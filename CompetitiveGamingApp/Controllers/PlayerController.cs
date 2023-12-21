@@ -100,4 +100,18 @@ public class PlayerController : ControllerBase {
             return BadRequest();
         }
     }
+
+     [HttpPut("{username}")]
+    public async Task<ActionResult> LeaveLeague(string username) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            player[0].leagueJoined = false;
+            player[0].playerLeagueJoined = null;
+            _playerService.SaveChanges();
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 }

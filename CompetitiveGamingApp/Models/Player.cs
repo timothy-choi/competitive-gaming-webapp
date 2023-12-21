@@ -9,6 +9,7 @@ public class Player {
     public String? playerEmail {get; set;}
     public DateTime playerJoined {get; set;}
     public bool playerAvailable {get; set;}
+    public bool playerInGame {get; set;}
     public List<String>? playerFriends {get; set;}
     public bool leagueJoined {get; set;}
     public String? playerLeagueJoined {get; set;}

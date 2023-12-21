@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "K30Vv99R6NT4zuAi05dRTenjyJtChpneorb5yUtIwgnu8DRKub9NoVslJUptbr3gU9fvMnwjWjVpzWR2ngseww==",
+  "dgSpecHash": "HnXTKFSe0okzv9PoIelybPEUvZLJ9FAHo1CkKbbrxHxRmFYKVWzLlhXb9B0H0KoMvYzQ7NaYp8s/WkC3iZ+ysQ==",
   "success": true,
   "projectFilePath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
   "expectedPackageFiles": [
     "/Users/timchoi/.nuget/packages/azure.core/1.25.0/azure.core.1.25.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/azure.identity/1.7.0/azure.identity.1.7.0.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/dapper/2.1.11/dapper.2.1.11.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.aspnetcore.openapi/7.0.11/microsoft.aspnetcore.openapi.7.0.11.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.bcl.asyncinterfaces/1.1.1/microsoft.bcl.asyncinterfaces.1.1.1.nupkg.sha512",
@@ -43,6 +44,7 @@
     "/Users/timchoi/.nuget/packages/microsoft.sqlserver.server/1.0.0/microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.win32.systemevents/6.0.0/microsoft.win32.systemevents.6.0.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/npgsql/7.0.6/npgsql.7.0.6.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/swashbuckle.aspnetcore/6.5.0/swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/swashbuckle.aspnetcore.swagger/6.5.0/swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.5.0/swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",

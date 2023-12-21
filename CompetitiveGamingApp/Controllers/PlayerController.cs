@@ -55,6 +55,9 @@ public class PlayerController : ControllerBase {
     public async Task<ActionResult> AddFriend([FromBody] Dictionary<string, string> userInfo) {
         try {
             var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == userInfo["username"]).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
             var singlePlayer = player[0];
             singlePlayer.playerFriends?.Add(userInfo["friendUsername"]);
             _playerService.SaveChanges();
@@ -68,6 +71,9 @@ public class PlayerController : ControllerBase {
     public async Task<ActionResult> RemoveFriend(string username, string friendUsername) {
         try {
             var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
             var singlePlayer = player[0];
             var index = -1;
             for (int i = 0; i < singlePlayer.playerFriends?.Count; ++i) {
@@ -91,6 +97,9 @@ public class PlayerController : ControllerBase {
     public async Task<ActionResult> JoinLeague(string username, string leagueName) {
         try {
             var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
             player[0].leagueJoined = true;
             player[0].playerLeagueJoined = leagueName;
             _playerService.SaveChanges();
@@ -105,12 +114,45 @@ public class PlayerController : ControllerBase {
     public async Task<ActionResult> LeaveLeague(string username) {
         try {
             var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
             player[0].leagueJoined = false;
             player[0].playerLeagueJoined = null;
             _playerService.SaveChanges();
             return Ok();
         }
         catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("available/{username}/{status}")]
+    public async Task<ActionResult> changeAvailableStatus(string username, bool status) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
+            player[0].playerAvailable = status;
+            _playerService.SaveChanges();
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("playing/{username}/{status}")]
+    public async Task<ActionResult> changeGameStatus(string username, bool status) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
+            player[0].playerInGame = status;
+            _playerService.SaveChanges();
+            return Ok();
+        } catch {
             return BadRequest();
         }
     }

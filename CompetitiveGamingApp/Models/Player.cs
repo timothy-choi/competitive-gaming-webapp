@@ -14,5 +14,4 @@ public class Player {
     public bool leagueJoined {get; set;}
     public String? playerLeagueJoined {get; set;}
     public List<int>? singlePlayerRecord {get; set;}
-    public int playerScore {get; set;}
 }

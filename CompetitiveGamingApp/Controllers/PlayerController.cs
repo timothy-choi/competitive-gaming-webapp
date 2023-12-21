@@ -156,4 +156,20 @@ public class PlayerController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPut("/record/{username}/{wins}/{losses}")]
+    public async Task<ActionResult> updatePlayerRecord(string username, int wins, int losses) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
+            player[0].singlePlayerRecord[0] += wins;
+            player[0].singlePlayerRecord[1] += losses;
+            _playerService.SaveChanges();
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

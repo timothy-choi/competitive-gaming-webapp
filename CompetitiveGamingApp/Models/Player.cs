@@ -13,6 +13,6 @@ public class Player {
     public List<String>? playerFriends {get; set;}
     public bool leagueJoined {get; set;}
     public String? playerLeagueJoined {get; set;}
-    public Tuple<int, int>? singlePlayerRecord {get; set;}
+    public List<int>? singlePlayerRecord {get; set;}
     public int playerScore {get; set;}
 }

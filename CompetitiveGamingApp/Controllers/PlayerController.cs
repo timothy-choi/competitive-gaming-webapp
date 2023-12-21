@@ -86,4 +86,18 @@ public class PlayerController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPut("{username}/{leagueName}")]
+    public async Task<ActionResult> JoinLeague(string username, string leagueName) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            player[0].leagueJoined = true;
+            player[0].playerLeagueJoined = leagueName;
+            _playerService.SaveChanges();
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 }

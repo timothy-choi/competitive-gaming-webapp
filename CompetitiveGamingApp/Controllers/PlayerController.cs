@@ -51,6 +51,48 @@ public class PlayerController : ControllerBase {
         }
     }
 
+    [HttpPost]
+    public async Task<ActionResult> CreatePlayer([FromBody] Dictionary<string, string> playerInfo) {
+        try {
+            Player createdPlayer = new Player {
+                playerId = Guid.NewGuid().ToString(),
+                playerName = playerInfo["name"],
+                playerUsername = playerInfo["playerUsername"],
+                playerEmail = playerInfo["playerEmail"],
+                playerJoined = DateTime.Now,
+                playerAvailable = false,
+                playerFriends = new List<string>(),
+                leagueJoined = false,
+                playerInGame = false,
+                playerLeagueJoined = "",
+                singlePlayerRecord = new List<int>()
+            };
+
+            await _playerService.AddAsync(createdPlayer);
+            await _playerService.SaveChangesAsync();
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpDelete("{username}")]
+    public async Task<ActionResult> DeletePlayer(string username) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
+            var curr = player[0];
+            _playerService.Remove(curr);
+            await _playerService.SaveChangesAsync();
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("friends")]
     public async Task<ActionResult> AddFriend([FromBody] Dictionary<string, string> userInfo) {
         try {

@@ -162,4 +162,17 @@ public class PlayerAuthController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpGet("session/{username}")]
+    public async Task<ActionResult<bool>> GetSession(string username) {
+        try {
+            if (!HttpContext.Session.Keys.Contains("username")) {
+                return Ok("Not Logged In");
+            }
+            var res = HttpContext.Session.GetString("username") == username ? true : false;
+            return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
 }

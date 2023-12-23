@@ -27,4 +27,23 @@ public class PlayerPaymentController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost]
+    public async Task<ActionResult> createNewAccount([FromBody] Dictionary<string, string> acctInfo) {
+        try {
+            PlayerPaymentAccount playerAcct = new PlayerPaymentAccount {
+                playerPaymentAccountId = Guid.NewGuid().ToString(),
+                playerUsername = acctInfo["username"],
+                playerPaymentUsername = acctInfo["cashAppUsername"],
+                playerCashAppId = acctInfo["playerCashAppId"],
+                idempotencyKey = ""
+            };
+
+            await _playerPaymentService.AddAsync(playerAcct);
+            await _playerPaymentService.SaveChangesAsync();
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

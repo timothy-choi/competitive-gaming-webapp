@@ -36,7 +36,7 @@ public class PlayerPaymentController : ControllerBase {
                 playerUsername = acctInfo["username"],
                 playerPaymentUsername = acctInfo["cashAppUsername"],
                 playerCashAppId = acctInfo["playerCashAppId"],
-                idempotencyKey = ""
+                idempotencyKey = Guid.NewGuid().ToString()
             };
 
             await _playerPaymentService.AddAsync(playerAcct);

@@ -27,4 +27,13 @@ public class SingleGameServices {
             throw new Exception("Couldn't get game!");
         }
     }
+
+    public async Task CreateGame(SingleGame currMatch) {
+        try {
+            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, videoObjName, gameEditor, twitchBroadcasterId) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @videoObjName, @gameEditor, @twitchBroadcasterId)";
+            await _dbServices.EditData<SingleGame>(cmd, currMatch);
+        } catch {
+            throw new Exception("Couldn't create game!");
+        }
+    }
 }

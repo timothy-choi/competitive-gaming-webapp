@@ -91,4 +91,17 @@ public class SingleGameController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("/inGameScores")]
+    public async Task<ActionResult> addInGameScore([FromBody] Dictionary<string, string> inGameScoreInfo) {
+        try {
+            Tuple<int, int> score = Tuple.Create(Convert.ToInt32(inGameScoreInfo["guestScore"]), Convert.ToInt32(inGameScoreInfo["hostScore"]));
+            Tuple<String, Tuple<int, int>> gameScore = Tuple.Create(inGameScoreInfo["gameScoreType"], score);
+
+            await _singleGameService.AddInGameScores(gameScore, inGameScoreInfo["gameId"]);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

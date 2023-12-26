@@ -74,4 +74,13 @@ public class SingleGameServices {
             throw new Exception("Couldn't add other game info");
         }
     }
+
+    public async Task AddTwitchBroadcasterId(string twitchId, string gameId) {
+        try {
+            string cmd = "UPDATE public.singleGames SET twitchBroadcasterId = @twitchId WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {twitchId, gameId});
+        } catch {
+            throw new Exception("Couldn't add twitch id");
+        }
+    }
 }

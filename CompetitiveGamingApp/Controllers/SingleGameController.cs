@@ -116,4 +116,19 @@ public class SingleGameController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPut("/twitchId/{broadcasterId}/{gameId}")]
+    public async Task<ActionResult> AddTwitchId(string broadcasterId, string gameId) {
+        try {
+            var user = await client.GetAsync("https://api.twitch.tv/helix/users?id=" + broadcasterId);
+            if ((int) user.StatusCode != 200) {
+                return NotFound();
+            }
+
+            await _singleGameService.AddTwitchBroadcasterId(broadcasterId, gameId);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

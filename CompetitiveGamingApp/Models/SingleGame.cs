@@ -10,4 +10,5 @@ public class SingleGame {
     public String? videoObjName {get; set;}
     public String? gameEditor {get; set;}
     public String? twitchBroadcasterId {get; set;}
+    public Dictionary<String, String>? otherGameInfo {get; set;}
 }

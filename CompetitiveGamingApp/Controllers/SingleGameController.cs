@@ -7,6 +7,7 @@ using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 using System.Numerics;
+using Newtonsoft.Json;
 
 [ApiController]
 [Route("api/singleGame")]
@@ -93,12 +94,23 @@ public class SingleGameController : ControllerBase {
     }
 
     [HttpPost("/inGameScores")]
-    public async Task<ActionResult> addInGameScore([FromBody] Dictionary<string, string> inGameScoreInfo) {
+    public async Task<ActionResult> AddInGameScore([FromBody] Dictionary<string, string> inGameScoreInfo) {
         try {
             Tuple<int, int> score = Tuple.Create(Convert.ToInt32(inGameScoreInfo["guestScore"]), Convert.ToInt32(inGameScoreInfo["hostScore"]));
             Tuple<String, Tuple<int, int>> gameScore = Tuple.Create(inGameScoreInfo["gameScoreType"], score);
 
             await _singleGameService.AddInGameScores(gameScore, inGameScoreInfo["gameId"]);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("/otherGameInfo")]
+    public async Task<ActionResult> AddOtherGameInfo([FromBody] Dictionary<string, string> otherGameInfo) {
+        try {
+            Dictionary<string, string> parsedGameInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(otherGameInfo["gameInfo"])!; 
+            await _singleGameService.AddOtherGameInfo(parsedGameInfo!, otherGameInfo["gameId"]);
             return Ok();
         } catch {
             return BadRequest();

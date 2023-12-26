@@ -30,7 +30,7 @@ public class SingleGameServices {
 
     public async Task CreateGame(SingleGame currMatch) {
         try {
-            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, videoObjName, gameEditor, twitchBroadcasterId) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @videoObjName, @gameEditor, @twitchBroadcasterId)";
+            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, videoObjName, gameEditor, twitchBroadcasterId, otherGameInfo) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @videoObjName, @gameEditor, @twitchBroadcasterId, @otherGameInfo)";
             await _dbServices.EditData<SingleGame>(cmd, currMatch);
         } catch {
             throw new Exception("Couldn't create game!");
@@ -63,6 +63,15 @@ public class SingleGameServices {
             await _dbServices.EditData<SingleGame>(cmd, new {scoresArr, gameId});
         } catch {
             throw new Exception("Couldn't add in-game score");
+        }
+    }
+
+    public async Task AddOtherGameInfo(Dictionary<String, String> gameInfo, string gameId) {
+        try {
+            string cmd = "UPDATE public.singleGames SET otherGameInfo = @gameInfo WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {gameInfo, gameId});
+        } catch {
+            throw new Exception("Couldn't add other game info");
         }
     }
 }

@@ -6,15 +6,18 @@ using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
+using System.Numerics;
 
 [ApiController]
 [Route("api/singleGame")]
 
 public class SingleGameController : ControllerBase {
 
+    private readonly HttpClient client;
     private readonly SingleGameServices _singleGameService;
     public SingleGameController(SingleGameServices singleGameServices) {
         _singleGameService = singleGameServices;
+        client = new HttpClient();
     }
 
     [HttpGet]
@@ -58,6 +61,33 @@ public class SingleGameController : ControllerBase {
             return Ok();
         }
         catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("/finalScore")]
+    public async Task<ActionResult> addFinalScore([FromBody] Dictionary<string, string> finalScoreInfo) {
+        try {
+            Tuple<int, int> finalScore = Tuple.Create(Convert.ToInt32(finalScoreInfo["guestPoints"]), Convert.ToInt32(finalScoreInfo["hostPoints"]));
+
+            await _singleGameService.UpdateFinalScore(finalScore, finalScoreInfo["gameId"]);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("/editor/{gameId}/{editor}")]
+    public async Task<ActionResult> updateGameEditor(string gameId, string editor) {
+        try {
+            var player = await client.GetAsync("/player/" + editor);
+            if (player == null) {
+                return NotFound();
+            }
+            await _singleGameService.EditUserGameEditor(editor, gameId);
+            return Ok();
+        } catch {
             return BadRequest();
         }
     }

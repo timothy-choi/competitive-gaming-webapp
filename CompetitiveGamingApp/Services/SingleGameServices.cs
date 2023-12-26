@@ -36,7 +36,7 @@ public class SingleGameServices {
             throw new Exception("Couldn't create game!");
         }
     }
-    public async Task UpdateFinalScore(Tuple<int> completedScore, string gameId) {
+    public async Task UpdateFinalScore(Tuple<int, int> completedScore, string gameId) {
         try {
             string cmd = "UPDATE public.singleGames SET finalScore = @completedScore WHERE SingleGameId = @gameId";
             await _dbServices.EditData<SingleGame>(cmd, new {completedScore, gameId});

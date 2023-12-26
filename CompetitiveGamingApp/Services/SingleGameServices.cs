@@ -36,4 +36,33 @@ public class SingleGameServices {
             throw new Exception("Couldn't create game!");
         }
     }
+    public async Task UpdateFinalScore(Tuple<int> completedScore, string gameId) {
+        try {
+            string cmd = "UPDATE public.singleGames SET finalScore = @completedScore WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {completedScore, gameId});
+        }
+        catch {
+            throw new Exception("Couldn't add final score");
+        }
+    }
+    public async Task EditUserGameEditor(string editorUsername, string gameId) {
+        try {
+            string cmd = "UPDATE public.singleGames SET gameEditor = @editorUsername WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {editorUsername, gameId});
+        } catch {
+            throw new Exception("Couldn't name game editor");
+        }
+    }
+    public async Task AddInGameScores(Tuple<String, Tuple<int, int>> score, string gameId) {
+        try {
+            string cmd = "SELECT * FROM public.singleGames WHERE SingleGameId = @gameId";
+            SingleGame? game = await _dbServices.GetAsync<SingleGame>(cmd, new {gameId});
+            game?.inGameScores!.Add(score);
+            var scoresArr = game?.inGameScores!.ToArray();
+            cmd = "UPDATE public.singleGames SET inGameScores = @scoresArr WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {scoresArr, gameId});
+        } catch {
+            throw new Exception("Couldn't add in-game score");
+        }
+    }
 }

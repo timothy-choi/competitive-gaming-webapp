@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 using System.Numerics;
 using Newtonsoft.Json;
+using System.Text;
 
 [ApiController]
 [Route("api/singleGame")]
@@ -127,6 +128,60 @@ public class SingleGameController : ControllerBase {
 
             await _singleGameService.AddTwitchBroadcasterId(broadcasterId, gameId);
             return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("/twitchId/prediction")]
+    public async Task<ActionResult<String>> CreatePrediction([FromBody] Dictionary<String, String> predictionInfo) {
+        try {
+            var stringContent = new StringContent(JsonConvert.SerializeObject(predictionInfo), Encoding.UTF8, "application/json");
+            HttpResponseMessage res = await client.PostAsync("https://api.twitch.tv/helix/predictions", stringContent);
+            if (!res.IsSuccessStatusCode) {
+                return BadRequest();
+            }
+            string predData = await res.Content.ReadAsStringAsync();
+            OkObjectResult newPred = new OkObjectResult(predData);
+            return Ok(newPred);
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpGet("/twitchId/prediction/{broadcasterId}/{predId}")]
+    public async Task<ActionResult<Dictionary<String, String>>> GetPrediction(string broadcasterId, string predId) {
+        try {
+            var res = await client.GetAsync("https://api.twitch.tv/helix/predictions?broadcaster_id=" + broadcasterId);
+            if (!res.IsSuccessStatusCode) {
+                return BadRequest();
+            }
+            var body = await res.Content.ReadAsStringAsync();
+            var predList = JsonConvert.DeserializeObject<List<Dictionary<String, object>>>(body);
+            for (int i = 0; i < predList!.Count; ++i) {
+                if ((string) predList[i]["id"] == predId) {
+                    OkObjectResult pred = new OkObjectResult(predList[i]);
+                    return Ok(pred);
+                }
+            }
+            return NotFound();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPatch("/twitchId/prediction/end")]
+    public async Task<ActionResult<String>> EndPrediction([FromBody] Dictionary<String, String> endPredInfo) {
+        try {
+            var stringContent = new StringContent(JsonConvert.SerializeObject(endPredInfo), Encoding.UTF8, "application/json");
+            HttpResponseMessage res = await client.PatchAsync("https://api.twitch.tv/helix/predictions", stringContent);
+            if (!res.IsSuccessStatusCode) {
+                return BadRequest();
+            }
+            var dataBody = await res.Content.ReadAsStringAsync();
+            OkObjectResult resolvedPred = new OkObjectResult(dataBody);
+            return Ok(resolvedPred);
         } catch {
             return BadRequest();
         }

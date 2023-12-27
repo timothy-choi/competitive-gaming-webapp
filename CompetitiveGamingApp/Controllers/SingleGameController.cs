@@ -9,6 +9,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Numerics;
 using Newtonsoft.Json;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 [ApiController]
 [Route("api/singleGame")]
@@ -182,6 +183,32 @@ public class SingleGameController : ControllerBase {
             var dataBody = await res.Content.ReadAsStringAsync();
             OkObjectResult resolvedPred = new OkObjectResult(dataBody);
             return Ok(resolvedPred);
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpGet("/twitchId/stream/{broadcasterId}/{streamId}")]
+    public async Task<ActionResult<Dictionary<String, String>>> GetStream(string broadcasterId, string streamId) {
+        try {
+            var res = await client.GetAsync("https://api.twitch.tv/helix/streams?user_id=" + broadcasterId + "&type=live");
+            if (!res.IsSuccessStatusCode) {
+                return NotFound();
+            }
+            var allStreamsStr = await res.Content.ReadAsStringAsync();
+            var allStreams = JsonConvert.DeserializeObject<List<Dictionary<String, String>>>(allStreamsStr)!;
+            List<Dictionary<String, String>> parsedStreams = new List<Dictionary<String, String>>();
+            for (int x = 0; x < allStreams.Count; ++x) {
+                var jsonObj = JObject.Parse(allStreams[x]["data"]);
+                parsedStreams.Add(jsonObj.ToObject<Dictionary<String, String>>()!);
+            }
+            for (int i = 0; i < parsedStreams.Count; ++i) {
+                if (parsedStreams[i]["id"] == streamId) {
+                    OkObjectResult currStream = new OkObjectResult(parsedStreams[i]);
+                    return Ok(currStream);
+                }
+            }
+            return NotFound();
         } catch {
             return BadRequest();
         }

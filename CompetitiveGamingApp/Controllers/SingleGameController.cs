@@ -275,4 +275,17 @@ public class SingleGameController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("/downloadVideo")]
+    public async Task<ActionResult> DownloadVideo([FromBody] Dictionary<String, String> downloadInfo) {
+        try {
+            var res = await AmazonS3Operations.DownloadVideoFromBucket(downloadInfo["bucketName"], downloadInfo["key"], downloadInfo["filePath"]);
+            if (!res) {
+                return BadRequest();
+            }
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

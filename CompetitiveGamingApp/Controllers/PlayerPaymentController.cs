@@ -46,4 +46,20 @@ public class PlayerPaymentController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpDelete("{username}")]
+    public async Task<ActionResult> DeleteAccount(string username) {
+        try {
+            var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (acct == null) {
+                return NotFound();
+            }
+            
+            _playerPaymentService.Remove(acct);
+            await _playerPaymentService.SaveChangesAsync();
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

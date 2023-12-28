@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "K8qcaj6R0bBUh3I42ook7LYTdA90aYi2f9fPZhWXmgH1poNuKSCrsqxwgo76LvcsTBH+Vxo+yJKRijos72qrNg==",
+  "dgSpecHash": "+lBbX1euT8X/otgwuUWYhV25KEulWqpZj0HHJH/M3WznzLn7X9rGPycpwxZKva9ppbmIZMVfnKdqa1/oahzUow==",
   "success": true,
   "projectFilePath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
   "expectedPackageFiles": [
+    "/Users/timchoi/.nuget/packages/awssdk.core/3.7.204.8/awssdk.core.3.7.204.8.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/awssdk.s3/3.7.205.17/awssdk.s3.3.7.205.17.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/azure.core/1.25.0/azure.core.1.25.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/azure.identity/1.7.0/azure.identity.1.7.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/dapper/2.1.11/dapper.2.1.11.nupkg.sha512",

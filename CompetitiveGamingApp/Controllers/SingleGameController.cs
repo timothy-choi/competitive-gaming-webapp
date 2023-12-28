@@ -10,6 +10,8 @@ using System.Numerics;
 using Newtonsoft.Json;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
+using AWSHelper;
 
 [ApiController]
 [Route("api/singleGame")]
@@ -204,12 +206,72 @@ public class SingleGameController : ControllerBase {
             }
             for (int i = 0; i < parsedStreams.Count; ++i) {
                 if (parsedStreams[i]["id"] == streamId) {
+                    parsedStreams[i]["stream_url"] = "http://twitch.tv/" + parsedStreams[i]["user_name"].ToLower();
                     OkObjectResult currStream = new OkObjectResult(parsedStreams[i]);
                     return Ok(currStream);
                 }
             }
             return NotFound();
         } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("/processRecording")]
+    public async Task<ActionResult> ProcessGameRecording([FromBody] Dictionary<String, String> recordingInfo) {
+        try {
+            var res = await client.GetAsync("https://api.twitch.tv/helix/videos?user_id=" + recordingInfo["user_id"] + "&period=day&sort=time&type=archive");
+            if (res == null) {
+                return NotFound();
+            }
+            var videosStr = await res.Content.ReadAsStringAsync();
+            var videos = JsonConvert.DeserializeObject<List<Dictionary<String, String>>>(videosStr)!;
+            Dictionary<String, String> selectedVideo = new Dictionary<String, String>();
+            int i = 0;
+            for (i = 0; i < videos.Count; ++i) {
+                if (recordingInfo["title"] == videos[i]["title"]) {
+                    selectedVideo = videos[i];
+                    break;
+                }
+            }
+
+            if (i == videos.Count) {
+                return NotFound();
+            }
+
+            string cmd = "twitch-dl download ";
+            string args = selectedVideo["url"] + " --output " + selectedVideo["title"] + ".mov";
+
+            ProcessStartInfo psi = new ProcessStartInfo {
+                FileName = "/bin/bash",
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                Arguments = $"-c \"{cmd} {args}\""
+            };
+
+            Process process = new Process { StartInfo = psi };
+            process.Start();
+
+            string error = process.StandardError.ReadToEnd();
+
+            process.WaitForExit();
+
+            if (error != null) {
+                return BadRequest();
+            }
+
+            if (!await AmazonS3Operations.BucketExists(recordingInfo["user_name"])) {
+                await AmazonS3Operations.CreateBucket(recordingInfo["user_name"]);
+            }
+
+            await AmazonS3Operations.AddRecordingToBucket(recordingInfo["user_name"], Path.GetFullPath(selectedVideo["title"] + ".mov"));
+
+            return Ok();
+        }
+        catch {
             return BadRequest();
         }
     }

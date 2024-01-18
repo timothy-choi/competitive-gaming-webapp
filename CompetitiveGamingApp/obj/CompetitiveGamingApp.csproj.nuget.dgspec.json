@@ -72,6 +72,10 @@
               "target": "Package",
               "version": "[6.5.0, )"
             },
+            "WebSocketSharp": {
+              "target": "Package",
+              "version": "[1.0.3-rc11, )"
+            },
             "npgsql": {
               "target": "Package",
               "version": "[7.0.6, )"

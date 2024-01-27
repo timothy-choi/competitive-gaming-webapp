@@ -13,4 +13,6 @@ public class League {
     public List<Tuple<String, Dictionary<String, Dictionary<String, object>>>>? LeagueStandings {get; set;}
     public Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>? DivisionStandings {get; set;}
     public Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>? CombinedDivisionStandings {get; set;} //Combined Division = Conferences in NFL, NBA, MLB, etc.
+    public List<Tuple<String, String>>? Champions {get; set;} 
+    public String? PlayoffAssignments {get; set;}
 }

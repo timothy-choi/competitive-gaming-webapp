@@ -5,6 +5,7 @@ public class LeagueSeasonConfig {
     public String? LeagueName {get; set;}
 
     public int commitmentLength {get; set;} //how long players will need to stay in a league before leaving. If seasons is on, # of season. Otherwise, time (in months)
+    public int feePrice {get; set;} //cost to join a league
     public int NumberOfPlayersLimit {get; set;}  //# of players allowed in this league. 
     public bool JoinDuringSeason {get; set;} // true = can accept new players to join league after season has started, false = deny new members (need to wait during offseason)
     public bool convertToRegular {get; set;} //true = automatically convert seasons mode to regular mode (no playoffs)

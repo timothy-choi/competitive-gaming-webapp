@@ -10,5 +10,7 @@ public class League {
     public List<String?>? tags {get; set;}
     public String? LeagueConfig {get; set;}
     public String? SeasonAssignments {get; set;}
-    public List<Dictionary<String, String>>? LeagueStandings {get; set;}
+    public List<Tuple<String, Dictionary<String, Dictionary<String, object>>>>? LeagueStandings {get; set;}
+    public Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>? DivisionStandings {get; set;}
+    public Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>? CombinedDivisionStandings {get; set;} //Combined Division = Conferences in NFL, NBA, MLB, etc.
 }

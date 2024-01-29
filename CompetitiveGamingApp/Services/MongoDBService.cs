@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using MongoDB.Bson;
+using CompetitiveGamingApp.Models;
 
 
 namespace CompetitiveGamingApp.Services;
@@ -35,7 +36,7 @@ public class MongoDBService {
     public void PostData(String db, object document) {
         object doc;
         if (db == "leagueInfo") {
-            doc = new {
+            doc = new League {
                 LeagueId = document.LeagueId,
                 Name = document.Name,
                 Owner = document.Owner,
@@ -52,18 +53,69 @@ public class MongoDBService {
             };
         }
         if (db == "leagueConfig") {
-            doc = new {
-
+            doc = new LeagueSeasonConfig {
+                ConfigId = document.ConfigId,
+                LeagueName = document.LeagueName,
+                commitmentLength = document.commitmentLength,
+                feePrice = document.feePrice,
+                NumberOfPlayersLimit = document.NumberOfPlayersLimit,
+                JoinDuringSeason = document.JoinDuringSeason,
+                convertToRegular = document.convertToRegular,
+                seasons = document.seasons,
+                NumberOfGames = document.NumberOfGames,
+                selfScheduleGames = document.selfScheduleGames,
+                intervalBetweenGames = document.intervalBetweenGames,
+                intervalBetweenGameHours = document.intervalBetweenGameHours,
+                firstSeasonMatch = document.firstSeasonMatch,
+                tiesAllowed = document.tiesAllowed,
+                playoffStart = document.playoffStart,
+                intervalBetweenPlayoffRoundGames = document.intervalBetweenPlayoffRoundGames,
+                intervalBetweenPlayoffRoundGamesHours = document.intervalBetweenPlayoffRoundGamesHours,
+                intervalBetweenRounds = document.intervalBetweenRounds,
+                intervalBetweenRoundsHours = document.intervalBetweenRoundsHours,
+                playoffContention = document.playoffContention,
+                playoffEligibleLimit = document.playoffEligibleLimit,
+                PlayoffSizeLimit = document.PlayoffSizeLimit,
+                PlayoffSeries = document.PlayoffSeries,
+                SeriesLengthMax = document.SeriesLengthMax,
+                sameSeriesLength = document.sameSeriesLength,
+                BreakTiesViaGame = document.BreakTiesViaGame,
+                otherMetrics = document.otherMetrics
             };
         }
         if (db == "leagueSeasonAssignments") {
-            doc = new {
-
+            doc = new LeaguePlayerSeasonAssignments {
+                AssignmentsId = document.AssignmentsId,
+                ConfigId = document.ConfigId,
+                LeagueId = document.LeagueId,
+                PartitionsEnabled = document.PartitionsEnabled,
+                ReassignEverySeason = document.ReassignEverySeason,
+                AutomaticInduction = document.AutomaticInduction,
+                NumberOfPlayersPerPartition = document.NumberOfPlayersPerPartition,
+                NumberOfPartitions = document.NumberOfPartitions,
+                SamePartitionSize = document.SamePartitionSize,
+                AutomaticScheduling = document.AutomaticScheduling,
+                ExcludeOutsideGames = document.ExcludeOutsideGames,
+                InterDivisionGameLimit = document.InterDivisionGameLimit,
+                RepeatMatchups = document.RepeatMatchups,
+                MaxRepeatMatchups = document.MaxRepeatMatchups
             };
         }
         if (db == "leaguePlayoffConfig") {
-            doc = new {
-
+            doc = new LeaguePlayoffs {
+                LeagueId = document.LeagueId,
+                RandomInitialMode = document.RandomInitialMode,
+                RandomRoundMode = document.RandomRoundMode,
+                WholeMode = document.WholeMode,
+                DefaultMode = document.DefaultMode,
+                WholeRoundOrdering = document.WholeRoundOrdering,
+                WholePlayoffPairings = document.WholePlayoffPairings,
+                CombinedDivisionGroups = document.CombinedDivisionGroups,
+                CombinedDivisionPlayoffMatchups = document.CombinedDivisionPlayoffMatchups,
+                DivisonBasedPlayoffPairings = document.DivisionBasedPlayoffPairings,
+                DivisionBasedPlayoffMatchups = document.DivisionBasedPlayoffMatchups,
+                UserDefinedPlayoffMatchups = document.UserDefinedPlayoffMatchups,
+                UserDefinedPlayoffFinalGroups = document.UserDefinedPlayoffFinalGroups
             };
         }
 

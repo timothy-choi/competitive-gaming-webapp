@@ -14,21 +14,21 @@ public class MongoDBService {
     public object GetData(String db, String entityId) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         if (db == "leagueInfo") {
-            var filterById = Builders<LeagueInfo>.Filter.Eq(league => league.leagueId, entityId);
+            var filterById = Builders<LeagueInfo>.Filter.Eq(league => league.LeagueId, entityId);
             var res = db_collection.Find(filterById).FirstOrDefault();
             return res;
         }
         if (db == "leagueConfig") {
-            var filterById = Builders<LeagueConfig>.Filter.Eq(league => league.leagueId, entityId);
+            var filterById = Builders<LeagueConfig>.Filter.Eq(league => league.ConfigId, entityId);
             var res = db_collection.Find(filterById).FirstOrDefault();
             return res;
         }
         if (db == "leagueSeasonAssignments") {
-            var filterById = Builders<LeagueSeasonConfig>.Filter.Eq(league => league.leagueId, entityId);
+            var filterById = Builders<LeagueSeasonConfig>.Filter.Eq(league => league.AssignmentsId, entityId);
             var res = db_collection.Find(filterById).FirstOrDefault();
             return res;
         }
-        var filterById = Builders<LeaguePlayoffConfig>.Filter.Eq(league => league.leagueId, entityId);
+        var filterById = Builders<LeaguePlayoffConfig>.Filter.Eq(league => league.LeaguePlayoffId, entityId);
         var res = db_collection.Find(filterById).FirstOrDefault();
         return res;
     }

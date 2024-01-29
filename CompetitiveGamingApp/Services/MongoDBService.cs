@@ -125,11 +125,40 @@ public class MongoDBService {
         db_collection.InsertOne((BsonDocument) doc);
     }
 
-    public void EditData(String db, bool upsert, Dictionary<string, object> newValues) {
-
+    private void updateDocument(string KeyName, object update, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
+        if (upsertChangeStatus[KeyName]) {
+            update = update.Push(KeyName, newValues[KeyName]);
+        }
+        else {
+            update = update.Set(KeyName, newValues[KeyName]);
+        }
     }
-    public void DeleteData(String db, Dictionary<String, object> filter) {
 
+    public void EditData(String db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
+        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
+        var filter = Builder<BsonDocument>.Filter.Eq(newValues["IdName"], newValues["id"]);
+        object update = Builders<BsonDocument>.Update;
+        for (int i = 0; i < newValues.Keys.Count; ++i) {
+            updateDocument(newValues.Keys[i], update, upsertChangeStatus, newValues);
+        }
+        db_collection.UpdateOne(filter, update);
     }
-
+    public void DeleteData(String db, string docId) {
+        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
+        string IdName = "";
+        if (db == "leagueInfo") {
+            IdName = "LeagueId";
+        }
+        if (db == "leagueConfig") {
+            IdName = "ConfigId";
+        } 
+        if (db == "leagueSeasonAssignments") {
+            IdName = "AssignmentsId";
+        }
+        if (db == "leaguePlayoffConfig") {
+            IdName = "LeaguePlayoffId";
+        }
+        var filter = Builders<BsonDocument>.Filter.Eq(IdName, docId);
+        db_collection.DeleteOne(filter);
+    }
 }

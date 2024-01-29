@@ -10,6 +10,7 @@ public class PlayoffMatchup {
 }
 
 public class LeaguePlayoffs {
+    public string? LeaguePlayoffId {get; set;}
     public String? LeagueId {get; set;}
     public bool RandomInitialMode {get; set;}  //true = playoff selection is done randomnly, first round matchups are selected randomnly 
     public bool RandomRoundMode {get; set;} //true = after each round, playoff selection matchups are done randomly

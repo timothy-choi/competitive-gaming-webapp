@@ -98,7 +98,9 @@ public class MongoDBService {
                 ExcludeOutsideGames = document.ExcludeOutsideGames,
                 InterDivisionGameLimit = document.InterDivisionGameLimit,
                 RepeatMatchups = document.RepeatMatchups,
-                MaxRepeatMatchups = document.MaxRepeatMatchups
+                MaxRepeatMatchups = document.MaxRepeatMatchups,
+                DivisionSelective = document.DivisionSelective,
+                OutsideDivisionSelections = document.OutsideDivisionSelections
             };
         }
         if (db == "leaguePlayoffConfig") {

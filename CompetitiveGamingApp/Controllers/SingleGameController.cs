@@ -269,7 +269,11 @@ public class SingleGameController : ControllerBase {
 
             await AmazonS3Operations.AddRecordingToBucket(recordingInfo["user_name"], Path.GetFullPath(selectedVideo["title"] + ".mov"));
 
-            return Ok();
+            recordingInfo["key"] = selectedVideo["title"] + ".mov";
+            recordingInfo["filePath"] = Path.GetFullPath(selectedVideo["title"] + ".mov"); 
+            OkObjectResult res = new OkObjectResult(recordingInfo);
+
+            return Ok(res);
         }
         catch {
             return BadRequest();

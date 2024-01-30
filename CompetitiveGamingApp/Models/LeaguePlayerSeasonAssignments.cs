@@ -1,5 +1,8 @@
 namespace CompetitiveGamingApp.Models;
 
+using CompetitiveGamingApp.Models;
+
+
 public class LeaguePlayerSeasonAssignments {
     public String? AssignmentsId {get; set;}
     public String? ConfigId {get; set;}
@@ -22,11 +25,10 @@ public class LeaguePlayerSeasonAssignments {
     public bool DivisionSelective {get; set;} //true = if outside games (out of division) are enabled, then only teams in select divisions will play the said team
     public List<string> OutsideDivisionSelections {get; set;} //List of all division that a teams can play for outside-division games
 
-
-
     
     public Dictionary<String, List<String>>? AllPartitions {get; set;}
-    public List<Tuple<String, String>>? FinalFullSchedule {get; set;}
+    public List<Tuple<string, List<SingleGame>>>? PlayerFullSchedule {get; set;}
+    public List<SingleGame>? FinalFullSchedule {get; set;}
     
 
 

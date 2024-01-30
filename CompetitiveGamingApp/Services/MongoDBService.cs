@@ -100,7 +100,10 @@ public class MongoDBService {
                 RepeatMatchups = document.RepeatMatchups,
                 MaxRepeatMatchups = document.MaxRepeatMatchups,
                 DivisionSelective = document.DivisionSelective,
-                OutsideDivisionSelections = document.OutsideDivisionSelections
+                OutsideDivisionSelections = document.OutsideDivisionSelections,
+                AllPartitions = document.AllPartitions,
+                PlayerFullSchedule = document.PlayerFullSchedule,
+                FinalFullSchedule  = document.FinalFullSchedule
             };
         }
         if (db == "leaguePlayoffConfig") {

@@ -142,7 +142,11 @@ public class MongoDBService {
         }
 
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        await db_collection.InsertOneAsync((BsonDocument) doc);
+        try {
+            await db_collection.InsertOneAsync((BsonDocument) doc);
+        } catch {
+            throw new Exception("Create League Failed!");
+        }
     }
 
     private void updateDocument(string KeyName, object update, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {

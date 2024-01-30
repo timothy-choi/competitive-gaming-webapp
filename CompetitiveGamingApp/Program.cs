@@ -13,6 +13,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<PlayerServices>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PlayerTable")));
 
+builder.Services.AddSingleton<MongoDBService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

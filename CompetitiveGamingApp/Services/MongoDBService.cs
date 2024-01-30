@@ -11,29 +11,36 @@ public class MongoDBService {
     public MongoDBService(IConfiguration configuration) {
         client = new MongoClient(configuration.GetConnectionString("MongoDB_URI"));
     }
-    public object GetData(String db, String entityId) {
+
+    public async List<object> GetAllData(string db) {
+        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
+        var filter = Builders<Restaurant>.Filter.Empty;
+        var AllData = await _restaurantsCollection.Find(filter).ToListAsync();
+        return AllData;
+    }
+    public async object GetData(String db, String entityId) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         if (db == "leagueInfo") {
             var filterById = Builders<LeagueInfo>.Filter.Eq(league => league.LeagueId, entityId);
-            var res = db_collection.Find(filterById).FirstOrDefault();
+            var res = await db_collection.Find(filterById).FirstOrDefault();
             return res;
         }
         if (db == "leagueConfig") {
             var filterById = Builders<LeagueConfig>.Filter.Eq(league => league.ConfigId, entityId);
-            var res = db_collection.Find(filterById).FirstOrDefault();
+            var res = await db_collection.Find(filterById).FirstOrDefault();
             return res;
         }
         if (db == "leagueSeasonAssignments") {
             var filterById = Builders<LeagueSeasonConfig>.Filter.Eq(league => league.AssignmentsId, entityId);
-            var res = db_collection.Find(filterById).FirstOrDefault();
+            var res = await db_collection.Find(filterById).FirstOrDefault();
             return res;
         }
         var filterById = Builders<LeaguePlayoffConfig>.Filter.Eq(league => league.LeaguePlayoffId, entityId);
-        var res = db_collection.Find(filterById).FirstOrDefault();
+        var res = await db_collection.Find(filterById).FirstOrDefault();
         return res;
     }
 
-    public void PostData(String db, object document) {
+    public async void PostData(String db, object document) {
         object doc;
         if (db == "leagueInfo") {
             doc = new League {
@@ -135,7 +142,7 @@ public class MongoDBService {
         }
 
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        db_collection.InsertOne((BsonDocument) doc);
+        await db_collection.InsertOneAsync((BsonDocument) doc);
     }
 
     private void updateDocument(string KeyName, object update, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
@@ -147,16 +154,16 @@ public class MongoDBService {
         }
     }
 
-    public void EditData(String db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
+    public async void EditData(String db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         var filter = Builder<BsonDocument>.Filter.Eq(newValues["IdName"], newValues["id"]);
         object update = Builders<BsonDocument>.Update;
         for (int i = 0; i < newValues.Keys.Count; ++i) {
             updateDocument(newValues.Keys[i], update, upsertChangeStatus, newValues);
         }
-        db_collection.UpdateOne(filter, update);
+        await db_collection.UpdateOneAsync(filter, update);
     }
-    public void DeleteData(String db, string docId) {
+    public async void DeleteData(String db, string docId) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         string IdName = "";
         if (db == "leagueInfo") {
@@ -172,6 +179,6 @@ public class MongoDBService {
             IdName = "LeaguePlayoffId";
         }
         var filter = Builders<BsonDocument>.Filter.Eq(IdName, docId);
-        db_collection.DeleteOne(filter);
+        await db_collection.DeleteOneAsync(filter);
     }
 }

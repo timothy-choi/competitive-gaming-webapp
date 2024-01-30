@@ -1,6 +1,8 @@
 namespace CompetitiveGamingApp.Models;
 
 public class PlayoffMatchup {
+    public String? PlayoffMatchup {get; set;}
+    public String? GameId {get; set;}
     public String? player1 {get; set;}
     public int player1_rank {get; set;}
     public String? player2 {get; set;}

@@ -14,9 +14,11 @@ using System.Text;
 
 public class PlayerAuthController : ControllerBase {
     private readonly PlayerAuthServices _playerAuthServices;
+    private readonly IConfiguration _configuration;
 
-    public PlayerAuthController(PlayerAuthServices playerAuthServices) {
+    public PlayerAuthController(IConfiguration configuration;, PlayerAuthServices playerAuthServices) {
         _playerAuthServices = playerAuthServices;
+        _configuration = configuration;
     }
 
     private static string HashPassword(string password) {
@@ -81,6 +83,7 @@ public class PlayerAuthController : ControllerBase {
                 return BadRequest();
             }
             HttpContext.Session.SetString("username", loginInfo["username"]);
+            _configuration["WebSocketConfig:StopServer"] = "Start";
             return Ok();
         } 
         catch {
@@ -94,6 +97,7 @@ public class PlayerAuthController : ControllerBase {
             return Unauthorized();
         }
         HttpContext.Session.Remove("username");
+        _configuration["WebSocketConfig:StopServer"] = "Stop";
         return Ok();
     }
 

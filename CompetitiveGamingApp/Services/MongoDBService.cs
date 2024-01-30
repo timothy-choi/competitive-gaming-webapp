@@ -46,6 +46,9 @@ public class MongoDBService {
                 LeagueConfig = document.LeagueConfig,
                 SeasonAssignments = document.SeasonAssignments,
                 LeagueStandings = document.LeagueStandings,
+                ArchieveLeagueStandings = document.ArchieveLeagueStandings,
+                ArchieveDivisionStandings = document.ArchieveDivisionStandings,
+                ArchieveCombinedDivisionStandings = document.ArchieveCombinedDivisionStandings
                 DivisionStandings = document.DivisionStandings,
                 CombinedDivisionStandings = document.CombinedDivisionStandings,
                 Champions = document.Champions,
@@ -103,6 +106,8 @@ public class MongoDBService {
                 OutsideDivisionSelections = document.OutsideDivisionSelections,
                 AllPartitions = document.AllPartitions,
                 PlayerFullSchedule = document.PlayerFullSchedule,
+                ArchievePlayerFullSchedule = document.ArchievePlayerFullSchedule,
+                ArchieveFinalFullSchedule = document.ArchieveFinalFullSchedule,
                 FinalFullSchedule  = document.FinalFullSchedule
             };
         }
@@ -115,12 +120,16 @@ public class MongoDBService {
                 DefaultMode = document.DefaultMode,
                 WholeRoundOrdering = document.WholeRoundOrdering,
                 WholePlayoffPairings = document.WholePlayoffPairings,
+                ArchieveWholePlayoffPairings = document.ArchieveWholePlayoffPairings,
                 CombinedDivisionGroups = document.CombinedDivisionGroups,
                 CombinedDivisionPlayoffMatchups = document.CombinedDivisionPlayoffMatchups,
+                ArchieveCombinedDivisionPlayoffMatchups = document.ArchieveCombinedDivisionPlayoffMatchups,
                 DivisonBasedPlayoffPairings = document.DivisionBasedPlayoffPairings,
                 DivisionBasedPlayoffMatchups = document.DivisionBasedPlayoffMatchups,
+                ArchieveDivisionBasedPlayoffMatchups = document.ArchieveDivisionBasedPlayoffMatchups,
                 UserDefinedPlayoffMatchups = document.UserDefinedPlayoffMatchups,
-                UserDefinedPlayoffFinalGroups = document.UserDefinedPlayoffFinalGroups
+                UserDefinedPlayoffFinalGroups = document.UserDefinedPlayoffFinalGroups,
+                ArchieveUserDefinedPlayoffFinalGroups = document.ArchieveUserDefinedPlayoffFinalGroups
             };
         }
 

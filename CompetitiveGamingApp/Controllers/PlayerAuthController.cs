@@ -16,7 +16,7 @@ public class PlayerAuthController : ControllerBase {
     private readonly PlayerAuthServices _playerAuthServices;
     private readonly IConfiguration _configuration;
 
-    public PlayerAuthController(IConfiguration configuration;, PlayerAuthServices playerAuthServices) {
+    public PlayerAuthController(IConfiguration configuration, PlayerAuthServices playerAuthServices) {
         _playerAuthServices = playerAuthServices;
         _configuration = configuration;
     }

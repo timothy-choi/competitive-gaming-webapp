@@ -73,9 +73,63 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeagueId}/{SeasonAssignmentsId}")]
+    public async Task<ActionResult> SetSeasonConfig(string LeagueId, string SeasonAssignmentsId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+            Dictionary<String, String> body;
+            body["AssignmentsId"] = SeasonAssignmentsId;
 
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["AssignmentsId"] = false;
+            await _leagueService.EditData("leagueInfo", upsertStatus, body);
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 
+    [HttpPut("{LeagueId}/{LeagueConfigId}")]
+    public async Task<ActionResult> SetConfigId(string LeagueId, string LeagueConfigId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+            Dictionary<String, String> body;
+            body["ConfigId"] = LeagueConfigId;
 
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["ConfigId"] = false;
+            await _leagueService.EditData("leagueInfo", upsertStatus, body);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeagueId}/{PlayoffAssigmentId}")]
+    public async Task<ActionResult> SetPlayoffAssignments(string LeagueId, string PlayoffAssignmentId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+            Dictionary<String, String> body;
+            body["PlayoffAssignmentId"] = PlayoffAssignmentId;
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["PlayoffAssignmentId"] = false;
+            await _leagueService.EditData("leagueInfo", upsertStatus, body);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }
 
 

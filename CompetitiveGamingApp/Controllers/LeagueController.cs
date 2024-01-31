@@ -59,6 +59,22 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpDelete("{LeagueId}")]
+    public async Task<ActionResult> DeleteLeague(string LeagueId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+            await _leagueService.DeleteData("leagueInfo", LeagueId);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+
+
 
 }
 

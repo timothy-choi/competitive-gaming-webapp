@@ -183,6 +183,10 @@ public class MongoDBService {
             IdName = "LeaguePlayoffId";
         }
         var filter = Builders<BsonDocument>.Filter.Eq(IdName, docId);
-        await db_collection.DeleteOneAsync(filter);
+        try {
+            await db_collection.DeleteOneAsync(filter);
+        } catch {
+            throw new Exception("Delete League Failed!");
+        }
     }
 }

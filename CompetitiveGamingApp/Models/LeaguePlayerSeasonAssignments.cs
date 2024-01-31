@@ -1,9 +1,12 @@
 namespace CompetitiveGamingApp.Models;
 
 using CompetitiveGamingApp.Models;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 
 public class LeaguePlayerSeasonAssignments {
+    [BsonId]
     public String? AssignmentsId {get; set;}
     public String? ConfigId {get; set;}
     public String? LeagueId {get; set;}

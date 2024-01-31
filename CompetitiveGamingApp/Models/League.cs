@@ -1,7 +1,11 @@
 namespace CompetitiveGamingApp.Models;
 
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
 
 public class League {
+    [BsonId]
     public String? LeagueId {get; set;}
     public String? Name {get; set;}
     public String? Owner {get; set;}

@@ -1,6 +1,8 @@
 namespace CompetitiveGamingApp.Models;
-
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 public class LeagueSeasonConfig {
+    [BsonId]
     public String? ConfigId {get; set;}
     public String? LeagueName {get; set;}
 

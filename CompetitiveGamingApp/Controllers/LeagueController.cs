@@ -182,7 +182,7 @@ public class LeagueController : ControllerBase {
             var league = await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
-            
+            }
             var players = league.Players;
 
             int size = players.Count;

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Globalization;
 
 [ApiController]
 [Route("api/League")]
@@ -149,6 +151,31 @@ public class LeagueController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPut("{LeagueId}/players/{PlayerId}")]
+    public async Task<ActionResult> AddNewPlayer(string LeagueId, string PlayerId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["Players"] = true;
+
+            Dictionary<string, string> playerInfo;
+            playerInfo["PlayerId"] = PlayerId;
+            playerInfo["DateJoined"] = DateTime.Now;
+            Dictionary<String, object> body;
+            body["Players"] = playerInfo;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, body);
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
 }
 
 

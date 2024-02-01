@@ -207,6 +207,30 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeagueId}/Champion/{PlayerId}")]
+    public async Task<ActionResult> AddNewChampion(string LeagueId, string PlayerId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var champions_size = league.Champions.Count;
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["Players"] = false;
+
+            Dictionary<string, string> champ;
+            champ[PlayerId] = Tuple.Create(PlayerId, "Season " + champions_size + 1);
+
+            await _leagueService.EditData("leagueId", upsertStatus, champ);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
 }
 
 

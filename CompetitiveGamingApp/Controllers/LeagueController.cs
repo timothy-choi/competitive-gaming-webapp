@@ -231,6 +231,68 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeagueId}")]
+    public async Task<ActionResult> ResetLeagueStandings(string LeagueId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var leagueStandings = league.LeagueStandings;
+            leagueStandings.Season = league.Champion.Count + 1;
+            leagueStandings.Table = leagueStandings.Table.OrderBy(d => d["playerName"]).ToList();
+            for (int i = 0; i < leagueStandings.Table.Count; ++i) {
+                for (var k in leagueStandings.Table[i]) {
+                    if (k == "playerName") {
+                        continue;
+                    }
+                    leagueStandings.Table[i][k] = 0;
+                }
+            }
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["LeagueStandings"] = true;
+
+            Dictionary<string, object> leagueTable;
+            leagueTable["LeagueStandings"] = leagueStandings;
+
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, leagueTable);
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
+
+    [HttpPost("{LeagueId}/LeagueStandings")]
+    public async Task<ActionResult> AddPlayerToLeagueStandings(string LeagueId, Dictionary<string, string> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["LeagueStandings.Table"] = true;
+
+            Dictionary<string, object> playerStandings;
+            playerStandings["LeagueStandings.Table"] = reqBody;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, playerStandings);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeagueId}/Division/{PlayerId}/{}")]
+    public async Task<ActionResult> AddPlayersToDivision(string LeagueId, Dictionary)
+
+
+
 }
 
 

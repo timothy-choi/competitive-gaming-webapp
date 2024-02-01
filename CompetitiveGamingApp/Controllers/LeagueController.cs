@@ -42,12 +42,12 @@ public class LeagueController : ControllerBase {
                 tags = new List<string>(),
                 LeagueConfig = "",
                 SeasonAssignments = "",
-                LeagueStandings = new List<Tuple<String, Dictionary<String, Dictionary<String, object>>>>(),
-                AchieveLeagueStandings = new List<List<Tuple<String, Dictionary<String, Dictionary<String, object>>>>>(),
-                DivisionStandings = new Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>(),
-                AchieveDivisionStandings = new List<Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>>(),
-                CombinedDivisionStandings = new Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>(),
-                AchieveCombinedDivisionStandings = new List<Dictionary<String, List<Tuple<String, Dictionary<String, object>>>>>(),
+                LeagueStandings = new LeagueTable(),
+                AchieveLeagueStandings = new List<LeagueTable>(),
+                DivisionStandings = new Dictionary<string, DivisionTable>(),
+                AchieveDivisionStandings = new List<Dictionary<string, DivisionTable>>(),
+                CombinedDivisionStandings = new Dictionary<string, CombinedDivisionTable>(),
+                AchieveCombinedDivisionStandings = new List<Dictionary<string, CombinedDivisionTable>>(),
                 Champions = new List<Tuple<String, String>>(),
                 PlayoffAssignments = ""
             };

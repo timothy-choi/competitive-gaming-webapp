@@ -4,21 +4,21 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 
-public class LeagueStandings {
-    public String? LeagueStandingsId {get; set;}
+public class LeagueTable {
+    public String? LeagueTableId {get; set;}
     public int Season {get; set;}
     public List<Dictionary<String, object>>? Table {get; set;}
 }
 
-public class DivisionStandings {
-    public String? DivisionStandingsId {get; set;}
+public class DivisionTable {
+    public String? DivisionTableId {get; set;}
     public int Season {get; set;}
     public String? DivisionName {get; set;}
     public List<Dictionary<String, object>>? Table {get; set;}
 }
 
-public class CombinedDivisionStandings {
-    public String? CombinedDivisionStandingsId {get; set;}
+public class CombinedDivisionTable {
+    public String? CombinedDivisionTableId {get; set;}
     public int Season {get; set;}
     public String? CombinedDivisionName {get; set;}
     public List<string> Divisions {get; set;}
@@ -37,12 +37,12 @@ public class League {
     public List<String?>? tags {get; set;}
     public String? LeagueConfig {get; set;}
     public String? SeasonAssignments {get; set;}
-    public LeagueStandings? LeagueStandings {get; set;}
-    public List<LeagueStandings>? AchieveLeagueStandings {get; set;}
-    public Dictionary<String, DivisionStandings>? DivisionStandings {get; set;}
-    public List<Dictionary<String, DivisionStandings>>? ArchieveDivisionStandings {get; set;}
-    public Dictionary<String, CombinedDivisionStandings>? CombinedDivisionStandings {get; set;} //Combined Division = Conferences in NFL, NBA, MLB, etc.
-    public List<Dictionary<String, CombinedDivisionStandings>>? ArchieveCombinedDivisionStandings {get; set;}
+    public LeagueTable? LeagueStandings {get; set;}
+    public List<LeagueTable>? AchieveLeagueStandings {get; set;}
+    public Dictionary<String, DivisionTable>? DivisionStandings {get; set;}
+    public List<Dictionary<String, DivisionTable>>? ArchieveDivisionStandings {get; set;}
+    public Dictionary<String, CombinedDivisionTable>? CombinedDivisionStandings {get; set;} //Combined Division = Conferences in NFL, NBA, MLB, etc.
+    public List<Dictionary<String, CombinedDivisionTable>>? ArchieveCombinedDivisionStandings {get; set;}
     public List<Tuple<String, String>>? Champions {get; set;} 
     public String? PlayoffAssignments {get; set;}
 }

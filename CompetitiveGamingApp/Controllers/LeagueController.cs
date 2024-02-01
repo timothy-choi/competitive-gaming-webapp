@@ -176,6 +176,37 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeagueId}/players/{PlayerId}/delete")]
+    public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            
+            var players = league.Players;
+
+            int size = players.Count;
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["Players"] = false;
+
+            players.RemoveAll(p => p.containsKey("PlayerId") && p["PlayerId"].ToString() == PlayerId);
+
+            if (players.Count == size) {
+                return NotFound();
+            }
+
+            Dictionary<string, object> playersVal;
+            playersVal["Players"] = players;
+
+            await _leagueService.EditData("leagueId", upsertStatus, playersVal);
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
 }
 
 

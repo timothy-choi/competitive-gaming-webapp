@@ -90,6 +90,7 @@ public class MongoDBService {
                 PlayoffSeries = document.PlayoffSeries,
                 SeriesLengthMax = document.SeriesLengthMax,
                 sameSeriesLength = document.sameSeriesLength,
+                GamesPerRound = document.GamesPerRound,
                 BreakTiesViaGame = document.BreakTiesViaGame,
                 otherMetrics = document.otherMetrics
             };

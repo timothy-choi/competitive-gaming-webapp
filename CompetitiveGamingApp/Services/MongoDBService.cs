@@ -165,7 +165,12 @@ public class MongoDBService {
         for (int i = 0; i < newValues.Keys.Count; ++i) {
             updateDocument(newValues.Keys[i], update, upsertChangeStatus, newValues);
         }
-        await db_collection.UpdateOneAsync(filter, update);
+        try {
+            await db_collection.UpdateOneAsync(filter, update);
+        }
+        catch {
+            throw new Exception("Update League Failed!");
+        }
     }
     public async void DeleteData(String db, string docId) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);

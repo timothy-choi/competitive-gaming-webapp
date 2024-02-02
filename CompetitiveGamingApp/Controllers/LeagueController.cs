@@ -303,7 +303,7 @@ public class LeagueController : ControllerBase {
             for (int i = 0; i < divisions.Count; ++i) {
                 DivisionTable divTable = new DivisionTable {
                     DivisionTableId = Guid.NewGuid().ToString(),
-                    Name = divisions[i],
+                    DivisionName = divisions[i],
                     Season = league.Champion.Count + 1,
                     Table = new List<Dictionary<String, object>>()
                 };
@@ -353,6 +353,67 @@ public class LeagueController : ControllerBase {
             return Ok();
         }
         catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeagueId}/ResetDivisions")]
+    public async Task<ActionResult> ResetDivisions(string LeagueId, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var divisions = league.DivisionStandings;
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["DivisionStandings." + DivisionName + ".Table"] = true;
+
+            if (reqBody["ReassignEverySeason"]) {
+                for (var k in reqBody) {
+                    if (k == "ReassignEverySeason") {
+                        continue;
+                    }
+                    divisions[k] = new DivisionTable();
+                    divisions[k].DivisionName = k;
+                    divisions[k].DivisionTableId = Guid.NewGuid().ToString(); 
+                    divisions[k].Season = league.Champions.Count + 1;
+
+                    divisions[k].Table = List<Dictionary<string, object>>();
+
+                    for (var player in reqBody[k]) {
+                        divisions[k].Table.Push(player.Value);
+                    }
+                }
+            }
+            else {
+                for (var div in divisions) {
+                    var table = divisions[div];
+                    divisions[div] = new DivisionTable();
+                    divisions[div].DivisionName = div;
+                    divisions[div].DivisionTableId = Guid.NewGuid().ToString();
+                    divisions[div].Season = league.Champions.Count + 1;
+                    divisions[div].Table = table.OrderBy(d => d["PlayerId"]).ToList();
+
+                    for (var k in divisions[div].Table) {
+                        for (var metric in divisions[div].Table[k]) {
+                            if (typeof(divisions[div].Table[k]) == typeof(string)) {
+                                continue;
+                            }
+                            divisions[div].Table[k] = 0;
+                        }
+                    }
+                }
+            }
+
+            Dictionary<string, object> newDivisions;
+            newDivisions["DivisionStandings"] = divisions;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, newDivisions);
+
+            return Ok();
+        } catch {
             return BadRequest();
         }
     }

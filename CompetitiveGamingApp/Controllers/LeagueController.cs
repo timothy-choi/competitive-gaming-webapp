@@ -244,7 +244,7 @@ public class LeagueController : ControllerBase {
             leagueStandings.Table = leagueStandings.Table.OrderBy(d => d["playerName"]).ToList();
             for (int i = 0; i < leagueStandings.Table.Count; ++i) {
                 for (var k in leagueStandings.Table[i]) {
-                    if (k == "playerName") {
+                    if (k == "playerName" || typeof(leagueStandings.Table[i][k]) == typeof(string)) {
                         continue;
                     }
                     leagueStandings.Table[i][k] = 0;
@@ -288,8 +288,74 @@ public class LeagueController : ControllerBase {
         }
     }
 
-    [HttpPut("{LeagueId}/Division/{PlayerId}/{}")]
-    public async Task<ActionResult> AddPlayersToDivision(string LeagueId, Dictionary)
+    [HttpPost("{LeagueId}/Division/Create")]
+    public async Task<ActionResult> CreateDivisions(string LeagueId, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var divisions = reqBody["divisions"];
+
+            Dictionary<string, object> divs;
+
+            for (int i = 0; i < divisions.Count; ++i) {
+                DivisionTable divTable = new DivisionTable {
+                    DivisionTableId = Guid.NewGuid().ToString(),
+                    Name = divisions[i],
+                    Season = league.Champion.Count + 1,
+                    Table = new List<Dictionary<String, object>>()
+                };
+                divs[divisions[i]] = divTable;
+            }
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["DivisionStandings"] = false;
+
+            Dictionary<string, object> divStandings;
+            divStandings["DivisionStandings"] = divs;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, divStandings);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("{LeagueId}/{DivisionName}/{PlayerId}")]
+    public async Task<ActionResult> AddPlayerToDivision(string LeagueId, string DivisionName, string PlayerId, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var divisions = _leagueService.DivisionStandings;
+
+            if (!divisions.containsKey(DivisionName)) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["DivisionStandings." + DivisionName + ".Table"] = true;
+
+            Dictionary<string, object> entry;
+            entry[PlayerId] = reqBody;
+
+            Dictionary<string, object> DivPlayer;
+            DivPlayer["DivisionStandings." + DivisionName + ".Table"] = entry;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 
 
 

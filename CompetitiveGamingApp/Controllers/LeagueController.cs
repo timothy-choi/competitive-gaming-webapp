@@ -218,10 +218,10 @@ public class LeagueController : ControllerBase {
             var champions_size = league.Champions.Count;
 
             Dictionary<string, bool> upsertStatus;
-            upsertStatus["Players"] = false;
+            upsertStatus["Champions"] = true;
 
-            Dictionary<string, string> champ;
-            champ[PlayerId] = Tuple.Create(PlayerId, "Season " + champions_size + 1);
+            Dictionary<string, object> champ;
+            champ["Champions"] = Tuple.Create(PlayerId, "Season " + champions_size + 1);
 
             await _leagueService.EditData("leagueId", upsertStatus, champ);
 
@@ -268,7 +268,7 @@ public class LeagueController : ControllerBase {
 
 
     [HttpPost("{LeagueId}/LeagueStandings")]
-    public async Task<ActionResult> AddPlayerToLeagueStandings(string LeagueId, Dictionary<string, string> reqBody) {
+    public async Task<ActionResult> AddPlayerToLeagueStandings(string LeagueId, Dictionary<string, object> reqBody) {
         try {
             var league = await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
@@ -560,11 +560,9 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-
-            var combinedDivisions = league.CombinedDivisionStandings;
-
+            
             Dictionary<string, bool> upsertStatus;
-            upsertStatus["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = false;
+            upsertStatus["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = true;
 
             Dictionary<string, object> totalCombDivisions;
             totalCombDivisions["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = reqBody;

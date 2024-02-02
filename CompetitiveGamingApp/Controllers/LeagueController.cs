@@ -31,7 +31,7 @@ public class LeagueController : ControllerBase {
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateLeague(Dictionary<string, object> leagueInput) {
+    public async Task<ActionResult<string>> CreateLeague(Dictionary<string, object> leagueInput) {
         try {
             League curr = new League {
                 LeagueId = Guid.NewGuid().ToString(),
@@ -560,7 +560,7 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            
+
             Dictionary<string, bool> upsertStatus;
             upsertStatus["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = true;
 

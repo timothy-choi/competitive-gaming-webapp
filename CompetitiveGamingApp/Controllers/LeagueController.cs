@@ -368,7 +368,7 @@ public class LeagueController : ControllerBase {
             var divisions = league.DivisionStandings;
 
             Dictionary<string, bool> upsertStatus;
-            upsertStatus["DivisionStandings." + DivisionName + ".Table"] = true;
+            upsertStatus["DivisionStandings"] = true;
 
             if (reqBody["ReassignEverySeason"]) {
                 for (var k in reqBody) {
@@ -414,6 +414,42 @@ public class LeagueController : ControllerBase {
 
             return Ok();
         } catch {
+            return BadRequest();
+        }
+    }
+
+
+    [HttpPost("{LeagueId}/CombinedDivision")]
+    public async Task<ActionResult> CreateCombinedDivision(string LeagueId, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["CombinedDivisionStandings"] = false;
+
+            Dictionary<string, object> allCombinedDivisions;
+
+            for (var combined in reqBody) {
+                CombinedDivisionTable combTable = new CombinedDivisionTable();
+                combTable.CombinedDivisionName = combined.Key;
+                combTable.CombinedDivisionTableId = Guid.NewGuid().ToString();
+                combTable.Season = league.Champions.Count + 1;
+                combTable.Divisions = combined.Value;
+                combTable.Table = new List<Dictionary<string, object>>();
+                allCombinedDivisions[combined.Key] = combTable;
+            }
+
+            Dictionary<string, object> totalCombDivisions;
+            totalCombDivisions["CombinedDivisionStandings"] = allCombinedDivisions;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, totalCombDivisions);
+
+            return Ok();
+        }
+        catch {
             return BadRequest();
         }
     }

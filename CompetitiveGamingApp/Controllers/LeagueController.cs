@@ -588,15 +588,18 @@ public class LeagueController : ControllerBase {
 
             for (int i = 0; i < leagueStandings.Count; ++i) {
                 if (leagueStandings[i]["playerId"] == reqBody["PlayerId"]) {
-                    if (reqBody["recordStatus"] == -1) {
+                    if (reqBody["recordStatus"] == 1) {
                         leagueStandings[i]["wins"] += 1;
                     }
-                    else if (reqBody["recordStatus"] == 1) {
-                        leagueStandings[i]["wins"] += -1;
+                    else if (reqBody["recordStatus"] == -1) {
+                        leagueStandings[i]["losses"] += 1;
+                    }
+                    else if (reqBody["recordStatus"] == 0) {
+                        leagueStandings[i]["losses"] += 1;
                     }
 
                     for (var k in reqBody) {
-                        if (k == "recordStatus") {
+                        if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
                             continue;
                         }
                         leagueStandings[i][k] = reqBody[k];
@@ -605,17 +608,96 @@ public class LeagueController : ControllerBase {
                 }
             }
 
-            leagueStandings = leagueStandings.OrderBy().ToList();
+            List<string> sortFactors = new List<string>();
+            sortFactors.add("wins");
+            sortFactors.add("losses");
+            sortFactors.add("draws");
+            for (var k in reqBody) {
+                if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
+                    continue;
+                }
+                sortFactors.add(k);
+            }
+
+            leagueStandings.Sort(new PlayerComparer(sortFactors));
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["LeagueStandings.Table"] = false;
+
+            Dictionary<string, object> updatedTable;
+            updatedTable["LeagueStandings.Table"] = leagueStandings;
 
 
+            await _leagueService.EditData("leagueInfo", upsertStatus, updatedTable);
 
-            await _leagueService.EditData("leagueInfo", );
+            var division = league.Division["divisionName"].Table;
+
+            for (int i = 0; i < division.Count; ++i) {
+                if (division[i]["playerId"] == reqBody["PlayerId"]) {
+                    if (reqBody["recordStatus"] == 1) {
+                        division[i]["wins"] += 1;
+                    }
+                    else if (reqBody["recordStatus"] == -1) {
+                        division[i]["losses"] += 1;
+                    }
+                    else if (reqBody["recordStatus"] == 0) {
+                        division[i]["losses"] += 1;
+                    }
+
+                    for (var k in reqBody) {
+                        if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
+                            continue;
+                        }
+                        division[i][k] = reqBody[k];
+                    }
+                    break;
+                }
+            }
+
+            division.Sort(new PlayerComparer(sortFactors));
+
+            Dictionary<string, bool> upsertStatusDivisions;
+            upsertStatusDivisions["DivisionStandings.Table"] = false;
+
+            Dictionary<string, object> updatedDivisions;
+            updatedDivisions["DivisionStandings.Table"] = division;
 
 
-            await _leagueService.EditData("leagueInfo", );
+            await _leagueService.EditData("leagueInfo", upsertStatusDivisions, updatedDivisions);
 
+            var combinedDivision = league.CombinedDivisionStandings["combinedDivisionName"].Table;
 
-            await _leagueService.EditData("leagueInfo", );
+            for (int i = 0; i < combinedDivision.Count; ++i) {
+                if (combinedDivision[i]["playerId"] == reqBody["PlayerId"]) {
+                    if (reqBody["recordStatus"] == 1) {
+                        combinedDivision[i]["wins"] += 1;
+                    }
+                    else if (reqBody["recordStatus"] == -1) {
+                        combinedDivision[i]["losses"] += 1;
+                    }
+                    else if (reqBody["recordStatus"] == 0) {
+                        combinedDivision[i]["losses"] += 1;
+                    }
+
+                    for (var k in reqBody) {
+                        if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
+                            continue;
+                        }
+                        combinedDivision[i][k] = reqBody[k];
+                    }
+                    break;
+                }
+            }
+
+            combinedDivision.Sort(new PlayerComparer(sortFactors));
+
+            Dictionary<string, bool> upsertStatusComb;
+            upsertStatusComb["DivisionStandings.Table"] = false;
+
+            Dictionary<string, object> updatedComb;
+            updatedComb["DivisionStandings.Table"] = combinedDivision;
+
+            await _leagueService.EditData("leagueInfo", upsertStatusComb, updatedComb);
 
             return Ok();
         }

@@ -576,6 +576,54 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPut("/Record/{LeagueId}")]
+    public async Task<ActionResult> UpdatePlayerStandings(string LeagueId, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var leagueStandings = league.LeagueStandings.Table;
+
+            for (int i = 0; i < leagueStandings.Count; ++i) {
+                if (leagueStandings[i]["playerId"] == reqBody["PlayerId"]) {
+                    if (reqBody["recordStatus"] == -1) {
+                        leagueStandings[i]["wins"] += 1;
+                    }
+                    else if (reqBody["recordStatus"] == 1) {
+                        leagueStandings[i]["wins"] += -1;
+                    }
+
+                    for (var k in reqBody) {
+                        if (k == "recordStatus") {
+                            continue;
+                        }
+                        leagueStandings[i][k] = reqBody[k];
+                    }
+                    break;
+                }
+            }
+
+            leagueStandings = leagueStandings.OrderBy().ToList();
+
+
+
+            await _leagueService.EditData("leagueInfo", );
+
+
+            await _leagueService.EditData("leagueInfo", );
+
+
+            await _leagueService.EditData("leagueInfo", );
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
 
 
 }

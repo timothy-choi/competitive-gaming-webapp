@@ -489,6 +489,70 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeagueId}/CombinedDivision/Reset")]
+    public async Task<ActionResult> ResetCombinedDivisionStandings(string LeagueId, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var combinedDivision = league.CombinedDivisionStandings;
+
+            var copyCombinedDivision = league.CombinedDivisionStandings;
+
+            Dictionary<string, object> allCombinedDivisions;
+
+
+            if(reqBody["ReassignEverySeason"]) {
+                for (var k in reqBody) {
+                    if (typeof(reqBody[k]) == typeof(string)) {
+                        continue;
+                    }
+                    combinedDivision[k] = new CombinedDivisionTable();
+                    combinedDivision[k].CombinedDivisionTableId = Guid.NewGuid().ToString();
+                    combinedDivision[k].CombinedDivisionName = k;
+                    combinedDivision[k].Divisions = reqBody[k];
+                    combinedDivision[k].Seasons = league.Champions.Count + 1;
+                    combinedDivision[k].Table = new List<Dictionary<string, object>>();
+                }
+            }
+            else {
+                for (var combDiv in combinedDivision) {
+                    var table = combinedDivision[combDiv];
+                    combinedDivision[combDiv] = new CombinedDivisionTable();
+                    combinedDivision[combDiv].CombinedDivisionTableId = Guid.NewGuid().ToString();
+                    combinedDivision[combDiv].CombinedDivisionName = combDiv;
+                    combinedDivision[combDiv].Seasons = league.Champions.Count + 1;
+                    combinedDivision[combDiv].Divisions = copyCombinedDivision[combDiv].Divisions;
+                    combinedDivision[combDiv].Table = table.OrderBy(d => d["PlayerId"]).ToList();
+
+                    for (var k in combinedDivision[combDiv].Table) {
+                        for (var metric in combinedDivision[combDiv].Table[k]) {
+                            if (typeof(combinedDivision[combDiv].Table[k][metric]) == typeof(string)) {
+                                continue;
+                            }
+                            divisions[div].Table[k][metric] = 0;
+                        }
+                    }
+                }
+            }
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["CombinedDivisionStandings"] = false;
+
+            Dictionary<string, object> totalCombDivisions;
+            totalCombDivisions["CombinedDivisionStandings"] = combinedDivision;
+
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, totalCombDivisions);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
 
 
 

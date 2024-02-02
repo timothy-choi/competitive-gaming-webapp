@@ -454,6 +454,43 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeagueId}/{PlayerId}/{DivisionName}/Combined")]
+    public async Task<ActionResult> AddPlayerToCombinedStandings(string LeagueId, string playerId, string DivisionName, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            var division = league.DivisionStandings[DivisionName];
+            bool playerFound = false;
+            for (int i = 0; i < division.Table.Count; ++i) {
+                if (division.Table[i].containsKey(playerId)) {
+                    playerFound = true;
+                    break;
+                }
+            }
+
+            if (league.CombinedDivisionStandings.containsKey(DivisionName) || !playerFound) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["CombinedDivisionStandings." + DivisionName + ".Table"] = true;
+
+            Dictionary<string, object> PlayerEntry;
+            PlayerEntry["CombinedDivisionStandings." + DivisionName + ".Table"] = reqBody;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, PlayerEntry);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+
+
 
 
 }

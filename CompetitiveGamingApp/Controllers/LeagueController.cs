@@ -26,6 +26,9 @@ public class LeagueController : ControllerBase {
     [HttpGet("{LeagueId}")]
     public async Task<ActionResult<League>> GetLeagueById(string LeagueId) {
         var league = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league.Count == 0) {
+            return NotFound();
+        }
         OkObjectResult res = new OkObjectResult(league);
         return Ok(res);
     }

@@ -706,7 +706,31 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeagueId}/ArchieveStandings")]
+    public async Task<ActionResult> ArchieveStandings(string LeagueId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
 
+            Dictionary<string, bool> upsertOpt;
+            upsertOpt["ArchieveLeagueStandings"] = true;
+            upsertOpt["ArchieveDivisionStandings"] = true;
+            upsertOpt["ArchieveCombinedDivisionStandings"] = true;
+            
+            Dictionary<string, object> archievedTables;
+            archievedTables["ArchieveLeagueStandings"] = league.LeagueStandings;
+            archievedTables["ArchieveDivisionStandings"] = league.DivisionStandings;
+            archievedTables["ArchieveCombinedDivisionStandings"] = league.CombinedDivisionStandings;
+
+            await _leagueService.EditData("leagueInfo", upsertOpt, archievedTables);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 
 }
 

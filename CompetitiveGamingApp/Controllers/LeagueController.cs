@@ -553,7 +553,28 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeagueId}/{DivisionId}/Combined/Rest/Add")]
+    public async Task<ActionResult> AddPlayersToNewCombinedStandings(string LeagueId, string CombinedDivisionName, Dictionary<string, object> reqBody) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
 
+            var combinedDivisions = league.CombinedDivisionStandings;
+
+            Dictionary<string, bool> upsertStatus;
+            upsertStatus["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = false;
+
+            Dictionary<string, object> totalCombDivisions;
+            totalCombDivisions["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = reqBody;
+
+            await _leagueService.EditData("leagueId", upsertStatus, totalCombDivisions);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 
 
 

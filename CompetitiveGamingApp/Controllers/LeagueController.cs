@@ -595,7 +595,7 @@ public class LeagueController : ControllerBase {
                         leagueStandings[i]["losses"] += 1;
                     }
                     else if (reqBody["recordStatus"] == 0) {
-                        leagueStandings[i]["losses"] += 1;
+                        leagueStandings[i]["draws"] += 1;
                     }
 
                     for (var k in reqBody) {
@@ -641,7 +641,7 @@ public class LeagueController : ControllerBase {
                         division[i]["losses"] += 1;
                     }
                     else if (reqBody["recordStatus"] == 0) {
-                        division[i]["losses"] += 1;
+                        division[i]["draws"] += 1;
                     }
 
                     for (var k in reqBody) {
@@ -676,7 +676,7 @@ public class LeagueController : ControllerBase {
                         combinedDivision[i]["losses"] += 1;
                     }
                     else if (reqBody["recordStatus"] == 0) {
-                        combinedDivision[i]["losses"] += 1;
+                        combinedDivision[i]["draws"] += 1;
                     }
 
                     for (var k in reqBody) {

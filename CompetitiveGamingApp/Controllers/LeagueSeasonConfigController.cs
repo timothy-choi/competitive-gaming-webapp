@@ -136,4 +136,15 @@ public class LeagueSeasonConfigController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpGet("{ConfigId}/Metrics")]
+    public async Task<ActionResult<List<string>>> GetConfigMetrics(string ConfigId) {
+        var config = _leagueService.GetData("leagueConfig", ConfigId);
+        if (config.Count == 0) {
+            return NotFound();
+        }
+
+        OkObjectResult res = new OkObjectResult(config.otherMetrics);
+        return Ok(res);
+    }
 }

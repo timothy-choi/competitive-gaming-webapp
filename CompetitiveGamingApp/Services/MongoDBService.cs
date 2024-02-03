@@ -79,7 +79,7 @@ public class MongoDBService {
                 intervalBetweenGameHours = document.intervalBetweenGameHours,
                 firstSeasonMatch = document.firstSeasonMatch,
                 tiesAllowed = document.tiesAllowed,
-                playoffStart = document.playoffStart,
+                playoffStartOffset = document.playoffStartOffset,
                 intervalBetweenPlayoffRoundGames = document.intervalBetweenPlayoffRoundGames,
                 intervalBetweenPlayoffRoundGamesHours = document.intervalBetweenPlayoffRoundGamesHours,
                 intervalBetweenRounds = document.intervalBetweenRounds,

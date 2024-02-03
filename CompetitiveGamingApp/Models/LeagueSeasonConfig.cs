@@ -23,7 +23,7 @@ public class LeagueSeasonConfig {
     public bool tiesAllowed {get; set;} //true = game can end in tie
 
 
-    public List<Tuple<string, DateTime>> playoffStart {get; set;} //DateTime of date of first game of the playoffs of a season (only on if selfScheduleGames is false)
+    public int playoffStartOffset {get; set;} //DateTime of date of first game of the playoffs of a season (only on if selfScheduleGames is false)
     public int intervalBetweenPlayoffRoundGames {get; set;} //# of days off between playoff matches if selfScheduleGames is set to false
     public int intervalBetweenPlayoffRoundGamesHours {get; set;} //# of hours off between playoff matchs if selfScheduleGames is set to false. If want < 1 day off between playing next match then set this to non zero val and intervalsBetweenGames to 0. 
     public int intervalBetweenRounds {get; set;} // # of days before next round 

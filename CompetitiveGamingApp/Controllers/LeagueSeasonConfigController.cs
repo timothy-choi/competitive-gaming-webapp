@@ -45,7 +45,7 @@ public class LeagueSeasonConfigController : ControllerBase {
                 intervalBetweenGamesHours = reqBody["intervalBetweenGames"],
                 firstSeasonMatch = reqBody["firstSeasonMatch"],
                 tiesAllowed = reqBody["tiesAllowed"],
-                playoffStart = reqBody["playoffStart"],
+                playoffStartOffset = reqBody["playoffStartOffset"],
                 intervalBetweenPlayoffRoundGames = reqBody["intervalBetweenPlayoffRoundGames"],
                 intervalBetweenPlayoffRoundGamesHours = reqBody["intervalBetweenPlayoffRoundGamesHours"],
                 intervalBetweenRounds = reqBody["intervalBetweenRounds"], 
@@ -84,6 +84,55 @@ public class LeagueSeasonConfigController : ControllerBase {
             return Ok();
         }
         catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{ConfigId}")]
+    public async Task<ActionResult> EditConfigData(string ConfigId, Dictionary<string, object> reqBody) {
+        try {
+            var config = _leagueService.GetData("leagueConfig", ConfigId);
+            if (config.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, object> upsertOpt;
+            Dictionary<string, object> updatedValues;
+
+            for (var setting in reqBody) {
+                upsertOpt[setting] = reqBody[setting].Item1;
+                if (!psertOpt[setting]) {
+                    if (reqBody[setting].Item2) {
+                        int pos = reqBody[setting].Item3;
+                        if (setting == "firstSeasonMatch") {
+                            var matches = config.firstSeasonMatch;
+                            matches.RemoveAt(pos);
+                            updatedValues[setting] = matches;
+                        }
+                        if (setting == "GamesPerRound") {
+                            var games = config.GamesPerRound;
+                            matches.RemoveAt(pos);
+                            updatedValues[setting] = games;
+                        }
+                        if (setting == "otherMetrics") {
+                            var metrics = config.otherMetrics;
+                            matches.RemoveAt(pos);
+                            updatedValues[setting] = metrics;
+                        }
+                    }
+                    else {
+                        updatedValues[setting] = reqBody[setting].Item4;
+                    }
+                }
+                else {
+                    updatedValues[setting] = reqBody[setting].Item4;
+                }
+            }
+
+            await _leagueService.EditData("leagueConfig", upsertOpt, updatedValues);
+
+            return Ok();
+        } catch {
             return BadRequest();
         }
     }

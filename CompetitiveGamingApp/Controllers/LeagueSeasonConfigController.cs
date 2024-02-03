@@ -35,6 +35,7 @@ public class LeagueSeasonConfigController : ControllerBase {
                 commitmentLength = reqBody["commitmentLength"],
                 feePrice = reqBody["feePrice"],
                 NumberOfPlayersLimit = reqBody["NumberOfPlayersLimit"],
+                OwnerAsPlayer = reqBody["OwnerAsPlayer"],
                 NumberOfPlayersMin = reqBody["NumberOfPlayersMin"],
                 JoinDuringSeason = reqBody["JoinDuringSeason"],
                 convertToRegular = reqBody["convertToRegular"],

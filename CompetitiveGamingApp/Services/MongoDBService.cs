@@ -69,6 +69,7 @@ public class MongoDBService {
                 commitmentLength = document.commitmentLength,
                 feePrice = document.feePrice,
                 NumberOfPlayersLimit = document.NumberOfPlayersLimit,
+                OwnerAsPlayer = document.OwnerAsPlayer,
                 NumberOfPlayersMin = document.NumberOfPlayersMin,
                 JoinDuringSeason = document.JoinDuringSeason,
                 convertToRegular = document.convertToRegular,

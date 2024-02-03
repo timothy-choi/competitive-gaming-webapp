@@ -114,6 +114,7 @@ public class MongoDBService {
                 DivisionSelective = document.DivisionSelective,
                 OutsideDivisionSelections = document.OutsideDivisionSelections,
                 AllPartitions = document.AllPartitions,
+                AllCombinedDivisions = document.AllCombinedDivisions,
                 PlayerFullSchedule = document.PlayerFullSchedule,
                 ArchievePlayerFullSchedule = document.ArchievePlayerFullSchedule,
                 ArchieveFinalFullSchedule = document.ArchieveFinalFullSchedule,

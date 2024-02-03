@@ -119,6 +119,7 @@ public class MongoDBService {
                 PlayerExemptLists = document.PlayerExemptLists,
                 repeatAllMatchups = document.repeatAllMatchups,
                 minRepeatMatchups = document.minRepeatMatchups,
+                playAllPlayers = document.playAllPlayers,
                 AllPartitions = document.AllPartitions,
                 AllCombinedDivisions = document.AllCombinedDivisions,
                 PlayerFullSchedule = document.PlayerFullSchedule,

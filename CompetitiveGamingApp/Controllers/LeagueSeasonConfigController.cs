@@ -111,12 +111,12 @@ public class LeagueSeasonConfigController : ControllerBase {
                         }
                         if (setting == "GamesPerRound") {
                             var games = config.GamesPerRound;
-                            matches.RemoveAt(pos);
+                            games.RemoveAt(pos);
                             updatedValues[setting] = games;
                         }
                         if (setting == "otherMetrics") {
                             var metrics = config.otherMetrics;
-                            matches.RemoveAt(pos);
+                            metrics.RemoveAt(pos);
                             updatedValues[setting] = metrics;
                         }
                     }

@@ -27,6 +27,7 @@ public class LeaguePlayerSeasonAssignments {
     public int MaxRepeatMatchups {get; set;} //# of times players can play with repeat players in a different partition in a season at the Max
     public bool DivisionSelective {get; set;} //true = if outside games (out of division) are enabled, then only teams in select divisions will play the said team
     public Dictionary<string, List<string>> OutsideDivisionSelections {get; set;} //List of all division that a teams can play for outside-division games
+    public bool RandomizeDivisionSelections {get; set;}
 
     
     public Dictionary<String, List<String>>? AllPartitions {get; set;}

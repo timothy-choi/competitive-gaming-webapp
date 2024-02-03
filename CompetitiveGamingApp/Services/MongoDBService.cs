@@ -113,6 +113,7 @@ public class MongoDBService {
                 MaxRepeatMatchups = document.MaxRepeatMatchups,
                 DivisionSelective = document.DivisionSelective,
                 OutsideDivisionSelections = document.OutsideDivisionSelections,
+                RandomizeDivisionSelections = document.RandomizeDivisionSelections,
                 AllPartitions = document.AllPartitions,
                 AllCombinedDivisions = document.AllCombinedDivisions,
                 PlayerFullSchedule = document.PlayerFullSchedule,

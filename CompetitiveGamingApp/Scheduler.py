@@ -101,7 +101,7 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
         
             open_slots = GetOpenGames(player_schedule, index2)
 
-            times = random.sample(open_slots, times_to_play)
+            times = random.sample(open_slots, times_to_play-1)
 
             times.insert(0, index2)
 

@@ -45,7 +45,7 @@ def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max
             
       available_spots = [index for index in range(player_schedule) if player_schedule[index] is None]
       available_players = [player for player in players if player != players[index1]]
-      if len(available_spots) > 0 and max_repeat_times == min_repeat_times + 1:
+      if len(available_spots) > 0 and max_repeat_times <= min_repeat_times + 1:
          return None 
       for spot in available_spots:
          if len(available_players) == 0:

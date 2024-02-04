@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from datetime import datetime, timedelta
 import random
+import json
 
 app = Flask(__name__)
 
@@ -143,11 +144,17 @@ def GeneratePlayerSchedule():
 
   player_schedules = {}
 
-  if all_player_data.get("whole_mode"):
-    if all_player_data.get("playAllTeams"):
-        player_schedules = SolvePlayerWholeScheduleAllPlayers()
+  player_schedule_info = json.loads(all_player_data)
+
+  if player_schedule_info["whole_mode"]:
+    if player_schedule_info["playAllTeams"]:
+        player_schedules = SolvePlayerWholeScheduleAllPlayers(player_schedule_info["players"], player_schedule_info["num_games"], player_schedule_info["min_repeat_times"], 
+                                                              player_schedule_info["max_repeat_times"], player_schedule_info["start_dates"], player_schedule_info["interval_between_games"], 
+                                                              player_schedule_info["interval_between_games_hours"])
     else:
-        player_schedules = SolvePlayerScheduleWhole()
+        player_schedules = SolvePlayerScheduleWhole(player_schedule_info["players"], player_schedule_info["num_games"], player_schedule_info["do_not_play"], 
+                                                    player_schedule_info["min_repeat_times"], player_schedule_info["max_repeat_times"], player_schedule_info["start_dates"], 
+                                                    player_schedule_info["interval_between_games"], player_schedule_info["interval_between_games_hours"])
   else:
     player_schedules = SolvePlayerScheduleDivisions()
   

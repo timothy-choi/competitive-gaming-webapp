@@ -32,7 +32,8 @@ def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max
          if min_repeat_times > 1:
             times_played = min_repeat_times
             time_slots = GetOpenGames(player_schedule, index)
-            selected_slots = random.sample(time_slots, times_played)
+            selected_slots = random.sample(time_slots, times_played-1)
+            selected_slots.insert(0, index)
             for spot in selected_slots:
                schedule_table[index1][spot] = other_player
                opponent_spot = FindOpponentPosition(players, other_player)
@@ -41,7 +42,8 @@ def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max
             times_played = 1
             schedule_table[index1][index] = other_player
             opponent_spot = FindOpponentPosition(players, other_player)
-            schedule_table[opponent_spot][spot] = players[index1]
+            schedule_table[opponent_spot][index] = players[index1]
+         index = index + 1
             
       available_spots = [index for index in range(player_schedule) if player_schedule[index] is None]
       available_players = [player for player in players if player != players[index1]]
@@ -55,7 +57,7 @@ def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max
                available_players = [player for player in players if player != players[index1]]
          opponent = random.choice(available_players)
          available_players.remove(opponent)
-         schedule_table[index1][index] = opponent
+         schedule_table[index1][spot] = opponent
          opponent_spot = FindOpponentPosition(players, opponent)
          schedule_table[opponent_spot][spot] = players[index1]
 
@@ -101,18 +103,14 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
 
             times = random.sample(open_slots, times_to_play)
 
-            schedule_table[index1][index2] = selected_player
-
-            player_index = FindOpponentPosition(players, selected_player)
-
-            schedule_table[player_index][index2] = players[index1]
+            times.insert(0, index2)
 
             for time in times:
                schedule_table[index1][time] = selected_player
 
                player_index = FindOpponentPosition(players, selected_player)
 
-               schedule_table[player_index][index2] = players[index1]
+               schedule_table[player_index][time] = players[index1]
          
          else:
         

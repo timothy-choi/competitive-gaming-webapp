@@ -8,7 +8,7 @@ def GetValidPlayers(players, do_not_play, current):
    return [player for player in players if player not in do_not_play[current] and player != current]
 
 def GetOpenGames(player_schedule, current):
-   return [index for index, game in enumerate(player_schedule) if game is None]
+   return [index for index, game in enumerate(player_schedule) if game is None and index > current]
 
 def FindOpponentPosition(players, name):
    for index, player in enumerate(players):
@@ -30,7 +30,7 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
 
          times_to_play = 0
 
-         if min_repeat_times != -1 and max_repeat_times != -1:
+         if min_repeat_times > 0:
             times_to_play = random.randint(min_repeat_times, max_repeat_times)
          else:
             times_to_play = random.randint(1, max_repeat_times)
@@ -40,6 +40,12 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
             open_slots = GetOpenGames(player_schedule, index2)
 
             times = random.sample(open_slots, times_to_play)
+
+            schedule_table[index1][index2] = selected_player
+
+            player_index = FindOpponentPosition(players, selected_player)
+
+            schedule_table[player_index][index2] = players[index1]
 
             for time in times:
                schedule_table[index1][time] = selected_player

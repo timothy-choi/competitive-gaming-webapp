@@ -362,4 +362,18 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpGet("{AssignmentsId}/Divisions")]
+    public async Task<ActionResult<Dictionary<string, List<string>>>> GetCurrentDivisionSelections(string AssignmentsId) {
+        var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        if (assignment.Count == 0) {
+            return NotFound();
+        }
+
+        OkObjectResult res = new OkObjectResult(assignment.AllPartitions);
+
+        return Ok(res);
+    }
+
+    
 }

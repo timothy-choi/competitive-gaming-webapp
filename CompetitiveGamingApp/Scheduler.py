@@ -135,22 +135,37 @@ def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max
 
 
 def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, max_repeat_times, start_dates, interval_between_games, interval_between_games_hours):
+   if num_games < len(players) * min_repeat_times or num_games > len(players) * max_repeat_times:
+      return None
    schedule_table = [[None] * len(num_games) for _ in range(players)]
+   leftover_games = {}
+   excess = False
    for index1, player_schedule in enumerate(schedule_table):
+    other_players = GetValidPlayers(players, do_not_play, players[index1])
     for index2, opponent in enumerate(player_schedule):
          if opponent is not None:
             continue
-         other_players = GetValidPlayers(players, do_not_play, players[index1])
-
-         selected_player = random.choice(other_players)
-
-         times_to_play = 0
-
-         if min_repeat_times > 1:
-            times_to_play = random.randint(min_repeat_times, max_repeat_times)
+         if len(other_players) == 0:
+            excess = True
+            for[player, leftovers] in leftover_games[players[index1]]:
+               if leftovers > 0 and leftovers < sum(1 for elt in player_schedule if elt is None):
+                  selected_player = player
+                  times_to_play = leftovers
+                  leftover_games[players[index1]][player] = 0
          else:
+            selected_player = random.choice(other_players)
+            other_players.remove(selected_player)
+
+         if not excess:
+            times_to_play = 0
+
+         if min_repeat_times > 1 and not excess:
+            times_to_play = random.randint(min_repeat_times, max_repeat_times)
+         elif min_repeat_times < 1 and not excess:
             times_to_play = random.randint(1, max_repeat_times)
-        
+         
+         if not excess:
+            leftover_games[players[index1]].append([selected_player, max_repeat_times - times_to_play])
          if times_to_play > 1:
         
             open_slots = GetOpenGames(player_schedule, index2)

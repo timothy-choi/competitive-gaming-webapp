@@ -240,4 +240,45 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("{AssignmentsId}/Divisions")]
+    public async Task<ActionResult> AddDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            var count = 0;
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["AllPartitions"] = false;
+
+            Dictionary<string, object> updatedValues;
+
+            var partitions = assignment.AllPartitions;
+
+            var seen = new List<string>();
+            for (var division in reqBody) {
+                partitions[division] = reqBody[division]
+                for (var player in reqBody[division]) {
+                    seen.add(player);
+                    count++;
+                }
+            }
+
+            if (seen.Distinct.Count() != count) {
+                return BadRequest();
+            }
+
+            updatedValues["AllPartitions"] = partitions;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 }

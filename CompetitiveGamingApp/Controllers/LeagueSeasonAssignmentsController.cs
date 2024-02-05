@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -133,4 +134,51 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     } 
+
+    [HttpPost("{AssignmentsId}/DivisionSelections")]
+    public async Task<ActionResult> GenerateDivisionSelectionsIndividual(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+            
+            var divisionSelection = assignment.OutsideDivisionSelections;
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["OutsideDivisionSelections"] = false;
+            Dictionary<string, object> updatedValues;
+
+            Dictionary<string, string> player_divisions;
+            for (int x = 0; x < reqBody["players"].Count; ++x) {
+                for (int y = 0; y < reqBody["divisions"].Count; ++i) {
+                    var found = reqBody["division_assignment"][reqBody["divisions"][y]].Find(player => player == reqBody["players"][x]);
+                    if (found != -1) {
+                        player_divisions[reqBody["players"][x]] = reqBody["divisions"][y];
+                        break;
+                    }
+                }
+            }
+
+            for (int i = 0; i < reqBody["players"].Count; ++i) {
+                var random = new Random();
+                var divisions = reqBody["divisions"];
+                while (divisionSelection[reqBody["players"][i]].Count != reqBody["num_of_selections"]) {
+                    var selection = divisions[random.Next(0, divisions.Count-1)];
+                    divisionSelection[reqBody["players"][i]].add(selection);
+                    divisions.removeAll(d => d == selection);
+                    for (int j = 0; j < reqBody["division_assignment"][selection].Count; ++j) {
+                        divisionSelection[reqBody["division_assignment"][selection][j]].add(player_divisions[reqBody["players"][i]]);
+                    }
+                }
+            } 
+
+            updatedValues["OutsideDivisionSelections"] = divisionSelection;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

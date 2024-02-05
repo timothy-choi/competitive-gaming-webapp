@@ -6,6 +6,7 @@ using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -403,4 +404,52 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    private bool verifySchedule(string scheduleContent, List<string> players) {
+
+    }
+
+    private Dictionary<string, List<string>> ParseSchedule(string scheduleContent) {
+        
+    }
+
+    //Endpoint to recieve a file of all schedules and verify it -> add it to file
+    [HttpPost("{AssignmentsId}/UploadSchedule")]
+    public async Task<ActionResult> ProcessSubmittedSchedule(string AssignmentsId, [FromForm] IFormFile schedule, [FromBody] Dictionary<string, object> reqBody) {
+        try {
+            if (schedule == null || schedule.Length == 0) {
+                return BadRequest();
+            }
+
+            Dictionary<string, object> player_schedules;
+
+            using (var streamReader = new StreamReader(schedule.OpenReadStream())) {
+                var fileContent = await streamReader.ReadToEndAsync();
+
+                player_schedules = ParseSchedule(fileContent);
+
+                var verified = verifySchedule(fileContent, reqBody["players"]);
+
+                if (!verified) {
+                    return BadRequest();
+                }
+            }
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    //Endpoint to notify SNS/other MQ with request to generate schedules. 
+
+    //Endpoint to take in generated schedules and format it using the SingleGame Objects for each player's schedule
+
+    //Endpoint to move the collection of player schedules into a bigger collection as an archieve
+
+    //Endpoint to take in a generated schedule (aggregate) and format each possible game and sort them by date
+
+    //Endpoint to move the collection of games into a bigger collection as an archieve
 }

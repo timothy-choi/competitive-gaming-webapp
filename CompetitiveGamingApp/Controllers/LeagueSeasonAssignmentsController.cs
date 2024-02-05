@@ -67,4 +67,29 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest()       
         }
     }
+
+    [HttpPut("{AssignmentsId}")]
+    public async Task<ActionResult> EditSeasonAssignmentsOptions(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, object> updatedValues;
+
+            for (var setting in reqBody) {
+                upsertInfo[setting] = reqBody[setting].Item1;
+                updatedValues[setting] = reqBody[setting].Item2;
+            }
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    } 
 }

@@ -91,5 +91,46 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         catch {
             return BadRequest();
         }
+    }
+
+    [HttpPut("{AssignmentsId}/OutsideDivision")]
+    public async Task<ActionResult> EditOutsideDivisionSelection(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, object> updatedValues;
+
+            upsertInfo[reqBody["indexName"]] = reqBody["upsertStatus"];
+
+            if (reqBody["deleteOption"]) {
+                var index = -1;
+                var selections = assignment.OutsideDivisionSelections;
+                for (int i = 0; i < selections.Count; ++i) {
+                    if (reqBody["selectedIndex"] == i) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index == -1) {
+                    return NotFound();
+                }
+
+                selections.removeAt(index);
+                updatedValues[reqBody["indexName"]] = selections;
+            }
+            else {
+                updatedValues[reqBody["indexName"]] = reqBody["DivisionValues"];
+            }
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
     } 
 }

@@ -202,6 +202,7 @@ def GeneratePlayerSchedule():
 
   player_schedule_info = json.loads(all_player_data)
 
+
   if player_schedule_info["whole_mode"]:
     if player_schedule_info["playAllTeams"]:
         player_schedules = SolvePlayerWholeScheduleAllPlayers(player_schedule_info["players"], player_schedule_info["num_games"], player_schedule_info["min_repeat_times"], 
@@ -212,6 +213,14 @@ def GeneratePlayerSchedule():
                                                     player_schedule_info["min_repeat_times"], player_schedule_info["max_repeat_times"], player_schedule_info["start_dates"], 
                                                     player_schedule_info["interval_between_games"], player_schedule_info["interval_between_games_hours"])
   else:
-    player_schedules = SolvePlayerScheduleDivisions()
+      if player_schedule_info["playAllTeams"]:
+         player_schedules = SolvePlayerWholeScheduleAllPlayers(player_schedule_info["players"], player_schedule_info["num_games"], player_schedule_info["min_repeat_times"], 
+                                                              player_schedule_info["max_repeat_times"], player_schedule_info["start_dates"], player_schedule_info["interval_between_games"], 
+                                                              player_schedule_info["interval_between_games_hours"])
+      else:
+         player_schedules = SolvePlayerScheduleDivisions(player_schedule_info["players"], player_schedule_info["num_games"], player_schedule_info["groups"], player_schedule_info["outside_groups"], 
+                                                       player_schedule_info["player_groups"], player_schedule_info["outside_player_limit"], player_schedule_info["max_repeat_outside_matches"],
+                                                       player_schedule_info["start_dates"], player_schedule_info["interval_between_games"], player_schedule_info["interval_between_games_hours"], 
+                                                       player_schedule_info["exclude_outside_divisions"], player_schedule_info["repeat_matchups"])
   
   return jsonify({"schedules": player_schedules})

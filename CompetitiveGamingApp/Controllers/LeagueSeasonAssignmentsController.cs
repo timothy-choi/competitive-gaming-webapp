@@ -375,5 +375,32 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         return Ok(res);
     }
 
-    
+    [HttpPost("{AssignmentsId}/Combined")]
+    public async Task<ActionResult> AddCombinedDivisionSelections(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["AllCombinedDivisions"] = false;
+
+            Dictionary<string, object> updatedValues;
+
+            var combinedDivisions = assignment.AllCombinedDivisions;
+
+            for (var combDivision in reqBody) {
+                combinedDivisions[combDivision] = reqBody[combDivision];
+            }
+
+            updatedValues["AllCombinedDivisions"] = combinedDivisions;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

@@ -281,4 +281,56 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("{AssignmentsId}/GenerateDivision")]
+    public async Task<ActionResult> GenerateDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["AllPartitions"] = false;
+
+            Dictionary<string, object> updatedValues;
+
+            var partitions = assignment.AllPartitions;
+
+            var players = reqBody["players"];
+
+            var min_num_players_on_group = reqBody["num_num_players_per_group"];
+
+            var random = new Random();
+
+            for (var division in reqBody["divisions"]) {
+                for (int i = 0; i < min_num_players_on_group; ++i) {
+                    var selection = players[random.Next(0, players.Count-1)];
+                    players.removeAll(player => player == selection);
+                    partitions[division].add(selection);
+                }
+            }
+
+            if (players.Count > 0) {
+                random = new Random();
+                var divisions = reqBody["divisions"];
+                while (players.Count > 0) {
+                    var div_selection = divisions[random.Next(0, divisions.Count-1)];
+                    divisions.removeAll(division => division == div_selection);
+                    var player_selection = players[random.Next(0, players.Count-1)];
+                    players.removeAll(player => player == player_selection);
+
+                    partitions[div_selection].add(player_selection);
+                }
+            }
+
+            updatedValues["AllPartitions"] = partitions;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

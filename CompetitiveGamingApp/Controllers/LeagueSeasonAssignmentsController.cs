@@ -181,4 +181,63 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+    [HttpPost("{AssignmentsId}/ExemptLists")]
+    public async Task<ActionResult> AddExemptLists(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo[reqBody["player_list_key"]] = false;
+            Dictionary<string, object> updatedValues;
+
+            updatedValues[reqBody["player_list_key"]] = reqBody["exempt_lists"];
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{AssignmentsId}/ExemptLists")]
+    public async Task<ActionResult> EditExemptList(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+
+            Dictionary<string, object> updatedValues;
+
+            for (var player in reqBody) {
+                for (var update in reqBody[player]) {
+                    upsertInfo[update.Item2] = update.Item1 ? false : true;
+                    if (!update.Item1) {
+                        var exemptList = assignment.ExemptLists[player];
+
+                        exemptList.RemoveAt(update.Item3);
+
+                        updatedValues[update.Item2] = exemptList;
+                    }
+                    else {
+                        updatedValues[update.Item2] = update.Item3;
+                    }
+                }
+            }
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 }

@@ -316,7 +316,6 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 var divisions = reqBody["divisions"];
                 while (players.Count > 0) {
                     var div_selection = divisions[random.Next(0, divisions.Count-1)];
-                    divisions.removeAll(division => division == div_selection);
                     var player_selection = players[random.Next(0, players.Count-1)];
                     players.removeAll(player => player == player_selection);
 

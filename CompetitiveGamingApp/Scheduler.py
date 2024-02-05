@@ -34,6 +34,7 @@ def SolvePlayerScheduleDivisions(players, num_games, groups, outside_groups, pla
                total_times_played = random.randint(1, max_repeat_outside_matches) 
                if open_spots_left < total_times_played:
                   total_times_played = open_spots_left
+               open_spots_left -= total_times_played
                open_slots = GetOpenGames(player_schedule, index2)
                random_open_slots = random.sample(open_slots, total_times_played-1)
                random_open_slots.insert(0, index2)

@@ -148,7 +148,7 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
          if len(other_players) == 0:
             excess = True
             for[player, leftovers] in leftover_games[players[index1]]:
-               if leftovers > 0 and leftovers < sum(1 for elt in player_schedule if elt is None):
+               if leftovers > 0 and leftovers <= sum(1 for elt in player_schedule if elt is None):
                   selected_player = player
                   times_to_play = leftovers
                   leftover_games[players[index1]][player] = 0

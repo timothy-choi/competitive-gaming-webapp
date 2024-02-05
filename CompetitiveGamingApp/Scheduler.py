@@ -16,7 +16,7 @@ def FindOpponentPosition(players, name):
       if name == player:
          return index
 
-def SolvePlayerScheduleDivisions(players, num_games, groups):
+def SolvePlayerScheduleDivisions(players, num_games, outside_groups, player_groups, max_repeat_outside_matches, start_dates, interval_between_games, interval_between_games_hours):
     pass
 
 def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max_repeat_times, start_dates, interval_between_games, interval_between_games_hours):
@@ -40,7 +40,6 @@ def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max
                opponent_spot = FindOpponentPosition(players, other_player)
                schedule_table[opponent_spot][spot] = players[index1]
          else:
-            times_played = 1
             schedule_table[index1][index] = other_player
             opponent_spot = FindOpponentPosition(players, other_player)
             schedule_table[opponent_spot][index] = players[index1]
@@ -101,6 +100,9 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
          if times_to_play > 1:
         
             open_slots = GetOpenGames(player_schedule, index2)
+
+            if times_to_play >= len(open_slots):
+               times_to_play = len(open_slots)
 
             times = random.sample(open_slots, times_to_play-1)
 

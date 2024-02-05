@@ -16,8 +16,62 @@ def FindOpponentPosition(players, name):
       if name == player:
          return index
 
-def SolvePlayerScheduleDivisions(players, num_games, outside_groups, player_groups, max_repeat_outside_matches, start_dates, interval_between_games, interval_between_games_hours):
-    pass
+def SolvePlayerScheduleDivisions(players, num_games, groups, outside_groups, player_groups, outside_player_limit, max_repeat_outside_matches, start_dates, interval_between_games, interval_between_games_hours, exclude_outside_divisions, repeat_matchups):
+    schedule_table = [[None] * len(num_games) for _ in range(players)]
+    if not exclude_outside_divisions:
+       for index1, player_schedule in enumerate(schedule_table):
+            all_outside_players = [player for key, value in groups.items() if key in outside_groups[players[index1]] for person in value]
+            if not repeat_matchups and outside_player_limit > len(all_outside_players):
+               return None
+            open_spots_left = outside_player_limit - sum(1 for elt in player_schedule if elt is not None)
+            index2 = 0
+            while open_spots_left > 0:
+               if player_schedule[index1][index2] is not None:
+                  index2 += 1
+                  continue
+               opponent = random.choice(all_outside_players)
+               all_outside_players.remove(opponent)
+               total_times_played = random.randint(1, max_repeat_outside_matches) 
+               if open_spots_left < total_times_played:
+                  total_times_played = open_spots_left
+               open_slots = GetOpenGames(player_schedule, index2)
+               random_open_slots = random.sample(open_slots, total_times_played-1)
+               random_open_slots.insert(0, index2)
+               for slot in random_open_slots:
+                  schedule_table[index1][slot] = opponent
+                  opponent_spot = FindOpponentPosition(players, opponent)
+                  schedule_table[opponent_spot][slot] = players[index1]
+               index2 += 1
+               
+    
+    for index1, player_schedule in enumerate(schedule_table):
+       for index2, player in enumerate(player_schedule):
+          if player is not None:
+             continue
+          opponent = random.choice(player_groups[players[index1]])
+
+          schedule_table[index1][index2] = opponent
+
+          opponent_pos = FindOpponentPosition(players, opponent)
+
+          schedule_table[opponent_pos][index2] = players[index1]
+
+    total_schedule = {}
+
+    sideOpts = ['H', 'A']
+   
+    for index, player in enumerate(schedule_table):
+      game_date = start_dates[players[index]]
+      total_schedule[players[index]] = []
+      for index, game in enumerate(player):
+         if index > 0:
+           game_date += timedelta(days=interval_between_games, hours=interval_between_games_hours)
+           loc = random.choice(sideOpts)
+           game_pair = [game, game_date, loc]
+           total_schedule[players[index]].insert(game_pair)
+    
+    return total_schedule
+
 
 def SolvePlayerWholeScheduleAllPlayers(players, num_games, min_repeat_times, max_repeat_times, start_dates, interval_between_games, interval_between_games_hours):
    if num_games < len(players) * min_repeat_times or num_games > len(players) * max_repeat_times:

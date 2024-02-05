@@ -22,7 +22,7 @@ public class LeaguePlayerSeasonAssignments {
     //season matchups
     public bool AutomaticScheduling {get; set;} //true = algorithm determines schedule, false = owner manually enters a schedule via json for verification
     public bool ExcludeOutsideGames {get; set;} //true = players can only play games in their partition, false = players can play games with players in other parititons or partitions are not enabled
-    public bool InterDvisionGameLimit {get; set;} //true = limit on # of games played against players outside of player's division
+    public int InterDvisionGameLimit {get; set;} //# of games played against players outside of player's division
     public bool RepeatMatchups {get; set;} //true = players can play other players in different partitions > 1 in the season 
     public int MaxRepeatMatchups {get; set;} //# of times players can play with repeat players in a different partition in a season at the Max
     public bool DivisionSelective {get; set;} //true = if outside games (out of division) are enabled, then only teams in select divisions will play the said team

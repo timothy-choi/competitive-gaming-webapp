@@ -332,4 +332,34 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPut("{AssignmentsId}/EditDivisions")]
+    public async Task<ActionResults> EditDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["AllPartitions"] = reqBody["remove"];
+
+            Dictionary<string, object> updatedValues;
+
+            if (!upsertInfo["AllPartitions"]) {
+                var divisionAssignment = assignment.AllPartitions[reqBody["target_division"]];
+                divisionAssignment.removeAll(player => player == reqBody["selected_player"]);
+                updatedValues["AllPartitions"] = divisionAssignment;
+            }
+            else {
+                updatedValues[reqBody["division_key"]] = reqBody["new_player"];  
+            }
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

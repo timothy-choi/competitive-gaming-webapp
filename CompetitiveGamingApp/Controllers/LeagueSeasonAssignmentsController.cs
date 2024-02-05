@@ -7,6 +7,8 @@ using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -405,39 +407,84 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
-    private bool verifySchedule(string scheduleContent, List<string> players) {
+    private bool verifySchedule(Dictionary<string, List<List<string>>> schedule, List<string> players) {
+        for (var player in schedule) {
+            List<string> schedule_players = schedule[player].Select(p => p.ElementAtOrDefault(0)).Distinct().ToList();
+            var player_ref = players.Except(player).Distinct().ToList();
 
+            if (schedule_players.Interest(player_ref).ToList().Count() != schedule_players.Count()) {
+                return false;
+            }
+        }
+
+        for (var player in schedule) {
+            for (int index = 0; index < schedule[player].Count; ++index) {
+                var opponent = schedule[player][index][0];
+                if (schedule[opponent][index][0] != player) {
+                    return false;
+                }
+            }
+        }
+
+        for (var player in schedule) {
+            for (int index = 0; index < schedule[player].Count - 1; ++index) {
+                int compareDates = schedule[player][index][1].CompareTo(schedule[player][index+1][1]);
+                if (compareDates >= 0) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
-    private Dictionary<string, List<string>> ParseSchedule(string scheduleContent) {
-        
+    private Dictionary<string, List<List<string>>> ParseSchedule(string scheduleContent) {
+        var schedule = new Dictionary<string, List<List<string>>>();
+        List<List<string>> currentSchedule = null;
+
+        using (var streamReader = new StreamReader()) {
+            string line;
+            while ((line = streamReader.ReadLine()) != null) {
+                if (char.IsDigit(line[0])) {
+                    var player_schedule = line.substr(3).Trim();
+                    currentSchedule = new List<List<string>>();
+                    schedule[player_schedule] = currentSchedule;
+                }
+                else if (currentSchedule != null) {
+                    List<string> gameInfo = line.Split(',').ToList();
+                    currentSchedule.add(gameInfo);
+                }
+            }
+        }
+
+        return schedule;
     }
 
     //Endpoint to recieve a file of all schedules and verify it -> add it to file
     [HttpPost("{AssignmentsId}/UploadSchedule")]
-    public async Task<ActionResult> ProcessSubmittedSchedule(string AssignmentsId, [FromForm] IFormFile schedule, [FromBody] Dictionary<string, object> reqBody) {
+    public async Task<ActionResult<Dictionary<string, List<List<string>>>>> ProcessSubmittedSchedule(string AssignmentsId, [FromForm] IFormFile schedule, [FromBody] Dictionary<string, object> reqBody) {
         try {
             if (schedule == null || schedule.Length == 0) {
                 return BadRequest();
             }
 
-            Dictionary<string, object> player_schedules;
+            Dictionary<string, List<List<string>>> player_schedules;
 
             using (var streamReader = new StreamReader(schedule.OpenReadStream())) {
                 var fileContent = await streamReader.ReadToEndAsync();
 
                 player_schedules = ParseSchedule(fileContent);
 
-                var verified = verifySchedule(fileContent, reqBody["players"]);
+                var verified = verifySchedule(player_schedules, reqBody["players"]);
 
                 if (!verified) {
                     return BadRequest();
                 }
             }
 
-            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+            OkObjectResult res = new OkObjectResult(player_schedules);
 
-            return Ok();
+            return Ok(res);
         } catch {
             return BadRequest();
         }

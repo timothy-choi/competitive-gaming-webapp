@@ -23,4 +23,48 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         OkObjectResult res = new OkObjectResult(assignment);
         return Ok(res);
     }
+
+    [HttpPost]
+    public async Task<ActionResult<string>> CreateSeasonAssignments(Dictionary<string, object> reqBody) {
+        try {
+            LeaguePlayerSeasonAssignments currLeague = new LeaguePlayerSeasonAssignments {
+                AssignmentsId = Guid.NewGuid().ToString(),
+                ConfigId = reqBody["ConfigId"],
+                LeagueId = reqBody["LeagueId"]
+                PartitionsEnabled = reqBody["PartitionsEnabled"],
+                ReassignEverySeason = reqBody["ReassignEverySeason"],
+                AutomaticInduction = reqBody["AutomaticInduction"],
+                NumberOfPlayersPerPartition = reqBody["NumberOfPlayersPerPartition"],
+                NumberOfPartitions = reqBody["NumberOfPartitions"],
+                SamePartitionSize = reqBody["SamePartitionSize"],
+                AutomaticScheduling = reqBody["AutomaticScheduling"],
+                ExcludeOutsideGames = reqBody["ExcludeOutsideGames"],
+                InterDivisionGameLimit = reqBody["InterDivisionGameLimit"],
+                RepeatMatchups = reqBody["RepeatMatchups"],
+                MaxRepeatMatchups = reqBody["MaxRepeatMatchups"],
+                DivisionSelective = reqBody["DivisionSelective"],
+                OutsideDivisionSelections = new Dictionary<string, List<string>>(),
+                RandomizeDivisionSelections = reqBody["RandomizeDivisionSelections"],
+                PlayerSelection = reqBody["PlayerSelection"],
+                PlayerExemptLists = new Dictionary<string, List<string>>(),
+                repeatAllMatchups = reqBody["repeatAllMatchups"],
+                minRepeatMatchups = reqBody["minRepeatMatchups"],
+                maxRepeatMatchups = reqBody["maxRepeatMatchups"],
+                playAllPlayers = reqBody["playAllPlayers"],
+                AllPartitions = new Dictionary<String, List<String>>(),
+                AllCombinedDivisions = new Dictionary<String, List<String>>(),
+                PlayerFullSchedule = new List<Tuple<string, List<SingleGame>>>(),
+                ArchievePlayerFullSchedule = new List<List<Tuple<string, List<SingleGame>>>>(),
+                FinalFullSchedule = new List<SingleGame>(),
+                ArchieveFinalFullSchedule = new List<List<SingleGame>>()
+            };
+
+            await _leagueService.PostData("leagueSeasonAssignments", currLeague);
+
+            OkObjectResult res = new OkObjectResult(currLeague.AssignmentsId);
+            return Ok(res);
+        } catch {
+            return BadRequest()       
+        }
+    }
 }

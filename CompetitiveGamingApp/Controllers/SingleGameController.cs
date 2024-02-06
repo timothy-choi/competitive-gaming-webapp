@@ -70,6 +70,16 @@ public class SingleGameController : ControllerBase {
         }
     }
 
+    [HttpPost("/Season")]
+    public async Task<ActionResult> addSeasonGame([FromBody] Dictionary<string, other> gameInfo) {
+        try {
+            await _singleGameService.CreateGame(gameInfo["SeasonGame"]);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("/finalScore")]
     public async Task<ActionResult> addFinalScore([FromBody] Dictionary<string, string> finalScoreInfo) {
         try {

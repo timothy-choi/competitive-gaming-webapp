@@ -38,8 +38,8 @@ public class LeaguePlayerSeasonAssignments {
     
     public Dictionary<String, List<String>>? AllPartitions {get; set;}
     public Dictionary<String, List<String>>? AllCombinedDivisions {get; set;}
-    public List<Tuple<string, List<SingleGame>>>? PlayerFullSchedule {get; set;}
-    public List<List<Tuple<string, List<SingleGame>>>>? ArchievePlayerFullSchedule {get; set;}
+    public List<Tuple<string, List<object>>>? PlayerFullSchedule {get; set;}
+    public List<List<Tuple<string, List<object>>>>? ArchievePlayerFullSchedule {get; set;}
     public List<SingleGame>? FinalFullSchedule {get; set;}
     public List<List<SingleGame>>? ArchieveFinalFullSchedule {get; set;}
     

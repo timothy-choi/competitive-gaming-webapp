@@ -59,8 +59,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 playAllPlayers = reqBody["playAllPlayers"],
                 AllPartitions = new Dictionary<String, List<String>>(),
                 AllCombinedDivisions = new Dictionary<String, List<String>>(),
-                PlayerFullSchedule = new List<Tuple<string, List<SingleGame>>>(),
-                ArchievePlayerFullSchedule = new List<List<Tuple<string, List<SingleGame>>>>(),
+                PlayerFullSchedule = new List<Tuple<string, List<object>>>(),
+                ArchievePlayerFullSchedule = new List<List<Tuple<string, List<object>>>>(),
                 FinalFullSchedule = new List<SingleGame>(),
                 ArchieveFinalFullSchedule = new List<List<SingleGame>>()
             };

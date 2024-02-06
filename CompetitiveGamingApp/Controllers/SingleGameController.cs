@@ -71,9 +71,9 @@ public class SingleGameController : ControllerBase {
     }
 
     [HttpPost("/Season")]
-    public async Task<ActionResult> addSeasonGame([FromBody] Dictionary<string, other> gameInfo) {
+    public async Task<ActionResult> addSeasonGame([FromBody] Dictionary<string, object> gameInfo) {
         try {
-            await _singleGameService.CreateGame(gameInfo["SeasonGame"]);
+            await _singleGameService.CreateGame((SingleGame) gameInfo["SeasonGame"]);
             return Ok();
         } catch {
             return BadRequest();
@@ -281,9 +281,9 @@ public class SingleGameController : ControllerBase {
 
             recordingInfo["key"] = selectedVideo["title"] + ".mov";
             recordingInfo["filePath"] = Path.GetFullPath(selectedVideo["title"] + ".mov"); 
-            OkObjectResult res = new OkObjectResult(recordingInfo);
+            OkObjectResult res2 = new OkObjectResult(recordingInfo);
 
-            return Ok(res);
+            return Ok(res2);
         }
         catch {
             return BadRequest();

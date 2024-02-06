@@ -714,4 +714,52 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpGet("{AssignmentsId}/{playerName}/PlayerSchedule")]
+    public async Task<ActionResult<List<SingleGame>>> GetPlayerSchedule(string AssignmentsId, string playerName) {
+        var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        if (assignment.Count == 0) {
+            return NotFound();
+        }
+
+        var playerMatches = new List<SingleGame>();
+
+        var playerSchedules = assignment.PlayerFullSchedule;
+        for (var playerSchedule in playerSchedules) {
+            if (playerSchedule.Item1 == playerName) {
+
+                for (var game in playerSchedule.Item2) {
+                    Type currType = typeof(game);
+                    if (!currType.IsClass  && !typeToCheck.IsValueType) {
+                        playerMatches.add(playerSchedules[game[0]].Item2[game[1]]);
+                    }
+                    else {
+                        playerMatches.add(game);
+                    }
+                }
+
+                Dictionary<string, object> resBody;
+                resBody["playerName"] = playerName;
+                resBody["schedule"] = playerMatches;
+
+                OkObjectResult res = new OkObjectResult(resBody);
+
+                return Ok(res);
+            }
+        }
+
+        return NotFound();
+    }
+
+
+    [HttpGet("{AssignmentsId}/FinalSchedule")]
+    public async Task<ActionResult<List<SingleGame>>> GetFinalSchedule(string AssignmentsId) {
+        var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        if (assignment.Count == 0) {
+            return NotFound();
+        }
+
+        OkObjectResult res = new OkObjectResult(assignment.FinalFullSchedule);
+        return Ok(res);
+    }
 }

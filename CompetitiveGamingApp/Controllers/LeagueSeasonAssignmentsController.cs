@@ -515,7 +515,10 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             }
 
-            OkObjectResult res = new OkObjectResult(final_player_schedule);
+            Dictionary<string, object> resBody = new Dictionary<string, object>();
+            resBody["PlayerFullSchedule"] = final_player_schedule;
+
+            OkObjectResult res = new OkObjectResult(resBody);
 
             return Ok(res);
         } catch {
@@ -541,9 +544,24 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             var playerSchedules = assignment.PlayerFullSchedule;
 
-            for (var schedule in reqBody) {
-                List<SingleGame> playerGames = new List<SingleGame>();
-                for (var gameInfo in reqBody[schedule]) {
+            var schedules = reqBody["PlayerFullSchedule"];
+
+            var size = schedules[0].Item2.Count;
+
+            for (var schedule in schedules) {
+                List<List<object>> temp = new List<List<object>>(size);
+                playerSchedules.add(temp);
+            }
+
+            index1 = 0;
+
+            for (var schedule in schedules) {
+                index2 = 0;
+                for (var gameInfo in schedule.Item2) {
+                    Type currType = typeof(gameInfo);
+                    if (!currType.IsClass  && !typeToCheck.IsValueType) {
+                        continue;
+                    }
                     SingleGame currGame = new SingleGame {
                         SingleGameId = Guid.NewGuid().ToString(),
                         hostPlayer = gameInfo[2] == 'H' ? schedule : gameInfo[0],
@@ -556,7 +574,15 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         twitchBroadcasterId = "",
                         otherGameInfo = new Dictionary<String, String>()
                     };
-                    playerGames.add(currGame);
+                    found_index = 0;
+                    for (var player in schedules) {
+                        if (player == schedule) {
+                            break;
+                        }
+                        found_index++;
+                    }
+                    playerSchedules[index1].Item2[index2] = currGame;
+                    playerSchedules[found_index].Item2[index2] = [index1, index2];
 
                     using (HttpClient client = new HttpClient()) {
                         
@@ -570,7 +596,6 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         }
                     }
                 }
-                playerSchedules.add(Tuple.Create(schedule, playerGames));
             }
 
             updatedValues["PlayerFullSchedule"] = playerSchedules;

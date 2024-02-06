@@ -435,7 +435,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 if (schedule[opponent][index][0] != player) {
                     return false;
                 }
-                if (schedule[opponent][index][2] == 'H' && schedule[opponent][index][2] == 'H' || schedule[opponent][index][2] == 'A' && schedule[opponent][index][2] == 'A') {
+                if (schedule[opponent][index][2] == 'H' && schedule[player][index][2] == 'H' || schedule[opponent][index][2] == 'A' && schedule[player][index][2] == 'A') {
                     return false;
                 }
             }

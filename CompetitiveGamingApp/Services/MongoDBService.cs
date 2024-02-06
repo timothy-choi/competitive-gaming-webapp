@@ -12,35 +12,42 @@ public class MongoDBService {
         client = new MongoClient(configuration.GetConnectionString("MongoDB_URI"));
     }
 
-    public async List<object> GetAllData(string db) {
-        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        var filter = Builders<Restaurant>.Filter.Empty;
-        var AllData = await _restaurantsCollection.Find(filter).ToListAsync();
-        return AllData;
-    }
-    public async object GetData(String db, String entityId) {
+    public async Task<List<object>> GetAllData(string db) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         if (db == "leagueInfo") {
-            var filterById = Builders<LeagueInfo>.Filter.Eq(league => league.LeagueId, entityId);
-            var res = await db_collection.Find(filterById).FirstOrDefault();
-            return res;
+            var filter = Builders<League>.Filter.Empty;
+            return await db_collection.Find(filter).ToListAsync();
+        }
+        else if (db == "leagueConfig") {
+            var filter = Builders<LeagueSeasonConfig>.Filter.Empty;
+            return await db_collection.Find(filter).ToListAsync();
+        }
+        else if (db == "leagueSeasonAssignments") {
+            var filter = Builders<LeaguePlayerSeasonAssignments>.Filter.Empty;
+            return await db_collection.Find(filter).ToListAsync();
+        }
+        var filter = Builders<LeaguePlayoffs>.Filter.Empty;
+        return await db_collection.Find(filter).ToListAsync();
+    }
+    public async Task<object> GetData(String db, String entityId) {
+        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
+        if (db == "leagueInfo") {
+            var filterById = Builders<League>.Filter.Eq(league => league.LeagueId, entityId);
+            return await db_collection.Find(filterById).FirstOrDefault();
         }
         if (db == "leagueConfig") {
-            var filterById = Builders<LeagueConfig>.Filter.Eq(league => league.ConfigId, entityId);
-            var res = await db_collection.Find(filterById).FirstOrDefault();
-            return res;
+            var filterById = Builders<LeagueSeasonConfig>.Filter.Eq(league => league.ConfigId, entityId);
+            return await db_collection.Find(filterById).FirstOrDefault();
         }
         if (db == "leagueSeasonAssignments") {
-            var filterById = Builders<LeagueSeasonConfig>.Filter.Eq(league => league.AssignmentsId, entityId);
-            var res = await db_collection.Find(filterById).FirstOrDefault();
-            return res;
+            var filterById = Builders<LeaguePlayerSeasonAssignments>.Filter.Eq(league => league.AssignmentsId, entityId);
+            return await db_collection.Find(filterById).FirstOrDefault();
         }
-        var filterById = Builders<LeaguePlayoffConfig>.Filter.Eq(league => league.LeaguePlayoffId, entityId);
-        var res = await db_collection.Find(filterById).FirstOrDefault();
-        return res;
+        var filterById = Builders<LeaguePlayoffs>.Filter.Eq(league => league.LeaguePlayoffId, entityId);
+        return await db_collection.Find(filterById).FirstOrDefault();
     }
 
-    public async void PostData(String db, object document) {
+    public async Task PostData(String db, object document) {
         object doc;
         if (db == "leagueInfo") {
             doc = new League {
@@ -53,7 +60,7 @@ public class MongoDBService {
                 LeagueConfig = document.LeagueConfig,
                 SeasonAssignments = document.SeasonAssignments,
                 LeagueStandings = document.LeagueStandings,
-                ArchieveLeagueStandings = document.ArchieveLeagueStandings,
+                AchieveLeagueStandings = document.ArchieveLeagueStandings,
                 ArchieveDivisionStandings = document.ArchieveDivisionStandings,
                 ArchieveCombinedDivisionStandings = document.ArchieveCombinedDivisionStandings
                 DivisionStandings = document.DivisionStandings,
@@ -77,7 +84,7 @@ public class MongoDBService {
                 NumberOfGames = document.NumberOfGames,
                 selfScheduleGames = document.selfScheduleGames,
                 intervalBetweenGames = document.intervalBetweenGames,
-                intervalBetweenGameHours = document.intervalBetweenGameHours,
+                intervalBetweenGamesHours = document.intervalBetweenGameHours,
                 firstSeasonMatch = document.firstSeasonMatch,
                 tiesAllowed = document.tiesAllowed,
                 playoffStartOffset = document.playoffStartOffset,
@@ -109,7 +116,7 @@ public class MongoDBService {
                 SamePartitionSize = document.SamePartitionSize,
                 AutomaticScheduling = document.AutomaticScheduling,
                 ExcludeOutsideGames = document.ExcludeOutsideGames,
-                InterDivisionGameLimit = document.InterDivisionGameLimit,
+                InterDvisionGameLimit = document.InterDivisionGameLimit,
                 RepeatMatchups = document.RepeatMatchups,
                 MaxRepeatMatchups = document.MaxRepeatMatchups,
                 DivisionSelective = document.DivisionSelective,
@@ -143,7 +150,7 @@ public class MongoDBService {
                 CombinedDivisionGroups = document.CombinedDivisionGroups,
                 CombinedDivisionPlayoffMatchups = document.CombinedDivisionPlayoffMatchups,
                 ArchieveCombinedDivisionPlayoffMatchups = document.ArchieveCombinedDivisionPlayoffMatchups,
-                DivisonBasedPlayoffPairings = document.DivisionBasedPlayoffPairings,
+                DivisionBasedPlayoffPairings = document.DivisionBasedPlayoffPairings,
                 DivisionBasedPlayoffMatchups = document.DivisionBasedPlayoffMatchups,
                 ArchieveDivisionBasedPlayoffMatchups = document.ArchieveDivisionBasedPlayoffMatchups,
                 UserDefinedPlayoffMatchups = document.UserDefinedPlayoffMatchups,
@@ -169,7 +176,7 @@ public class MongoDBService {
         }
     }
 
-    public async void EditData(String db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
+    public async Task EditData(String db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         var filter = Builder<BsonDocument>.Filter.Eq(newValues["IdName"], newValues["id"]);
         object update = Builders<BsonDocument>.Update;
@@ -183,7 +190,7 @@ public class MongoDBService {
             throw new Exception("Update League Failed!");
         }
     }
-    public async void DeleteData(String db, string docId) {
+    public async Task DeleteData(String db, string docId) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         string IdName = "";
         if (db == "leagueInfo") {

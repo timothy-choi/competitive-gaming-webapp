@@ -351,10 +351,18 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             Dictionary<string, object> updatedValues;
 
+            Dictionary<string, bool> resBody;
+
             if (!upsertInfo["AllPartitions"]) {
                 var divisionAssignment = assignment.AllPartitions[reqBody["target_division"]];
                 divisionAssignment.removeAll(player => player == reqBody["selected_player"]);
                 updatedValues["AllPartitions"] = divisionAssignment;
+                if (divisionAssignment.Count < reqBody["min_num_of_players_in_division"]) {
+                    resBody["change"] = true;
+                }
+                else {
+                    resBody["change"] = false;
+                }
             }
             else {
                 updatedValues[reqBody["division_key"]] = reqBody["new_player"];  
@@ -362,7 +370,9 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
 
-            return Ok();
+            OkObjectResult res = new OkObjectResult(resBody);
+
+            return Ok(res);
         } catch {
             return BadRequest();
         }

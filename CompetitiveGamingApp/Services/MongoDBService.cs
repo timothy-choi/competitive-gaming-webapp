@@ -136,6 +136,7 @@ public class MongoDBService {
                 RandomRoundMode = document.RandomRoundMode,
                 WholeMode = document.WholeMode,
                 DefaultMode = document.DefaultMode,
+                CombinedDivisionMode = document.CombinedDivisionMode,
                 WholeRoundOrdering = document.WholeRoundOrdering,
                 WholePlayoffPairings = document.WholePlayoffPairings,
                 ArchieveWholePlayoffPairings = document.ArchieveWholePlayoffPairings,

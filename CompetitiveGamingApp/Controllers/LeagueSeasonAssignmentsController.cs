@@ -595,7 +595,9 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                             return BadRequest();
                         }
                     }
+                    index2++;
                 }
+                index1++;
             }
 
             updatedValues["PlayerFullSchedule"] = playerSchedules;

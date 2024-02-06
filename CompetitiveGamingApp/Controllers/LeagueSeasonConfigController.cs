@@ -101,36 +101,36 @@ public class LeagueSeasonConfigController : ControllerBase {
             Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
             foreach (var setting in reqBody) {
-            if (setting.Value is Tuple<bool, bool, int, object> tupleValue) {
-                upsertOpt[setting.Key] = tupleValue.Item1;
-                if (!tupleValue.Item1) {
-                    if (tupleValue.Item2) {
-                        int pos = tupleValue.Item3;
-                        if (setting.Key == "firstSeasonMatch") {
-                            var matches = config.firstSeasonMatch;
-                            matches.RemoveAt(pos);
-                            updatedValues[setting.Key] = matches;
+                if (setting.Value is Tuple<bool, bool, int, object> tupleValue) {
+                    upsertOpt[setting.Key] = tupleValue.Item1;
+                    if (!tupleValue.Item1) {
+                        if (tupleValue.Item2) {
+                            int pos = tupleValue.Item3;
+                            if (setting.Key == "firstSeasonMatch") {
+                                var matches = config.firstSeasonMatch;
+                                matches.RemoveAt(pos);
+                                updatedValues[setting.Key] = matches;
+                            }
+                            if (setting.Key == "GamesPerRound") {
+                                var games = config.GamesPerRound;
+                                games.RemoveAt(pos);
+                                updatedValues[setting.Key] = games;
+                            }
+                            if (setting.Key == "otherMetrics") {
+                                var metrics = config.otherMetrics;
+                                metrics.RemoveAt(pos);
+                                updatedValues[setting.Key] = metrics;
+                            }
                         }
-                        if (setting.Key == "GamesPerRound") {
-                            var games = config.GamesPerRound;
-                            games.RemoveAt(pos);
-                            updatedValues[setting.Key] = games;
-                        }
-                        if (setting.Key == "otherMetrics") {
-                            var metrics = config.otherMetrics;
-                            metrics.RemoveAt(pos);
-                            updatedValues[setting.Key] = metrics;
+                        else {
+                            updatedValues[setting.Key] = tupleValue.Item4;
                         }
                     }
                     else {
                         updatedValues[setting.Key] = tupleValue.Item4;
                     }
                 }
-                else {
-                    updatedValues[setting.Key] = tupleValue.Item4;
-                }
             }
-        }
 
 
             await _leagueService.EditData("leagueConfig", upsertOpt, updatedValues);

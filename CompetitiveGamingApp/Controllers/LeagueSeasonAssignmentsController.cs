@@ -654,10 +654,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             upsertInfo["FinalFullSchedule"] = true;
 
             for (var player in playerSchedules) {
-                allGames.AddRange(player.Item2);
+                for (var game in player.Item2) {
+                    Type currType = typeof(game);
+                    if (!currType.IsClass  && !typeToCheck.IsValueType) {
+                        continue;
+                    }
+                    allGames.add(game);
+                }
             }
 
-            allGames = allGames.OrderBy(game => game.timeplayed).ToList();
+            allGames = allGames.OrderBy(game => game.timePlayed).ToList();
 
 
             Dictionary<string, object> updatedValues;

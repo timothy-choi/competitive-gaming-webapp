@@ -18,7 +18,7 @@ public class LeagueSeasonConfigController : ControllerBase {
     [HttpGet("{ConfigId}")]
     public async Task<ActionResult<LeagueSeasonConfig>> GetLeagueSeasonConfig(string ConfigId) {
         var config = _leagueService.GetData("leagueConfig", ConfigId);
-        if (config.Count == 0) {
+        if (config == null) {
             return NotFound();
         }
 
@@ -31,35 +31,35 @@ public class LeagueSeasonConfigController : ControllerBase {
         try {
             LeagueSeasonConfig createConfig = new LeagueSeasonConfig {
                 ConfigId = Guid.NewGuid().ToString(),
-                LeagueName = reqBody["LeagueName"],
-                commitmentLength = reqBody["commitmentLength"],
-                feePrice = reqBody["feePrice"],
-                NumberOfPlayersLimit = reqBody["NumberOfPlayersLimit"],
-                OwnerAsPlayer = reqBody["OwnerAsPlayer"],
-                NumberOfPlayersMin = reqBody["NumberOfPlayersMin"],
-                JoinDuringSeason = reqBody["JoinDuringSeason"],
-                convertToRegular = reqBody["convertToRegular"],
-                seasons = reqBody["seasons"],
-                NumberOfGames = reqBody["NumberOfGames"],
-                selfScheduleGames = reqBody["selfScheduleGames"],
-                intervalBetweenGames = reqBody["intervalBetweenGames"],
-                intervalBetweenGamesHours = reqBody["intervalBetweenGames"],
-                firstSeasonMatch = reqBody["firstSeasonMatch"],
-                tiesAllowed = reqBody["tiesAllowed"],
-                playoffStartOffset = reqBody["playoffStartOffset"],
-                intervalBetweenPlayoffRoundGames = reqBody["intervalBetweenPlayoffRoundGames"],
-                intervalBetweenPlayoffRoundGamesHours = reqBody["intervalBetweenPlayoffRoundGamesHours"],
-                intervalBetweenRounds = reqBody["intervalBetweenRounds"], 
-                intervalBetweenRoundsHours = reqBody["intervalBetweenRoundsHours"],
-                playoffContention = reqBody["playoffContention"],
-                playoffEligibleLimit = reqBody["playoffEligibleLimit"],
-                PlayoffSizeLimit = reqBody["playoffSizeLimit"],
-                PlayoffSeries = reqBody["PlayoffSeries"],
-                SeriesLengthMax = reqBody["SeriesLengthMax"],
-                sameSeriesLength = reqBody["sameSeriesLength"],
-                GamesPerRound = reqBody["GamesPerRound"],
-                BreakTiesViaGame = reqBody["BreakTiesViaGame"],
-                otherMetrics = reqBody["otherMetrics"]
+                LeagueName = reqBody["LeagueName"] as String,
+                commitmentLength = Convert.ToInt32(reqBody["commitmentLength"]),
+                feePrice = Convert.ToInt32(reqBody["feePrice"]),
+                NumberOfPlayersLimit = Convert.ToInt32(reqBody["NumberOfPlayersLimit"]),
+                OwnerAsPlayer = Convert.ToBoolean(reqBody["OwnerAsPlayer"]),
+                NumberOfPlayersMin = Convert.ToInt32(reqBody["NumberOfPlayersMin"]),
+                JoinDuringSeason = Convert.ToBoolean(reqBody["JoinDuringSeason"]),
+                convertToRegular = Convert.ToBoolean(reqBody["convertToRegular"]),
+                seasons = Convert.ToBoolean(reqBody["seasons"]),
+                NumberOfGames = Convert.ToInt32(reqBody["NumberOfGames"]),
+                selfScheduleGames = Convert.ToBoolean(reqBody["selfScheduleGames"]),
+                intervalBetweenGames = Convert.ToInt32(reqBody["intervalBetweenGames"]),
+                intervalBetweenGamesHours = Convert.ToInt32(reqBody["intervalBetweenGames"]),
+                firstSeasonMatch = reqBody["firstSeasonMatch"] as List<Tuple<string, DateTime>>,
+                tiesAllowed = Convert.ToBoolean(reqBody["tiesAllowed"]),
+                playoffStartOffset = Convert.ToInt32(reqBody["playoffStartOffset"]),
+                intervalBetweenPlayoffRoundGames = Convert.ToInt32(reqBody["intervalBetweenPlayoffRoundGames"]),
+                intervalBetweenPlayoffRoundGamesHours = Convert.ToInt32(reqBody["intervalBetweenPlayoffRoundGamesHours"]),
+                intervalBetweenRounds = Convert.ToInt32(reqBody["intervalBetweenRounds"]), 
+                intervalBetweenRoundsHours = Convert.ToInt32(reqBody["intervalBetweenRoundsHours"]),
+                playoffContention = Convert.ToBoolean(reqBody["playoffContention"]),
+                playoffEligibleLimit = Convert.ToBoolean(reqBody["playoffEligibleLimit"]),
+                PlayoffSizeLimit = Convert.ToInt32(reqBody["playoffSizeLimit"]),
+                PlayoffSeries = Convert.ToBoolean(reqBody["PlayoffSeries"]),
+                SeriesLengthMax = Convert.ToInt32(reqBody["SeriesLengthMax"]),
+                sameSeriesLength = Convert.ToBoolean(reqBody["sameSeriesLength"]),
+                GamesPerRound = reqBody["GamesPerRound"] as List<int>, 
+                BreakTiesViaGame = Convert.ToBoolean(reqBody["BreakTiesViaGame"]),
+                otherMetrics = reqBody["otherMetrics"] as List<string>
             };
 
             await _leagueService.PostData("leagueConfig", createConfig);
@@ -76,7 +76,7 @@ public class LeagueSeasonConfigController : ControllerBase {
     public async Task<ActionResult> DeleteLeagueSeasonConfig(string ConfigId) {
         try {
             var config = _leagueService.GetData("leagueConfig", ConfigId);
-            if (config.Count == 0) {
+            if (config == null) {
                 return NotFound();
             }
 
@@ -92,43 +92,46 @@ public class LeagueSeasonConfigController : ControllerBase {
     [HttpPut("{ConfigId}")]
     public async Task<ActionResult> EditConfigData(string ConfigId, Dictionary<string, object> reqBody) {
         try {
-            var config = _leagueService.GetData("leagueConfig", ConfigId);
-            if (config.Count == 0) {
+            var config = (LeagueSeasonConfig) await _leagueService.GetData("leagueConfig", ConfigId);
+            if (config == null) {
                 return NotFound();
             }
 
-            Dictionary<string, object> upsertOpt;
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            for (var setting in reqBody) {
-                upsertOpt[setting] = reqBody[setting].Item1;
-                if (!psertOpt[setting]) {
-                    if (reqBody[setting].Item2) {
-                        int pos = reqBody[setting].Item3;
-                        if (setting == "firstSeasonMatch") {
+            foreach (var setting in reqBody) {
+            if (setting.Value is Tuple<bool, bool, int, object> tupleValue) {
+                upsertOpt[setting.Key] = tupleValue.Item1;
+                if (!tupleValue.Item1) {
+                    if (tupleValue.Item2) {
+                        int pos = tupleValue.Item3;
+                        if (setting.Key == "firstSeasonMatch") {
                             var matches = config.firstSeasonMatch;
                             matches.RemoveAt(pos);
-                            updatedValues[setting] = matches;
+                            updatedValues[setting.Key] = matches;
                         }
-                        if (setting == "GamesPerRound") {
+                        if (setting.Key == "GamesPerRound") {
                             var games = config.GamesPerRound;
                             games.RemoveAt(pos);
-                            updatedValues[setting] = games;
+                            updatedValues[setting.Key] = games;
                         }
-                        if (setting == "otherMetrics") {
+                        if (setting.Key == "otherMetrics") {
                             var metrics = config.otherMetrics;
                             metrics.RemoveAt(pos);
-                            updatedValues[setting] = metrics;
+                            updatedValues[setting.Key] = metrics;
                         }
                     }
                     else {
-                        updatedValues[setting] = reqBody[setting].Item4;
+                        updatedValues[setting.Key] = tupleValue.Item4;
                     }
                 }
                 else {
-                    updatedValues[setting] = reqBody[setting].Item4;
+                    updatedValues[setting.Key] = tupleValue.Item4;
                 }
             }
+        }
+
 
             await _leagueService.EditData("leagueConfig", upsertOpt, updatedValues);
 
@@ -140,8 +143,8 @@ public class LeagueSeasonConfigController : ControllerBase {
 
     [HttpGet("{ConfigId}/Metrics")]
     public async Task<ActionResult<List<string>>> GetConfigMetrics(string ConfigId) {
-        var config = _leagueService.GetData("leagueConfig", ConfigId);
-        if (config.Count == 0) {
+        var config = (LeagueSeasonConfig) await _leagueService.GetData("leagueConfig", ConfigId);
+        if (config == null) {
             return NotFound();
         }
 

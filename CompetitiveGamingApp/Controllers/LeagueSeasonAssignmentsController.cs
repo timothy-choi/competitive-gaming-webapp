@@ -423,6 +423,9 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 if (schedule[opponent][index][0] != player) {
                     return false;
                 }
+                if (schedule[opponent][index][2] == 'H' && schedule[opponent][index][2] == 'H' || schedule[opponent][index][2] == 'A' && schedule[opponent][index][2] == 'A') {
+                    return false;
+                }
             }
         }
 
@@ -493,6 +496,51 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     //Endpoint to notify SNS/other MQ with request to generate schedules. 
 
     //Endpoint to take in generated schedules and format it using the SingleGame Objects for each player's schedule
+    {HttpPut("{AssignmentsId}")}
+    public async Task<ActionResult> ProcessPlayerSchedules(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["PlayerFullSchedule"] = false;
+
+            Dictionary<string, object> updatedValues;
+
+            var playerSchedules = assignment.PlayerFullSchedule;
+
+            for (var schedule in reqBody) {
+                List<SingleGame> playerGames = new List<SingleGame>();
+                for (var gameInfo in reqBody[schedule]) {
+                    SingleGame currGame = new SingleGame {
+                        SingleGameId = Guid.NewGuid().ToString(),
+                        hostPlayer = gameInfo[2] == 'H' ? schedule : gameInfo[0],
+                        guestPlayer = gameInfo[2] == 'A' ? schedule : gameInfo[0],
+                        finalScore = new Tuple<int, int>(),
+                        inGameScores = new List<Tuple<String, Tuple<int, int>>>(),
+                        timePlayed = gameInfo[1],
+                        videoObjName = "",
+                        gameEditor = "",
+                        twitchBroadcasterId = "",
+                        otherGameInfo = new Dictionary<String, String>()
+                    };
+                    playerGames.add(currGame);
+                }
+                playerSchedules.add(Tuple.Create(schedule, playerGames));
+            }
+
+            updatedValues["PlayerFullSchedule"] = playerSchedules;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 
     //Endpoint to move the collection of player schedules into a bigger collection as an archieve
 

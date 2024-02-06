@@ -182,23 +182,27 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
             times.insert(0, index2)
 
             for time in times:
-               schedule_table[index1][time] = selected_player
+               sideOpts = ['H', 'A']
+               loc = random.choices(sideOpts)
+               sideOpts.remove(loc)
+               schedule_table[index1][time] = [selected_player, loc]
 
                player_index = FindOpponentPosition(players, selected_player)
 
-               schedule_table[player_index][time] = players[index1]
+               schedule_table[player_index][time] = [players[index1], sideOpts[0]]
          
          else:
+            sideOpts = ['H', 'A']
+            loc = random.choices(sideOpts)
+            sideOpts.remove(loc)
         
-            schedule_table[index1][index2] = selected_player
+            schedule_table[index1][index2] = [selected_player, loc]
 
             player_index = FindOpponentPosition(players, selected_player)
 
-            schedule_table[player_index][index2] = players[index1]
+            schedule_table[player_index][index2] = [players[index1], sideOpts[0]]
     
     total_schedule = {}
-
-    sideOpts = ['H', 'A']
    
     for index, player in enumerate(schedule_table):
       game_date = start_dates[players[index]]
@@ -206,8 +210,7 @@ def SolvePlayerScheduleWhole(players, num_games, do_not_play, min_repeat_times, 
       for index, game in enumerate(player):
          if index > 0:
             game_date += timedelta(days=interval_between_games, hours=interval_between_games_hours)
-         loc = random.choice(sideOpts)
-         game_pair = [game, game_date, loc]
+         game_pair = [game[0], game_date, game[1]]
          total_schedule[players[index]].insert(game_pair)
     
     return total_schedule

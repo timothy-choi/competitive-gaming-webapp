@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json;
+using System.Text;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -23,7 +24,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpGet("{AssignmentId}")]
     public async Task<ActionResult<LeaguePlayerSeasonAssignments>> GetSeasonAssignments(string AssignmentId) {
         var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-        if (assignment.Count == 0) {
+        if (assignment == null) {
             return NotFound();
         }
         OkObjectResult res = new OkObjectResult(assignment);
@@ -70,24 +71,27 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             OkObjectResult res = new OkObjectResult(currLeague.AssignmentsId);
             return Ok(res);
         } catch {
-            return BadRequest()       
+            return BadRequest();      
         }
     }
 
     [HttpPut("{AssignmentsId}")]
     public async Task<ActionResult> EditSeasonAssignmentsOptions(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            for (var setting in reqBody) {
-                upsertInfo[setting] = reqBody[setting].Item1;
-                updatedValues[setting] = reqBody[setting].Item2;
+            foreach (var setting in reqBody) {
+                if (reqBody[setting.Key] is Tuple<bool, object> tupleValue)
+                {
+                    upsertInfo[setting.Key] = tupleValue.Item1;
+                    updatedValues[setting.Key] = tupleValue.Item2;
+                }
             }
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
@@ -102,21 +106,21 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPut("{AssignmentsId}/OutsideDivision")]
     public async Task<ActionResult> EditOutsideDivisionSelection(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            upsertInfo[reqBody["indexName"]] = reqBody["upsertStatus"];
+            upsertInfo[(String) reqBody["indexName"]] = (bool) reqBody["upsertStatus"];
 
-            if (reqBody["deleteOption"]) {
+            if ((bool) reqBody["deleteOption"]) {
                 var index = -1;
                 var selections = assignment.OutsideDivisionSelections;
                 for (int i = 0; i < selections.Count; ++i) {
-                    if (reqBody["selectedIndex"] == i) {
+                    if ((int) reqBody["selectedIndex"] == i) {
                         index = i;
                         break;
                     }
@@ -126,11 +130,12 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                     return NotFound();
                 }
 
-                selections.removeAt(index);
-                updatedValues[reqBody["indexName"]] = selections;
+                var key = selections.Keys.ElementAt(index);
+                selections.Remove(key);
+                updatedValues[(String) reqBody["indexName"]] = selections;
             }
             else {
-                updatedValues[reqBody["indexName"]] = reqBody["DivisionValues"];
+                updatedValues[(String) reqBody["indexName"]] = reqBody["DivisionValues"];
             }
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
@@ -143,20 +148,23 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPost("{AssignmentsId}/DivisionSelections")]
     public async Task<ActionResult> GenerateDivisionSelectionsIndividual(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
             
             var divisionSelection = assignment.OutsideDivisionSelections;
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["OutsideDivisionSelections"] = false;
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            Dictionary<string, string> player_divisions;
-            for (int x = 0; x < reqBody["players"].Count; ++x) {
-                for (int y = 0; y < reqBody["divisions"].Count; ++i) {
+            Dictionary<string, string> player_divisions = new Dictionary<string, string>();
+
+            var players = (List<String>) reqBody["players"];
+            var divisions = (List<String>) reqBody["divisions"];
+            for (int x = 0; x < players.Count; ++x) {
+                for (int y = 0; y < divisions.Count; ++y) {
                     var found = reqBody["division_assignment"][reqBody["divisions"][y]].Find(player => player == reqBody["players"][x]);
                     if (found != -1) {
                         player_divisions[reqBody["players"][x]] = reqBody["divisions"][y];
@@ -165,9 +173,9 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 }
             }
 
-            for (int i = 0; i < reqBody["players"].Count; ++i) {
+            for (int i = 0; i < players.Count; ++i) {
                 var random = new Random();
-                var divisions = reqBody["divisions"];
+                divisions =  (List<String>) reqBody["divisions"];
                 while (divisionSelection[reqBody["players"][i]].Count != reqBody["num_of_selections"]) {
                     var selection = divisions[random.Next(0, divisions.Count-1)];
                     divisionSelection[reqBody["players"][i]].add(selection);
@@ -189,16 +197,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPost("{AssignmentsId}/ExemptLists")]
     public async Task<ActionResult> AddExemptLists(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
-            upsertInfo[reqBody["player_list_key"]] = false;
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
+            upsertInfo[(String) reqBody["player_list_key"]] = false;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            updatedValues[reqBody["player_list_key"]] = reqBody["exempt_lists"];
+            updatedValues[(String) reqBody["player_list_key"]] = reqBody["exempt_lists"];
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
 
@@ -212,20 +220,20 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPut("{AssignmentsId}/ExemptLists")]
     public async Task<ActionResult> EditExemptList(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            for (var player in reqBody) {
-                for (var update in reqBody[player]) {
+            foreach (var player in reqBody) {
+                foreach (var update in player.Value) {
                     upsertInfo[update.Item2] = update.Item1 ? false : true;
                     if (!update.Item1) {
-                        var exemptList = assignment.ExemptLists[player];
+                        var exemptList = assignment.PlayerExemptLists[player.Key];
 
                         exemptList.RemoveAt(update.Item3);
 
@@ -249,30 +257,30 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPost("{AssignmentsId}/Divisions")]
     public async Task<ActionResult> AddDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
             var count = 0;
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["AllPartitions"] = false;
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
             var partitions = assignment.AllPartitions;
 
             var seen = new List<string>();
-            for (var division in reqBody) {
-                partitions[division] = reqBody[division]
-                for (var player in reqBody[division]) {
-                    seen.add(player);
+            foreach (var division in reqBody) {
+                partitions[division.Key] = reqBody[division.Key];
+                foreach (var player in reqBody[division]) {
+                    seen.Add(player);
                     count++;
                 }
             }
 
-            if (seen.Distinct.Count() != count) {
+            if (seen.Distinct().Count() != count) {
                 return BadRequest();
             }
 
@@ -290,41 +298,41 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPost("{AssignmentsId}/GenerateDivision")]
     public async Task<ActionResult> GenerateDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["AllPartitions"] = false;
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
             var partitions = assignment.AllPartitions;
 
-            var players = reqBody["players"];
+            var players = (List<String>) reqBody["players"];
 
-            var min_num_players_on_group = reqBody["num_num_players_per_group"];
+            var min_num_players_on_group = (int) reqBody["num_num_players_per_group"];
 
             var random = new Random();
 
-            for (var division in reqBody["divisions"]) {
+            foreach (var division in (List<String>) reqBody["divisions"]) {
                 for (int i = 0; i < min_num_players_on_group; ++i) {
                     var selection = players[random.Next(0, players.Count-1)];
-                    players.removeAll(player => player == selection);
-                    partitions[division].add(selection);
+                    players.RemoveAll(player => player == selection);
+                    partitions[division].Add(selection);
                 }
             }
 
             if (players.Count > 0) {
                 random = new Random();
-                var divisions = reqBody["divisions"];
+                var divisions = (List<String>) reqBody["divisions"];
                 while (players.Count > 0) {
                     var div_selection = divisions[random.Next(0, divisions.Count-1)];
                     var player_selection = players[random.Next(0, players.Count-1)];
-                    players.removeAll(player => player == player_selection);
+                    players.RemoveAll(player => player == player_selection);
 
-                    partitions[div_selection].add(player_selection);
+                    partitions[div_selection].Add(player_selection);
                 }
             }
 
@@ -339,25 +347,25 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     }
 
     [HttpPut("{AssignmentsId}/EditDivisions")]
-    public async Task<ActionResults> EditDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
+    public async Task<ActionResult> EditDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
-            upsertInfo["AllPartitions"] = reqBody["remove"];
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
+            upsertInfo["AllPartitions"] = (bool) reqBody["remove"];
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            Dictionary<string, bool> resBody;
+            Dictionary<string, bool> resBody = new Dictionary<string, bool>();
 
             if (!upsertInfo["AllPartitions"]) {
-                var divisionAssignment = assignment.AllPartitions[reqBody["target_division"]];
-                divisionAssignment.removeAll(player => player == reqBody["selected_player"]);
+                var divisionAssignment = assignment.AllPartitions[(String) reqBody["target_division"]];
+                divisionAssignment.RemoveAll(player => player == reqBody["selected_player"]);
                 updatedValues["AllPartitions"] = divisionAssignment;
-                if (divisionAssignment.Count < reqBody["min_num_of_players_in_division"]) {
+                if (divisionAssignment.Count < (int) reqBody["min_num_of_players_in_division"]) {
                     resBody["change"] = true;
                 }
                 else {
@@ -365,7 +373,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 }
             }
             else {
-                updatedValues[reqBody["division_key"]] = reqBody["new_player"];  
+                updatedValues[(String) reqBody["division_key"]] = reqBody["new_player"];  
             }
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
@@ -380,8 +388,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
     [HttpGet("{AssignmentsId}/Divisions")]
     public async Task<ActionResult<Dictionary<string, List<string>>>> GetCurrentDivisionSelections(string AssignmentsId) {
-        var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-        if (assignment.Count == 0) {
+        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        if (assignment == null) {
             return NotFound();
         }
 
@@ -393,20 +401,20 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPost("{AssignmentsId}/Combined")]
     public async Task<ActionResult> AddCombinedDivisionSelections(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["AllCombinedDivisions"] = false;
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
             var combinedDivisions = assignment.AllCombinedDivisions;
 
-            for (var combDivision in reqBody) {
-                combinedDivisions[combDivision] = reqBody[combDivision];
+            foreach (var combDivision in reqBody) {
+                combinedDivisions[combDivision.Key] = (List<String>) reqBody[combDivision.Key];
             }
 
             updatedValues["AllCombinedDivisions"] = combinedDivisions;
@@ -420,30 +428,30 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     }
 
     private bool verifySchedule(Dictionary<string, List<List<string>>> schedule, List<string> players) {
-        for (var player in schedule) {
-            List<string> schedule_players = schedule[player].Select(p => p.ElementAtOrDefault(0)).Distinct().ToList();
-            var player_ref = players.Except(player).Distinct().ToList();
+        foreach (var player in schedule) {
+            List<string> schedule_players = schedule[player.Key].Select(p => p.ElementAtOrDefault(0)).Distinct().ToList();
+            var player_ref = players.Except(player.Key).Distinct().ToList();
 
-            if (schedule_players.Interest(player_ref).ToList().Count() != schedule_players.Count()) {
+            if (schedule_players.Intersect(player_ref).ToList().Count() != schedule_players.Count()) {
                 return false;
             }
         }
 
-        for (var player in schedule) {
-            for (int index = 0; index < schedule[player].Count; ++index) {
-                var opponent = schedule[player][index][0];
-                if (schedule[opponent][index][0] != player) {
+        foreach (var player in schedule) {
+            for (int index = 0; index < schedule[player.Key].Count; ++index) {
+                var opponent = schedule[player.Key][index][0];
+                if (schedule[opponent][index][0] != player.Key) {
                     return false;
                 }
-                if (schedule[opponent][index][2] == 'H' && schedule[player][index][2] == 'H' || schedule[opponent][index][2] == 'A' && schedule[player][index][2] == 'A') {
+                if (schedule[opponent][index][2] == "H" && schedule[player.Key][index][2] == "H" || schedule[opponent][index][2] == "A" && schedule[player.Key][index][2] == "A") {
                     return false;
                 }
             }
         }
 
-        for (var player in schedule) {
-            for (int index = 0; index < schedule[player].Count - 1; ++index) {
-                int compareDates = schedule[player][index][1].CompareTo(schedule[player][index+1][1]);
+        foreach (var player in schedule) {
+            for (int index = 0; index < schedule[player.Key].Count - 1; ++index) {
+                int compareDates = schedule[player.Key][index][1].CompareTo(schedule[player.Key][index+1][1]);
                 if (compareDates >= 0) {
                     return false;
                 }
@@ -461,13 +469,13 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             string line;
             while ((line = streamReader.ReadLine()) != null) {
                 if (char.IsDigit(line[0])) {
-                    var player_schedule = line.substr(3).Trim();
+                    var player_schedule = line.Substring(3).Trim();
                     currentSchedule = new List<List<string>>();
                     schedule[player_schedule] = currentSchedule;
                 }
                 else if (currentSchedule != null) {
                     List<string> gameInfo = line.Split(',').ToList();
-                    currentSchedule.add(gameInfo);
+                    currentSchedule.Add(gameInfo);
                 }
             }
         }
@@ -476,22 +484,24 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     }
 
     private Dictionary<string, List<List<object>>> SimplifySchedule(Dictionary<string, List<List<object>>> schedule) {
-        Dictionary<string, List<List<object>>> final_schedule;
-        index = 0;
-        for (var player in schedule) {
-            final_schedule[player] = new List<List<object>>(schedule[player].Count);
+        Dictionary<string, List<List<object>>> final_schedule = new Dictionary<string, List<List<object>>>();
+        int index = 0;
+        foreach (var player in schedule) {
+            final_schedule[player.Key] = new List<List<object>>(schedule[player.Key].Count);
         }
 
-        for (var player in schedule) {
-            for (int i = 0; i < schedule[player].Count; ++i) {
-                if (game.Count < 3) {
+        foreach (var player in schedule) {
+            for (int i = 0; i < schedule[player.Key].Count; ++i) {
+                if (schedule[player.Key][i].Count < 3) {
                     continue;
                 }
-                final_schedule[player][i] = schedule[player][i];
-                final_schedule[schedule[player][i][0]][i] = [index, i]; 
+                final_schedule[player.Key][i] = schedule[player.Key][i];
+                final_schedule[(String) schedule[player.Key][i][0]][i] = new List<object> { (object)index, (object)i }; 
             }
             index++;
         }
+
+        return final_schedule;
     }
 
     //Endpoint to recieve a file of all schedules and verify it -> add it to file
@@ -502,14 +512,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 return BadRequest();
             }
 
-            Dictionary<string, List<List<object>>> player_schedules;
+            Dictionary<string, List<List<string>>> player_schedules = new Dictionary<string, List<List<string>>>();
+
+            List<Tuple<string, List<List<object>>>> final_player_schedule = new List<Tuple<string, List<List<object>>>>();
 
             using (var streamReader = new StreamReader(schedule.OpenReadStream())) {
                 var fileContent = await streamReader.ReadToEndAsync();
 
                 player_schedules = ParseSchedule(fileContent);
 
-                var verified = verifySchedule(player_schedules, reqBody["players"]);
+                var verified = verifySchedule(player_schedules, (List<String>) reqBody["players"]);
 
                 if (!verified) {
                     return BadRequest();
@@ -517,10 +529,10 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
                 Dictionary<string, List<List<object>>> final_schedule = SimplifySchedule(player_schedules);
 
-                List<Tuple<string, List<List<object>>>> final_player_schedule = new List<Tuple<string, List<List<object>>>>();
+                final_player_schedule = new List<Tuple<string, List<List<object>>>>();
 
-                for (var player in final_schedule) {
-                    final_player_schedule.add(Tuple.Create(player, final_schedule[player]));
+                foreach (var player in final_schedule) {
+                    final_player_schedule.Add(Tuple.Create(player, final_schedule[player.Key]));
                 }
 
             }
@@ -547,10 +559,10 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["PlayerFullSchedule"] = false;
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
             var playerSchedules = assignment.PlayerFullSchedule;
 
@@ -558,15 +570,15 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             var size = schedules[0].Item2.Count;
 
-            for (var schedule in schedules) {
+            foreach (var schedule in schedules) {
                 List<List<object>> temp = new List<List<object>>(size);
                 playerSchedules.add(temp);
             }
 
-            index1 = 0;
+            int index1 = 0;
 
-            for (var schedule in schedules) {
-                index2 = 0;
+            foreach (var schedule in schedules) {
+                int index2 = 0;
                 for (var gameInfo in schedule.Item2) {
                     Type currType = typeof(gameInfo);
                     if (!currType.IsClass  && !typeToCheck.IsValueType) {
@@ -584,8 +596,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         twitchBroadcasterId = "",
                         otherGameInfo = new Dictionary<String, String>()
                     };
-                    found_index = 0;
-                    for (var player in schedules) {
+                    int found_index = 0;
+                    foreach (var player in schedules) {
                         if (player == schedule) {
                             break;
                         }
@@ -598,8 +610,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         
                         var jsonData = JsonConvert.SerializeObject(currGame);
 
-                        StringContent reqBody = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                        HttpResponseMessage resMessage = await client.PostAsync("/api/singleGame/Season", reqBody);
+                        StringContent resBody = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                        HttpResponseMessage resMessage = await client.PostAsync("/api/singleGame/Season", resBody);
 
                         if (!resMessage.IsSuccessStatusCode) {
                             return BadRequest();
@@ -626,16 +638,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     public async Task<ActionResult> ArchievePlayerSchedules(string AssignmentsId) {
         try {
             var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-            if (assignment.Count == 0) {
+            if (assignment == null) {
                 return NotFound();
             }
 
             var playerSchedules = assignment.PlayerFullSchedule;
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["ArchievePlayerFullSchedule"] = true;
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
             updatedValues["ArchievePlayerFullSchedule"] = playerSchedules;
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
@@ -652,7 +664,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     public async Task<ActionResult> ProcessFinalSeasonSchedule(string AssignmentsId) {
         try {
             var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-            if (assignment.Count == 0) {
+            if (assignment == null) {
                 return NotFound();
             }
 
@@ -676,7 +688,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             allGames = allGames.OrderBy(game => game.timePlayed).ToList();
 
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
             updatedValues["FinalFullSchedule"] = allGames;
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
@@ -694,16 +706,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     public async Task<ActionResult> ArchievePlayerSchedules(string AssignmentsId) {
         try {
             var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-            if (assignment.Count == 0) {
+            if (assignment == null) {
                 return NotFound();
             }
 
             var finalSchedules = assignment.FinalFullSchedule;
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["ArchieveFinalFullSchedule"] = true;
 
-            Dictionary<string, object> updatedValues;
+            Dictionary<string, object> updatedValues = new  Dictionary<string, object>();
             updatedValues["ArchieveFinalFullSchedule"] = finalSchedules;
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
@@ -718,27 +730,27 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpGet("{AssignmentsId}/{playerName}/PlayerSchedule")]
     public async Task<ActionResult<List<SingleGame>>> GetPlayerSchedule(string AssignmentsId, string playerName) {
         var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-        if (assignment.Count == 0) {
+        if (assignment == null) {
             return NotFound();
         }
 
         var playerMatches = new List<SingleGame>();
 
         var playerSchedules = assignment.PlayerFullSchedule;
-        for (var playerSchedule in playerSchedules) {
+        foreach (var playerSchedule in playerSchedules) {
             if (playerSchedule.Item1 == playerName) {
 
-                for (var game in playerSchedule.Item2) {
+                foreach (var game in playerSchedule.Item2) {
                     Type currType = typeof(game);
                     if (!currType.IsClass  && !typeToCheck.IsValueType) {
-                        playerMatches.add(playerSchedules[game[0]].Item2[game[1]]);
+                        playerMatches.Add(playerSchedules[game[0]].Item2[game[1]]);
                     }
                     else {
-                        playerMatches.add(game);
+                        playerMatches.Add(game);
                     }
                 }
 
-                Dictionary<string, object> resBody;
+                Dictionary<string, object> resBody = new Dictionary<string, object>();
                 resBody["playerName"] = playerName;
                 resBody["schedule"] = playerMatches;
 
@@ -755,7 +767,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpGet("{AssignmentsId}/FinalSchedule")]
     public async Task<ActionResult<List<SingleGame>>> GetFinalSchedule(string AssignmentsId) {
         var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-        if (assignment.Count == 0) {
+        if (assignment == null) {
             return NotFound();
         }
 

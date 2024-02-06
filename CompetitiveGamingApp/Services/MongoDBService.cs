@@ -14,177 +14,204 @@ public class MongoDBService {
 
     public async Task<List<object>> GetAllData(string db) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        if (db == "leagueInfo") {
-            var filter = Builders<League>.Filter.Empty;
-            return await db_collection.Find(filter).ToListAsync();
-        }
-        else if (db == "leagueConfig") {
-            var filter = Builders<LeagueSeasonConfig>.Filter.Empty;
-            return await db_collection.Find(filter).ToListAsync();
-        }
-        else if (db == "leagueSeasonAssignments") {
-            var filter = Builders<LeaguePlayerSeasonAssignments>.Filter.Empty;
-            return await db_collection.Find(filter).ToListAsync();
-        }
-        var filter = Builders<LeaguePlayoffs>.Filter.Empty;
-        return await db_collection.Find(filter).ToListAsync();
-    }
-    public async Task<object> GetData(String db, String entityId) {
-        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        if (db == "leagueInfo") {
-            var filterById = Builders<League>.Filter.Eq(league => league.LeagueId, entityId);
-            return await db_collection.Find(filterById).FirstOrDefault();
-        }
-        if (db == "leagueConfig") {
-            var filterById = Builders<LeagueSeasonConfig>.Filter.Eq(league => league.ConfigId, entityId);
-            return await db_collection.Find(filterById).FirstOrDefault();
-        }
-        if (db == "leagueSeasonAssignments") {
-            var filterById = Builders<LeaguePlayerSeasonAssignments>.Filter.Eq(league => league.AssignmentsId, entityId);
-            return await db_collection.Find(filterById).FirstOrDefault();
-        }
-        var filterById = Builders<LeaguePlayoffs>.Filter.Eq(league => league.LeaguePlayoffId, entityId);
-        return await db_collection.Find(filterById).FirstOrDefault();
-    }
-
-    public async Task PostData(String db, object document) {
-        object doc;
-        if (db == "leagueInfo") {
-            doc = new League {
-                LeagueId = document.LeagueId,
-                Name = document.Name,
-                Owner = document.Owner,
-                Description = document.Description,
-                Players = document.Players,
-                tags = document.tags,
-                LeagueConfig = document.LeagueConfig,
-                SeasonAssignments = document.SeasonAssignments,
-                LeagueStandings = document.LeagueStandings,
-                AchieveLeagueStandings = document.ArchieveLeagueStandings,
-                ArchieveDivisionStandings = document.ArchieveDivisionStandings,
-                ArchieveCombinedDivisionStandings = document.ArchieveCombinedDivisionStandings
-                DivisionStandings = document.DivisionStandings,
-                CombinedDivisionStandings = document.CombinedDivisionStandings,
-                Champions = document.Champions,
-                PlayoffAssignments = document.PlayoffAssignments
-            };
-        }
-        if (db == "leagueConfig") {
-            doc = new LeagueSeasonConfig {
-                ConfigId = document.ConfigId,
-                LeagueName = document.LeagueName,
-                commitmentLength = document.commitmentLength,
-                feePrice = document.feePrice,
-                NumberOfPlayersLimit = document.NumberOfPlayersLimit,
-                OwnerAsPlayer = document.OwnerAsPlayer,
-                NumberOfPlayersMin = document.NumberOfPlayersMin,
-                JoinDuringSeason = document.JoinDuringSeason,
-                convertToRegular = document.convertToRegular,
-                seasons = document.seasons,
-                NumberOfGames = document.NumberOfGames,
-                selfScheduleGames = document.selfScheduleGames,
-                intervalBetweenGames = document.intervalBetweenGames,
-                intervalBetweenGamesHours = document.intervalBetweenGameHours,
-                firstSeasonMatch = document.firstSeasonMatch,
-                tiesAllowed = document.tiesAllowed,
-                playoffStartOffset = document.playoffStartOffset,
-                intervalBetweenPlayoffRoundGames = document.intervalBetweenPlayoffRoundGames,
-                intervalBetweenPlayoffRoundGamesHours = document.intervalBetweenPlayoffRoundGamesHours,
-                intervalBetweenRounds = document.intervalBetweenRounds,
-                intervalBetweenRoundsHours = document.intervalBetweenRoundsHours,
-                playoffContention = document.playoffContention,
-                playoffEligibleLimit = document.playoffEligibleLimit,
-                PlayoffSizeLimit = document.PlayoffSizeLimit,
-                PlayoffSeries = document.PlayoffSeries,
-                SeriesLengthMax = document.SeriesLengthMax,
-                sameSeriesLength = document.sameSeriesLength,
-                GamesPerRound = document.GamesPerRound,
-                BreakTiesViaGame = document.BreakTiesViaGame,
-                otherMetrics = document.otherMetrics
-            };
-        }
-        if (db == "leagueSeasonAssignments") {
-            doc = new LeaguePlayerSeasonAssignments {
-                AssignmentsId = document.AssignmentsId,
-                ConfigId = document.ConfigId,
-                LeagueId = document.LeagueId,
-                PartitionsEnabled = document.PartitionsEnabled,
-                ReassignEverySeason = document.ReassignEverySeason,
-                AutomaticInduction = document.AutomaticInduction,
-                NumberOfPlayersPerPartition = document.NumberOfPlayersPerPartition,
-                NumberOfPartitions = document.NumberOfPartitions,
-                SamePartitionSize = document.SamePartitionSize,
-                AutomaticScheduling = document.AutomaticScheduling,
-                ExcludeOutsideGames = document.ExcludeOutsideGames,
-                InterDvisionGameLimit = document.InterDivisionGameLimit,
-                RepeatMatchups = document.RepeatMatchups,
-                MaxRepeatMatchups = document.MaxRepeatMatchups,
-                DivisionSelective = document.DivisionSelective,
-                OutsideDivisionSelections = document.OutsideDivisionSelections,
-                RandomizeDivisionSelections = document.RandomizeDivisionSelections,
-                PlayerSelection = document.PlayerSelection,
-                PlayerExemptLists = document.PlayerExemptLists,
-                repeatAllMatchups = document.repeatAllMatchups,
-                minRepeatMatchups = document.minRepeatMatchups,
-                maxRepeatMatchups = document.maxRepeatMatchups,
-                playAllPlayers = document.playAllPlayers,
-                AllPartitions = document.AllPartitions,
-                AllCombinedDivisions = document.AllCombinedDivisions,
-                PlayerFullSchedule = document.PlayerFullSchedule,
-                ArchievePlayerFullSchedule = document.ArchievePlayerFullSchedule,
-                ArchieveFinalFullSchedule = document.ArchieveFinalFullSchedule,
-                FinalFullSchedule  = document.FinalFullSchedule
-            };
-        }
-        if (db == "leaguePlayoffConfig") {
-            doc = new LeaguePlayoffs {
-                LeagueId = document.LeagueId,
-                RandomInitialMode = document.RandomInitialMode,
-                RandomRoundMode = document.RandomRoundMode,
-                WholeMode = document.WholeMode,
-                DefaultMode = document.DefaultMode,
-                CombinedDivisionMode = document.CombinedDivisionMode,
-                WholeRoundOrdering = document.WholeRoundOrdering,
-                WholePlayoffPairings = document.WholePlayoffPairings,
-                ArchieveWholePlayoffPairings = document.ArchieveWholePlayoffPairings,
-                CombinedDivisionGroups = document.CombinedDivisionGroups,
-                CombinedDivisionPlayoffMatchups = document.CombinedDivisionPlayoffMatchups,
-                ArchieveCombinedDivisionPlayoffMatchups = document.ArchieveCombinedDivisionPlayoffMatchups,
-                DivisionBasedPlayoffPairings = document.DivisionBasedPlayoffPairings,
-                DivisionBasedPlayoffMatchups = document.DivisionBasedPlayoffMatchups,
-                ArchieveDivisionBasedPlayoffMatchups = document.ArchieveDivisionBasedPlayoffMatchups,
-                UserDefinedPlayoffMatchups = document.UserDefinedPlayoffMatchups,
-                UserDefinedPlayoffFinalGroups = document.UserDefinedPlayoffFinalGroups,
-                ArchieveUserDefinedPlayoffFinalGroups = document.ArchieveUserDefinedPlayoffFinalGroups
-            };
-        }
-
-        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        try {
-            await db_collection.InsertOneAsync((BsonDocument) doc);
-        } catch {
-            throw new Exception("Create League Failed!");
-        }
-    }
-
-    private void updateDocument(string KeyName, object update, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
-        if (upsertChangeStatus[KeyName]) {
-            update = update.Push(KeyName, newValues[KeyName]);
+        if (db == "leagueInfo" || db == "leagueConfig" || db == "leagueSeasonAssignments" || db == "leaguePlayoffs") {
+            var filter = Builders<BsonDocument>.Filter.Empty;
+            List<BsonDocument> bsonDocuments = await db_collection.Find(filter).ToListAsync();
+            return bsonDocuments.Cast<object>().ToList();
         }
         else {
-            update = update.Set(KeyName, newValues[KeyName]);
+            throw new ArgumentException("Invalid collection name");
         }
     }
 
-    public async Task EditData(String db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
+    public async Task<object> GetData(String db, String entityId) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        var filter = Builder<BsonDocument>.Filter.Eq(newValues["IdName"], newValues["id"]);
-        object update = Builders<BsonDocument>.Update;
-        for (int i = 0; i < newValues.Keys.Count; ++i) {
-            updateDocument(newValues.Keys[i], update, upsertChangeStatus, newValues);
+    
+        if (db == "leagueInfo") {
+            var filterById = Builders<BsonDocument>.Filter.Eq("LeagueId", entityId);
+            BsonDocument bsonDocument = await db_collection.Find(filterById).FirstOrDefaultAsync();
+            return bsonDocument?.AsBsonDocument;
         }
+        else if (db == "leagueConfig") {
+            var filterById = Builders<BsonDocument>.Filter.Eq("ConfigId", entityId);
+            BsonDocument bsonDocument = await db_collection.Find(filterById).FirstOrDefaultAsync();
+            return bsonDocument?.AsBsonDocument;
+        }
+        else if (db == "leagueSeasonAssignments") {
+            var filterById = Builders<BsonDocument>.Filter.Eq("AssignmentsId", entityId);
+            BsonDocument bsonDocument = await db_collection.Find(filterById).FirstOrDefaultAsync();
+            return bsonDocument?.AsBsonDocument;
+        }
+        else if (db == "leaguePlayoffs") {
+            var filterById = Builders<BsonDocument>.Filter.Eq("LeaguePlayoffId", entityId);
+            BsonDocument bsonDocument = await db_collection.Find(filterById).FirstOrDefaultAsync();
+            return bsonDocument?.AsBsonDocument;
+        }
+        else {
+            throw new ArgumentException("Invalid collection name");
+        }
+    }
+
+    public async Task PostData(string db, object document) {
+    BsonDocument doc;
+
+    switch (db) {
+        case "leagueInfo":
+            League leagueInfo = (League)document;
+            doc = new BsonDocument {
+                { "LeagueId", leagueInfo.LeagueId },
+                { "Name", leagueInfo.Name },
+                { "Owner", leagueInfo.Owner },
+                { "Description", leagueInfo.Description },
+                { "Players", new BsonArray(leagueInfo.Players ?? new List<Dictionary<string, object?>>()) },
+                { "tags", new BsonArray(leagueInfo.tags ?? new List<string?>()) },
+                { "LeagueConfig", leagueInfo.LeagueConfig },
+                { "SeasonAssignments", leagueInfo.SeasonAssignments },
+                { "LeagueStandings", leagueInfo.LeagueStandings != null ? BsonDocument.Parse(leagueInfo.LeagueStandings.ToJson()) : BsonNull.Value },
+                { "AchieveLeagueStandings", new BsonArray(leagueInfo.AchieveLeagueStandings ?? new List<LeagueTable>()) },
+                { "DivisionStandings", new BsonDocument(leagueInfo.DivisionStandings ?? new Dictionary<string, DivisionTable>()) },
+                { "ArchieveDivisionStandings", new BsonArray(leagueInfo.ArchieveDivisionStandings ?? new List<Dictionary<string, DivisionTable>>()) },
+                { "CombinedDivisionStandings", new BsonDocument(leagueInfo.CombinedDivisionStandings ?? new Dictionary<string, CombinedDivisionTable>()) },
+                { "ArchieveCombinedDivisionStandings", new BsonArray(leagueInfo.ArchieveCombinedDivisionStandings ?? new List<Dictionary<string, CombinedDivisionTable>>()) },
+                { "Champions", new BsonArray(leagueInfo.Champions ?? new List<Tuple<string, string>>()) },
+                { "PlayoffAssignments", leagueInfo.PlayoffAssignments }
+            };
+            break;
+
+        case "leagueConfig":
+            LeagueSeasonConfig leagueConfig = (LeagueSeasonConfig)document;
+            doc = new BsonDocument {
+                { "ConfigId", leagueConfig.ConfigId },
+                { "LeagueName", leagueConfig.LeagueName },
+                { "commitmentLength", leagueConfig.commitmentLength },
+                { "feePrice", leagueConfig.feePrice },
+                { "NumberOfPlayersLimit", leagueConfig.NumberOfPlayersLimit },
+                { "OwnerAsPlayer", leagueConfig.OwnerAsPlayer },
+                { "NumberOfPlayersMin", leagueConfig.NumberOfPlayersMin },
+                { "JoinDuringSeason", leagueConfig.JoinDuringSeason },
+                { "convertToRegular", leagueConfig.convertToRegular },
+                { "seasons", leagueConfig.seasons },
+                { "NumberOfGames", leagueConfig.NumberOfGames },
+                { "selfScheduleGames", leagueConfig.selfScheduleGames },
+                { "intervalBetweenGames", leagueConfig.intervalBetweenGames },
+                { "intervalBetweenGamesHours", leagueConfig.intervalBetweenGamesHours },
+                { "firstSeasonMatch", new BsonArray(leagueConfig.firstSeasonMatch ?? new List<Tuple<string, DateTime>>()) },
+                { "tiesAllowed", leagueConfig.tiesAllowed },
+                { "playoffStartOffset", leagueConfig.playoffStartOffset },
+                { "intervalBetweenPlayoffRoundGames", leagueConfig.intervalBetweenPlayoffRoundGames },
+                { "intervalBetweenPlayoffRoundGamesHours", leagueConfig.intervalBetweenPlayoffRoundGamesHours },
+                { "intervalBetweenRounds", leagueConfig.intervalBetweenRounds },
+                { "intervalBetweenRoundsHours", leagueConfig.intervalBetweenRoundsHours },
+                { "playoffContention", leagueConfig.playoffContention },
+                { "playoffEligibleLimit", leagueConfig.playoffEligibleLimit },
+                { "PlayoffSizeLimit", leagueConfig.PlayoffSizeLimit },
+                { "PlayoffSeries", leagueConfig.PlayoffSeries },
+                { "SeriesLengthMax", leagueConfig.SeriesLengthMax },
+                { "sameSeriesLength", leagueConfig.sameSeriesLength },
+                { "GamesPerRound", new BsonArray(leagueConfig.GamesPerRound ?? new List<int>()) },
+                { "BreakTiesViaGame", leagueConfig.BreakTiesViaGame },
+                { "otherMetrics", new BsonArray(leagueConfig.otherMetrics ?? new List<string>()) }
+            };
+            break;
+
+        case "leagueSeasonAssignments":
+            LeaguePlayerSeasonAssignments assignments = (LeaguePlayerSeasonAssignments)document;
+            doc = new BsonDocument {
+                { "AssignmentsId", assignments.AssignmentsId },
+                { "ConfigId", assignments.ConfigId },
+                { "LeagueId", assignments.LeagueId },
+                { "PartitionsEnabled", assignments.PartitionsEnabled },
+                { "ReassignEverySeason", assignments.ReassignEverySeason },
+                { "AutomaticInduction", assignments.AutomaticInduction },
+                { "NumberOfPlayersPerPartition", assignments.NumberOfPlayersPerPartition },
+                { "NumberOfPartitions", assignments.NumberOfPartitions },
+                { "SamePartitionSize", assignments.SamePartitionSize },
+                { "AutomaticScheduling", assignments.AutomaticScheduling },
+                { "ExcludeOutsideGames", assignments.ExcludeOutsideGames },
+                { "InterDvisionGameLimit", assignments.InterDvisionGameLimit },
+                { "RepeatMatchups", assignments.RepeatMatchups },
+                { "MaxRepeatMatchups", assignments.MaxRepeatMatchups },
+                { "DivisionSelective", assignments.DivisionSelective },
+                { "OutsideDivisionSelections", BsonDocumentWrapper.Create(assignments.OutsideDivisionSelections ?? new Dictionary<string, List<string>>()) },
+                { "RandomizeDivisionSelections", assignments.RandomizeDivisionSelections },
+                { "PlayerSelection", assignments.PlayerSelection },
+                { "PlayerExemptLists", BsonDocumentWrapper.Create(assignments.PlayerExemptLists ?? new Dictionary<string, List<string>>()) },
+                { "repeatAllMatchups", assignments.repeatAllMatchups },
+                { "minRepeatMatchups", assignments.minRepeatMatchups },
+                { "maxRepeatMatchups", assignments.maxRepeatMatchups },
+                { "playAllPlayers", assignments.playAllPlayers },
+                { "AllPartitions", BsonDocumentWrapper.Create(assignments.AllPartitions ?? new Dictionary<string, List<string>>()) },
+                { "AllCombinedDivisions", BsonDocumentWrapper.Create(assignments.AllCombinedDivisions ?? new Dictionary<string, List<string>>()) },
+                { "PlayerFullSchedule", BsonDocumentWrapper.Create(assignments.PlayerFullSchedule ?? new List<Tuple<string, List<object>>>()) },
+                { "ArchievePlayerFullSchedule", BsonDocumentWrapper.Create(assignments.ArchievePlayerFullSchedule ?? new List<List<Tuple<string, List<object>>>>()) },
+                { "FinalFullSchedule", BsonDocumentWrapper.Create(assignments.FinalFullSchedule ?? new List<SingleGame>()) },
+                { "ArchieveFinalFullSchedule", BsonDocumentWrapper.Create(assignments.ArchieveFinalFullSchedule ?? new List<List<SingleGame>>()) }
+            };
+            break;
+
+        case "leaguePlayoffConfig":
+            LeaguePlayoffs playoffs = (LeaguePlayoffs)document;
+            doc = new BsonDocument {
+                { "LeaguePlayoffId", playoffs.LeaguePlayoffId },
+                { "LeagueId", playoffs.LeagueId },
+                { "RandomInitialMode", playoffs.RandomInitialMode },
+                { "RandomRoundMode", playoffs.RandomRoundMode },
+                { "WholeMode", playoffs.WholeMode },
+                { "DefaultMode", playoffs.DefaultMode },
+                { "CombinedDivisionMode", playoffs.CombinedDivisionMode },
+                { "WholeRoundOrdering", BsonDocumentWrapper.Create(playoffs.WholeRoundOrdering ?? new List<Tuple<int, Tuple<string, string>>>()) },
+                { "WholePlayoffPairings", BsonDocumentWrapper.Create(playoffs.WholePlayoffPairings ?? new List<PlayoffMatchup>()) },
+                { "ArchieveWholePlayoffPairings", BsonDocumentWrapper.Create(playoffs.ArchieveWholePlayoffPairings ?? new List<List<PlayoffMatchup>>()) },
+                { "CombinedDivisionGroups", BsonDocumentWrapper.Create(playoffs.CombinedDivisionGroups ?? new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>()) },
+                { "CombinedDivisionPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.CombinedDivisionPlayoffMatchups ?? new List<Tuple<string, List<PlayoffMatchup>>>()) },
+                { "ArchieveCombinedDivisionPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.ArchieveCombinedDivisionPlayoffMatchups ?? new List<List<Tuple<string, List<PlayoffMatchup>>>>()) },
+                { "DivisionBasedPlayoffPairings", BsonDocumentWrapper.Create(playoffs.DivisionBasedPlayoffPairings ?? new List<Tuple<string, Tuple<int, Tuple<string, string>>>>()) },
+                { "DivisionBasedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.DivisionBasedPlayoffMatchups ?? new List<Tuple<string, PlayoffMatchup>>()) },
+                { "ArchieveDivisionBasedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.ArchieveDivisionBasedPlayoffMatchups ?? new List<List<Tuple<string, PlayoffMatchup>>>()) },
+                { "UserDefinedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.UserDefinedPlayoffMatchups ?? new List<Tuple<int, Tuple<string, string>>>()) },
+                { "UserDefinedPlayoffFinalGroups", BsonDocumentWrapper.Create(playoffs.UserDefinedPlayoffFinalGroups ?? new List<PlayoffMatchup>()) },
+                { "ArchieveUserDefinedPlayoffFinalGroups", BsonDocumentWrapper.Create(playoffs.ArchieveUserDefinedPlayoffFinalGroups ?? new List<List<PlayoffMatchup>>()) }
+            };
+            break;
+
+        default:
+            throw new ArgumentException("Invalid database name");
+    }
+
+    var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
+
+    try {
+        await db_collection.InsertOneAsync(doc);
+    } catch {
+        throw new Exception("Create League Failed!");
+    }
+}
+
+    public async Task EditData(string db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
+        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
+        var filter = Builders<BsonDocument>.Filter.Eq(newValues["IdName"].ToString(), newValues["id"]);
+
+        var updateBuilder = Builders<BsonDocument>.Update;
+        var updateDefinition = updateBuilder.Combine();
+
+        foreach (var key in newValues.Keys) {
+            if (key != "IdName" && key != "id") {
+                if (upsertChangeStatus.TryGetValue(key, out bool shouldUpsert)) {
+                    if (shouldUpsert) {
+                        updateDefinition = updateDefinition.Push(key, newValues[key]);
+                    }
+                    else {
+                        updateDefinition = updateDefinition.Set(key, newValues[key]);
+                    }
+                }
+                else {
+                    updateDefinition = updateDefinition.Set(key, newValues[key]);
+                }
+            }
+        }
+
         try {
-            await db_collection.UpdateOneAsync(filter, update);
+            await db_collection.UpdateOneAsync(filter, updateDefinition);
         }
         catch {
             throw new Exception("Update League Failed!");

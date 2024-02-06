@@ -602,6 +602,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 allGames.AddRange(player.Item2);
             }
 
+            allGames = allGames.OrderBy(game => game.timeplayed).ToList();
+
 
             Dictionary<string, object> updatedValues;
             updatedValues["FinalFullSchedule"] = allGames;

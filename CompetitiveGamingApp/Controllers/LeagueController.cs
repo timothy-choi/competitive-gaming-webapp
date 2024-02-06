@@ -25,8 +25,8 @@ public class LeagueController : ControllerBase {
 
     [HttpGet("{LeagueId}")]
     public async Task<ActionResult<League>> GetLeagueById(string LeagueId) {
-        var league = await _leagueService.GetData("leagueInfo", LeagueId);
-        if (league.Count == 0) {
+        var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null) {
             return NotFound();
         }
         OkObjectResult res = new OkObjectResult(league);
@@ -38,19 +38,19 @@ public class LeagueController : ControllerBase {
         try {
             League curr = new League {
                 LeagueId = Guid.NewGuid().ToString(),
-                Name = leagueInput["LeagueName"],
-                Owner = leagueInput["LeagueOwner"],
-                Description = leagueInput["LeagueDescription"],
+                Name = leagueInput["LeagueName"].ToString(),
+                Owner = leagueInput["LeagueOwner"].ToString(),
+                Description = leagueInput["LeagueDescription"].ToString(),
                 Players = new List<Dictionary<String, Object?>>(),
-                tags = new List<string>(),
+                tags = new List<string?>(),
                 LeagueConfig = "",
                 SeasonAssignments = "",
                 LeagueStandings = new LeagueTable(),
                 AchieveLeagueStandings = new List<LeagueTable>(),
                 DivisionStandings = new Dictionary<string, DivisionTable>(),
-                AchieveDivisionStandings = new List<Dictionary<string, DivisionTable>>(),
+                ArchieveDivisionStandings = new List<Dictionary<string, DivisionTable>>(),
                 CombinedDivisionStandings = new Dictionary<string, CombinedDivisionTable>(),
-                AchieveCombinedDivisionStandings = new List<Dictionary<string, CombinedDivisionTable>>(),
+                ArchieveCombinedDivisionStandings = new List<Dictionary<string, CombinedDivisionTable>>(),
                 Champions = new List<Tuple<String, String>>(),
                 PlayoffAssignments = ""
             };
@@ -85,10 +85,10 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body;
+            Dictionary<String, String> body = new Dictionary<String, String>();
             body["AssignmentsId"] = SeasonAssignmentsId;
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["AssignmentsId"] = false;
             await _leagueService.EditData("leagueInfo", upsertStatus, body);
             return Ok();
@@ -105,10 +105,10 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body;
+            Dictionary<String, String> body = new Dictionary<String, String>();
             body["ConfigId"] = LeagueConfigId;
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["ConfigId"] = false;
             await _leagueService.EditData("leagueInfo", upsertStatus, body);
             return Ok();
@@ -124,10 +124,10 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body;
+            Dictionary<String, String> body = new Dictionary<String, String>();
             body["PlayoffAssignmentId"] = PlayoffAssignmentId;
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["PlayoffAssignmentId"] = false;
             await _leagueService.EditData("leagueInfo", upsertStatus, body);
             return Ok();
@@ -143,10 +143,10 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body;
+            Dictionary<String, String> body = new Dictionary<String, String>();
             body["tag"] = TagValue;
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["tag"] = true;
             await _leagueService.EditData("leagueInfo", upsertStatus, body);
             return Ok();
@@ -162,13 +162,13 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["Players"] = true;
 
-            Dictionary<string, string> playerInfo;
+            Dictionary<string, string> playerInfo = new Dictionary<string, string>();
             playerInfo["PlayerId"] = PlayerId;
             playerInfo["DateJoined"] = DateTime.Now;
-            Dictionary<String, object> body;
+            Dictionary<String, object> body = new Dictionary<String, object>();
             body["Players"] = playerInfo;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, body);
@@ -190,7 +190,7 @@ public class LeagueController : ControllerBase {
 
             int size = players.Count;
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["Players"] = false;
 
             players.RemoveAll(p => p.containsKey("PlayerId") && p["PlayerId"].ToString() == PlayerId);
@@ -199,7 +199,7 @@ public class LeagueController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, object> playersVal;
+            Dictionary<string, object> playersVal = new Dictionary<string, object>();
             playersVal["Players"] = players;
 
             await _leagueService.EditData("leagueId", upsertStatus, playersVal);
@@ -220,10 +220,10 @@ public class LeagueController : ControllerBase {
 
             var champions_size = league.Champions.Count;
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["Champions"] = true;
 
-            Dictionary<string, object> champ;
+            Dictionary<string, object> champ = new Dictionary<string, object>();
             champ["Champions"] = Tuple.Create(PlayerId, "Season " + champions_size + 1);
 
             await _leagueService.EditData("leagueId", upsertStatus, champ);
@@ -254,10 +254,10 @@ public class LeagueController : ControllerBase {
                 }
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["LeagueStandings"] = true;
 
-            Dictionary<string, object> leagueTable;
+            Dictionary<string, object> leagueTable = new Dictionary<string, object>();
             leagueTable["LeagueStandings"] = leagueStandings;
 
 
@@ -278,10 +278,10 @@ public class LeagueController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["LeagueStandings.Table"] = true;
 
-            Dictionary<string, object> playerStandings;
+            Dictionary<string, object> playerStandings = new Dictionary<string, object>();
             playerStandings["LeagueStandings.Table"] = reqBody;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, playerStandings);
@@ -301,7 +301,7 @@ public class LeagueController : ControllerBase {
 
             var divisions = reqBody["divisions"];
 
-            Dictionary<string, object> divs;
+            Dictionary<string, object> divs = new Dictionary<string, object>();
 
             for (int i = 0; i < divisions.Count; ++i) {
                 DivisionTable divTable = new DivisionTable {
@@ -313,10 +313,10 @@ public class LeagueController : ControllerBase {
                 divs[divisions[i]] = divTable;
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["DivisionStandings"] = false;
 
-            Dictionary<string, object> divStandings;
+            Dictionary<string, object> divStandings = new Dictionary<string, object>();
             divStandings["DivisionStandings"] = divs;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, divStandings);
@@ -342,13 +342,13 @@ public class LeagueController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["DivisionStandings." + DivisionName + ".Table"] = true;
 
-            Dictionary<string, object> entry;
+            Dictionary<string, object> entry = new Dictionary<string, object>();
             entry[PlayerId] = reqBody;
 
-            Dictionary<string, object> DivPlayer;
+            Dictionary<string, object> DivPlayer = new Dictionary<string, object>();
             DivPlayer["DivisionStandings." + DivisionName + ".Table"] = entry;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
@@ -370,7 +370,7 @@ public class LeagueController : ControllerBase {
 
             var divisions = league.DivisionStandings;
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["DivisionStandings"] = true;
 
             if (reqBody["ReassignEverySeason"]) {
@@ -383,7 +383,7 @@ public class LeagueController : ControllerBase {
                     divisions[k].DivisionTableId = Guid.NewGuid().ToString(); 
                     divisions[k].Season = league.Champions.Count + 1;
 
-                    divisions[k].Table = List<Dictionary<string, object>>();
+                    divisions[k].Table = new List<Dictionary<string, object>>();
 
                     for (var player in reqBody[k]) {
                         divisions[k].Table.Push(player.Value);
@@ -391,7 +391,7 @@ public class LeagueController : ControllerBase {
                 }
             }
             else {
-                for (var div in divisions) {
+                foreach (var div in divisions) {
                     var table = divisions[div];
                     divisions[div] = new DivisionTable();
                     divisions[div].DivisionName = div;
@@ -399,8 +399,8 @@ public class LeagueController : ControllerBase {
                     divisions[div].Season = league.Champions.Count + 1;
                     divisions[div].Table = table.OrderBy(d => d["PlayerId"]).ToList();
 
-                    for (var k in divisions[div].Table) {
-                        for (var metric in divisions[div].Table[k]) {
+                    foreach (var k in divisions[div].Table) {
+                        foreach (var metric in divisions[div].Table[k]) {
                             if (typeof(divisions[div].Table[k]) == typeof(string)) {
                                 continue;
                             }
@@ -410,7 +410,7 @@ public class LeagueController : ControllerBase {
                 }
             }
 
-            Dictionary<string, object> newDivisions;
+            Dictionary<string, object> newDivisions = new Dictionary<string, object>();
             newDivisions["DivisionStandings"] = divisions;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, newDivisions);
@@ -430,12 +430,12 @@ public class LeagueController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["CombinedDivisionStandings"] = false;
 
-            Dictionary<string, object> allCombinedDivisions;
+            Dictionary<string, object> allCombinedDivisions = new Dictionary<string, object>();
 
-            for (var combined in reqBody) {
+            foreach (var combined in reqBody) {
                 CombinedDivisionTable combTable = new CombinedDivisionTable();
                 combTable.CombinedDivisionName = combined.Key;
                 combTable.CombinedDivisionTableId = Guid.NewGuid().ToString();
@@ -445,7 +445,7 @@ public class LeagueController : ControllerBase {
                 allCombinedDivisions[combined.Key] = combTable;
             }
 
-            Dictionary<string, object> totalCombDivisions;
+            Dictionary<string, object> totalCombDivisions = new Dictionary<string, object>();
             totalCombDivisions["CombinedDivisionStandings"] = allCombinedDivisions;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, totalCombDivisions);
@@ -478,10 +478,10 @@ public class LeagueController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["CombinedDivisionStandings." + DivisionName + ".Table"] = true;
 
-            Dictionary<string, object> PlayerEntry;
+            Dictionary<string, object> PlayerEntry = new Dictionary<string, object>();
             PlayerEntry["CombinedDivisionStandings." + DivisionName + ".Table"] = reqBody;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, PlayerEntry);
@@ -541,10 +541,10 @@ public class LeagueController : ControllerBase {
                 }
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["CombinedDivisionStandings"] = false;
 
-            Dictionary<string, object> totalCombDivisions;
+            Dictionary<string, object> totalCombDivisions = new Dictionary<string, object>();
             totalCombDivisions["CombinedDivisionStandings"] = combinedDivision;
 
 
@@ -564,10 +564,10 @@ public class LeagueController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = true;
 
-            Dictionary<string, object> totalCombDivisions;
+            Dictionary<string, object> totalCombDivisions = new Dictionary<string, object>();
             totalCombDivisions["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = reqBody;
 
             await _leagueService.EditData("leagueId", upsertStatus, totalCombDivisions);
@@ -610,22 +610,22 @@ public class LeagueController : ControllerBase {
             }
 
             List<string> sortFactors = new List<string>();
-            sortFactors.add("wins");
-            sortFactors.add("losses");
-            sortFactors.add("draws");
+            sortFactors.Add("wins");
+            sortFactors.Add("losses");
+            sortFactors.Add("draws");
             for (var k in reqBody) {
                 if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
                     continue;
                 }
-                sortFactors.add(k);
+                sortFactors.Add(k);
             }
 
             leagueStandings.Sort(new PlayerComparer(sortFactors));
 
-            Dictionary<string, bool> upsertStatus;
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["LeagueStandings.Table"] = false;
 
-            Dictionary<string, object> updatedTable;
+            Dictionary<string, object> updatedTable = new Dictionary<string, object>();
             updatedTable["LeagueStandings.Table"] = leagueStandings;
 
 
@@ -645,7 +645,7 @@ public class LeagueController : ControllerBase {
                         division[i]["draws"] += 1;
                     }
 
-                    for (var k in reqBody) {
+                    foreach (var k in reqBody) {
                         if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
                             continue;
                         }
@@ -657,10 +657,10 @@ public class LeagueController : ControllerBase {
 
             division.Sort(new PlayerComparer(sortFactors));
 
-            Dictionary<string, bool> upsertStatusDivisions;
+            Dictionary<string, bool> upsertStatusDivisions = new Dictionary<string, bool>();
             upsertStatusDivisions["DivisionStandings.Table"] = false;
 
-            Dictionary<string, object> updatedDivisions;
+            Dictionary<string, object> updatedDivisions = new Dictionary<string, object>();
             updatedDivisions["DivisionStandings.Table"] = division;
 
 
@@ -692,10 +692,10 @@ public class LeagueController : ControllerBase {
 
             combinedDivision.Sort(new PlayerComparer(sortFactors));
 
-            Dictionary<string, bool> upsertStatusComb;
+            Dictionary<string, bool> upsertStatusComb = new Dictionary<string, bool>();
             upsertStatusComb["DivisionStandings.Table"] = false;
 
-            Dictionary<string, object> updatedComb;
+            Dictionary<string, object> updatedComb = new Dictionary<string, object>();
             updatedComb["DivisionStandings.Table"] = combinedDivision;
 
             await _leagueService.EditData("leagueInfo", upsertStatusComb, updatedComb);
@@ -715,12 +715,12 @@ public class LeagueController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, bool> upsertOpt;
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["ArchieveLeagueStandings"] = true;
             upsertOpt["ArchieveDivisionStandings"] = true;
             upsertOpt["ArchieveCombinedDivisionStandings"] = true;
             
-            Dictionary<string, object> archievedTables;
+            Dictionary<string, object> archievedTables = new Dictionary<string, object>();
             archievedTables["ArchieveLeagueStandings"] = league.LeagueStandings;
             archievedTables["ArchieveDivisionStandings"] = league.DivisionStandings;
             archievedTables["ArchieveCombinedDivisionStandings"] = league.CombinedDivisionStandings;

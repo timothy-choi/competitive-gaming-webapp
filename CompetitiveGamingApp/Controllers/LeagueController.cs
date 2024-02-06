@@ -1,4 +1,5 @@
-namespace CompetitiveGamingApp.Controller;
+
+namespace CompetitiveGamingApp.Controllers;
 
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Globalization;
+using static PlayerComparer;
 
 [ApiController]
 [Route("api/League")]
@@ -85,7 +87,7 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body = new Dictionary<String, String>();
+            Dictionary<String, object> body = new Dictionary<String, object>();
             body["AssignmentsId"] = SeasonAssignmentsId;
 
             Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
@@ -105,7 +107,7 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body = new Dictionary<String, String>();
+            Dictionary<String, object> body = new Dictionary<String, object>();
             body["ConfigId"] = LeagueConfigId;
 
             Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
@@ -124,7 +126,7 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body = new Dictionary<String, String>();
+            Dictionary<String, object> body = new Dictionary<String, object>();
             body["PlayoffAssignmentId"] = PlayoffAssignmentId;
 
             Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
@@ -143,7 +145,7 @@ public class LeagueController : ControllerBase {
             if (league == null) {
                 return NotFound();
             }
-            Dictionary<String, String> body = new Dictionary<String, String>();
+            Dictionary<String, object> body = new Dictionary<String, object>();
             body["tag"] = TagValue;
 
             Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
@@ -167,7 +169,7 @@ public class LeagueController : ControllerBase {
 
             Dictionary<string, string> playerInfo = new Dictionary<string, string>();
             playerInfo["PlayerId"] = PlayerId;
-            playerInfo["DateJoined"] = DateTime.Now;
+            playerInfo["DateJoined"] = DateTime.Now.ToString();
             Dictionary<String, object> body = new Dictionary<String, object>();
             body["Players"] = playerInfo;
 
@@ -182,7 +184,7 @@ public class LeagueController : ControllerBase {
     [HttpPut("{LeagueId}/players/{PlayerId}/delete")]
     public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerId) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
@@ -193,7 +195,7 @@ public class LeagueController : ControllerBase {
             Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["Players"] = false;
 
-            players.RemoveAll(p => p.containsKey("PlayerId") && p["PlayerId"].ToString() == PlayerId);
+            players.RemoveAll(p => p.ContainsKey("PlayerId") && p["PlayerId"].ToString() == PlayerId);
 
             if (players.Count == size) {
                 return NotFound();
@@ -213,7 +215,7 @@ public class LeagueController : ControllerBase {
     [HttpPut("{LeagueId}/Champion/{PlayerId}")]
     public async Task<ActionResult> AddNewChampion(string LeagueId, string PlayerId) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
@@ -237,20 +239,20 @@ public class LeagueController : ControllerBase {
     [HttpPut("{LeagueId}")]
     public async Task<ActionResult> ResetLeagueStandings(string LeagueId) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
 
             var leagueStandings = league.LeagueStandings;
-            leagueStandings.Season = league.Champion.Count + 1;
+            leagueStandings.Season = league.Champions.Count + 1;
             leagueStandings.Table = leagueStandings.Table.OrderBy(d => d["playerName"]).ToList();
             for (int i = 0; i < leagueStandings.Table.Count; ++i) {
-                for (var k in leagueStandings.Table[i]) {
-                    if (k == "playerName" || typeof(leagueStandings.Table[i][k]) == typeof(string)) {
+                foreach (var k in leagueStandings.Table[i]) {
+                    if (k.Key == "playerName" || k.Value.GetType() == typeof(string)) {
                         continue;
                     }
-                    leagueStandings.Table[i][k] = 0;
+                    leagueStandings.Table[i][k.Key] = 0;
                 }
             }
 
@@ -294,12 +296,12 @@ public class LeagueController : ControllerBase {
     [HttpPost("{LeagueId}/Division/Create")]
     public async Task<ActionResult> CreateDivisions(string LeagueId, Dictionary<string, object> reqBody) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
 
-            var divisions = reqBody["divisions"];
+            var divisions = (List<String>) reqBody["divisions"];
 
             Dictionary<string, object> divs = new Dictionary<string, object>();
 
@@ -307,7 +309,7 @@ public class LeagueController : ControllerBase {
                 DivisionTable divTable = new DivisionTable {
                     DivisionTableId = Guid.NewGuid().ToString(),
                     DivisionName = divisions[i],
-                    Season = league.Champion.Count + 1,
+                    Season = league.Champions.Count + 1,
                     Table = new List<Dictionary<String, object>>()
                 };
                 divs[divisions[i]] = divTable;
@@ -331,14 +333,14 @@ public class LeagueController : ControllerBase {
     [HttpPost("{LeagueId}/{DivisionName}/{PlayerId}")]
     public async Task<ActionResult> AddPlayerToDivision(string LeagueId, string DivisionName, string PlayerId, Dictionary<string, object> reqBody) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
 
-            var divisions = _leagueService.DivisionStandings;
+            var divisions = league.DivisionStandings;
 
-            if (!divisions.containsKey(DivisionName)) {
+            if (!divisions.ContainsKey(DivisionName)) {
                 return NotFound();
             }
 
@@ -363,7 +365,7 @@ public class LeagueController : ControllerBase {
     [HttpPut("{LeagueId}/ResetDivisions")]
     public async Task<ActionResult> ResetDivisions(string LeagueId, Dictionary<string, object> reqBody) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
@@ -373,38 +375,38 @@ public class LeagueController : ControllerBase {
             Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
             upsertStatus["DivisionStandings"] = true;
 
-            if (reqBody["ReassignEverySeason"]) {
-                for (var k in reqBody) {
-                    if (k == "ReassignEverySeason") {
+            if ((bool) reqBody["ReassignEverySeason"]) {
+                foreach (var k in reqBody) {
+                    if (k.Key == "ReassignEverySeason") {
                         continue;
                     }
-                    divisions[k] = new DivisionTable();
-                    divisions[k].DivisionName = k;
-                    divisions[k].DivisionTableId = Guid.NewGuid().ToString(); 
-                    divisions[k].Season = league.Champions.Count + 1;
+                    divisions[k.Key] = new DivisionTable();
+                    divisions[k.Key].DivisionName = k.Key;
+                    divisions[k.Key].DivisionTableId = Guid.NewGuid().ToString(); 
+                    divisions[k.Key].Season = league.Champions.Count + 1;
 
-                    divisions[k].Table = new List<Dictionary<string, object>>();
+                    divisions[k.Key].Table = new List<Dictionary<string, object>>();
 
-                    for (var player in reqBody[k]) {
-                        divisions[k].Table.Push(player.Value);
+                    foreach (var player in (List<Dictionary<string, object>>) reqBody[k.Key]) {
+                        divisions[k.Key].Table.Add(player);
                     }
                 }
             }
             else {
                 foreach (var div in divisions) {
-                    var table = divisions[div];
-                    divisions[div] = new DivisionTable();
-                    divisions[div].DivisionName = div;
-                    divisions[div].DivisionTableId = Guid.NewGuid().ToString();
-                    divisions[div].Season = league.Champions.Count + 1;
-                    divisions[div].Table = table.OrderBy(d => d["PlayerId"]).ToList();
+                    var table = divisions[div.Key];
+                    divisions[div.Key] = new DivisionTable();
+                    divisions[div.Key].DivisionName = div.Key;
+                    divisions[div.Key].DivisionTableId = Guid.NewGuid().ToString();
+                    divisions[div.Key].Season = league.Champions.Count + 1;
+                    divisions[div.Key].Table = table.Table.OrderBy(d => d["PlayerId"].ToString()).ToList();
 
-                    foreach (var k in divisions[div].Table) {
-                        foreach (var metric in divisions[div].Table[k]) {
-                            if (typeof(divisions[div].Table[k]) == typeof(string)) {
+                    for (int k = 0; k < divisions[div.Key].Table.Count; ++k) {
+                        foreach (var metric in divisions[div.Key].Table[k]) {
+                            if (metric.Value.GetType() == typeof(string)) {
                                 continue;
                             }
-                            divisions[div].Table[k] = 0;
+                            divisions[div.Key].Table[k][metric.Key] = 0;
                         }
                     }
                 }
@@ -425,7 +427,7 @@ public class LeagueController : ControllerBase {
     [HttpPost("{LeagueId}/CombinedDivision")]
     public async Task<ActionResult> CreateCombinedDivision(string LeagueId, Dictionary<string, object> reqBody) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
@@ -440,7 +442,7 @@ public class LeagueController : ControllerBase {
                 combTable.CombinedDivisionName = combined.Key;
                 combTable.CombinedDivisionTableId = Guid.NewGuid().ToString();
                 combTable.Season = league.Champions.Count + 1;
-                combTable.Divisions = combined.Value;
+                combTable.Divisions = (List<String>) combined.Value;
                 combTable.Table = new List<Dictionary<string, object>>();
                 allCombinedDivisions[combined.Key] = combTable;
             }
@@ -460,7 +462,7 @@ public class LeagueController : ControllerBase {
     [HttpPost("{LeagueId}/{PlayerId}/{DivisionName}/Combined")]
     public async Task<ActionResult> AddPlayerToCombinedStandings(string LeagueId, string playerId, string DivisionName, Dictionary<string, object> reqBody) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
@@ -468,13 +470,13 @@ public class LeagueController : ControllerBase {
             var division = league.DivisionStandings[DivisionName];
             bool playerFound = false;
             for (int i = 0; i < division.Table.Count; ++i) {
-                if (division.Table[i].containsKey(playerId)) {
+                if (division.Table[i].ContainsKey(playerId)) {
                     playerFound = true;
                     break;
                 }
             }
 
-            if (league.CombinedDivisionStandings.containsKey(DivisionName) || !playerFound) {
+            if (league.CombinedDivisionStandings.ContainsKey(DivisionName) || !playerFound) {
                 return NotFound();
             }
 
@@ -495,7 +497,7 @@ public class LeagueController : ControllerBase {
     [HttpPost("{LeagueId}/CombinedDivision/Reset")]
     public async Task<ActionResult> ResetCombinedDivisionStandings(string LeagueId, Dictionary<string, object> reqBody) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
@@ -504,38 +506,38 @@ public class LeagueController : ControllerBase {
 
             var copyCombinedDivision = league.CombinedDivisionStandings;
 
-            Dictionary<string, object> allCombinedDivisions;
+            Dictionary<string, object> allCombinedDivisions = new Dictionary<string, object>();
 
 
-            if(reqBody["ReassignEverySeason"]) {
-                for (var k in reqBody) {
-                    if (typeof(reqBody[k]) == typeof(string)) {
+            if((bool) reqBody["ReassignEverySeason"]) {
+                foreach (var k in reqBody) {
+                    if (k.Value.GetType() == typeof(string)) {
                         continue;
                     }
-                    combinedDivision[k] = new CombinedDivisionTable();
-                    combinedDivision[k].CombinedDivisionTableId = Guid.NewGuid().ToString();
-                    combinedDivision[k].CombinedDivisionName = k;
-                    combinedDivision[k].Divisions = reqBody[k];
-                    combinedDivision[k].Seasons = league.Champions.Count + 1;
-                    combinedDivision[k].Table = new List<Dictionary<string, object>>();
+                    combinedDivision[k.Key] = new CombinedDivisionTable();
+                    combinedDivision[k.Key].CombinedDivisionTableId = Guid.NewGuid().ToString();
+                    combinedDivision[k.Key].CombinedDivisionName = k.Key;
+                    combinedDivision[k.Key].Divisions = (List<String>) k.Value;
+                    combinedDivision[k.Key].Season = league.Champions.Count + 1;
+                    combinedDivision[k.Key].Table = new List<Dictionary<string, object>>();
                 }
             }
             else {
-                for (var combDiv in combinedDivision) {
-                    var table = combinedDivision[combDiv];
-                    combinedDivision[combDiv] = new CombinedDivisionTable();
-                    combinedDivision[combDiv].CombinedDivisionTableId = Guid.NewGuid().ToString();
-                    combinedDivision[combDiv].CombinedDivisionName = combDiv;
-                    combinedDivision[combDiv].Seasons = league.Champions.Count + 1;
-                    combinedDivision[combDiv].Divisions = copyCombinedDivision[combDiv].Divisions;
-                    combinedDivision[combDiv].Table = table.OrderBy(d => d["PlayerId"]).ToList();
+                foreach (var combDiv in combinedDivision) {
+                    var table = combinedDivision[combDiv.Key];
+                    combinedDivision[combDiv.Key] = new CombinedDivisionTable();
+                    combinedDivision[combDiv.Key].CombinedDivisionTableId = Guid.NewGuid().ToString();
+                    combinedDivision[combDiv.Key].CombinedDivisionName = combDiv.Key;
+                    combinedDivision[combDiv.Key].Season = league.Champions.Count + 1;
+                    combinedDivision[combDiv.Key].Divisions = copyCombinedDivision[combDiv.Key].Divisions;
+                    combinedDivision[combDiv.Key].Table = table.Table.OrderBy(d => d["PlayerId"]).ToList();
 
-                    for (var k in combinedDivision[combDiv].Table) {
-                        for (var metric in combinedDivision[combDiv].Table[k]) {
-                            if (typeof(combinedDivision[combDiv].Table[k][metric]) == typeof(string)) {
+                    for (int k = 0; k < combinedDivision[combDiv.Key].Table.Count; ++k) {
+                        foreach (var metric in combinedDivision[combDiv.Key].Table[k]) {
+                            if (combinedDivision[combDiv.Key].Table[k][metric.Key].GetType() == typeof(string)) {
                                 continue;
                             }
-                            divisions[div].Table[k][metric] = 0;
+                            combinedDivision[combDiv.Key].Table[k][metric.Key] = 0;
                         }
                     }
                 }
@@ -580,7 +582,7 @@ public class LeagueController : ControllerBase {
     [HttpPut("/Record/{LeagueId}")]
     public async Task<ActionResult> UpdatePlayerStandings(string LeagueId, Dictionary<string, object> reqBody) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }
@@ -589,21 +591,24 @@ public class LeagueController : ControllerBase {
 
             for (int i = 0; i < leagueStandings.Count; ++i) {
                 if (leagueStandings[i]["playerId"] == reqBody["PlayerId"]) {
-                    if (reqBody["recordStatus"] == 1) {
-                        leagueStandings[i]["wins"] += 1;
+                    if ((int) reqBody["recordStatus"] == 1) {
+                        int wins = Convert.ToInt32(leagueStandings[i]["wins"]);
+                        leagueStandings[i]["wins"] = wins + 1;
                     }
-                    else if (reqBody["recordStatus"] == -1) {
-                        leagueStandings[i]["losses"] += 1;
+                    else if ((int) reqBody["recordStatus"] == -1) {
+                        int losses = Convert.ToInt32(leagueStandings[i]["losses"]);
+                        leagueStandings[i]["losses"] = losses + 1;
                     }
-                    else if (reqBody["recordStatus"] == 0) {
-                        leagueStandings[i]["draws"] += 1;
+                    else if ((int) reqBody["recordStatus"] == 0) {
+                        int draws = Convert.ToInt32(leagueStandings[i]["draws"]);
+                        leagueStandings[i]["draws"] = draws + 1;
                     }
 
-                    for (var k in reqBody) {
-                        if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
+                    foreach (var k in reqBody) {
+                        if (k.Key == "recordStatus" || k.Key == "divisionName" || k.Key == "combinedDivisionName") {
                             continue;
                         }
-                        leagueStandings[i][k] = reqBody[k];
+                        leagueStandings[i][k.Key] = reqBody[k.Key];
                     }
                     break;
                 }
@@ -613,11 +618,11 @@ public class LeagueController : ControllerBase {
             sortFactors.Add("wins");
             sortFactors.Add("losses");
             sortFactors.Add("draws");
-            for (var k in reqBody) {
-                if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
+            foreach (var k in reqBody) {
+                if (k.Key == "recordStatus" || k.Key == "divisionName" || k.Key == "combinedDivisionName") {
                     continue;
                 }
-                sortFactors.Add(k);
+                sortFactors.Add(k.Key);
             }
 
             leagueStandings.Sort(new PlayerComparer(sortFactors));
@@ -631,25 +636,28 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, updatedTable);
 
-            var division = league.Division["divisionName"].Table;
+            var division = league.DivisionStandings["divisionName"].Table;
 
             for (int i = 0; i < division.Count; ++i) {
                 if (division[i]["playerId"] == reqBody["PlayerId"]) {
-                    if (reqBody["recordStatus"] == 1) {
-                        division[i]["wins"] += 1;
+                    if ((int) reqBody["recordStatus"] == 1) {
+                        int wins = Convert.ToInt32(division[i]["wins"]);
+                        division[i]["wins"] = wins + 1;
                     }
-                    else if (reqBody["recordStatus"] == -1) {
-                        division[i]["losses"] += 1;
+                    else if ((int) reqBody["recordStatus"] == -1) {
+                        int losses = Convert.ToInt32(division[i]["losses"]);
+                        division[i]["losses"] = losses + 1;
                     }
-                    else if (reqBody["recordStatus"] == 0) {
-                        division[i]["draws"] += 1;
+                    else if ((int) reqBody["recordStatus"] == 0) {
+                        int draws = Convert.ToInt32(division[i]["draws"]);
+                        division[i]["draws"] = draws + 1;
                     }
 
                     foreach (var k in reqBody) {
-                        if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
+                        if (k.Key == "recordStatus" || k.Key == "divisionName" || k.Key == "combinedDivisionName") {
                             continue;
                         }
-                        division[i][k] = reqBody[k];
+                        division[i][k.Key] = reqBody[k.Key];
                     }
                     break;
                 }
@@ -670,21 +678,24 @@ public class LeagueController : ControllerBase {
 
             for (int i = 0; i < combinedDivision.Count; ++i) {
                 if (combinedDivision[i]["playerId"] == reqBody["PlayerId"]) {
-                    if (reqBody["recordStatus"] == 1) {
-                        combinedDivision[i]["wins"] += 1;
+                    if ((int) reqBody["recordStatus"] == 1) {
+                        int wins = Convert.ToInt32(combinedDivision[i]["wins"]);
+                        combinedDivision[i]["wins"]  = wins + 1;
                     }
-                    else if (reqBody["recordStatus"] == -1) {
-                        combinedDivision[i]["losses"] += 1;
+                    else if ((int) reqBody["recordStatus"] == -1) {
+                        int losses = Convert.ToInt32(combinedDivision[i]["losses"]);
+                        combinedDivision[i]["losses"] = losses + 1;
                     }
-                    else if (reqBody["recordStatus"] == 0) {
-                        combinedDivision[i]["draws"] += 1;
+                    else if ((int) reqBody["recordStatus"] == 0) {
+                        int draws = Convert.ToInt32(combinedDivision[i]["draws"]);
+                        combinedDivision[i]["draws"] = draws + 1;
                     }
 
-                    for (var k in reqBody) {
-                        if (k == "recordStatus" || k == "divisionName" || k == "combinedDivisionName") {
+                    foreach (var k in reqBody) {
+                        if (k.Key == "recordStatus" || k.Key == "divisionName" || k.Key == "combinedDivisionName") {
                             continue;
                         }
-                        combinedDivision[i][k] = reqBody[k];
+                        combinedDivision[i][k.Key] = reqBody[k.Key];
                     }
                     break;
                 }
@@ -710,7 +721,7 @@ public class LeagueController : ControllerBase {
     [HttpPut("{LeagueId}/ArchieveStandings")]
     public async Task<ActionResult> ArchieveStandings(string LeagueId) {
         try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
                 return NotFound();
             }

@@ -465,15 +465,34 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         return schedule;
     }
 
+    private Dictionary<string, List<List<object>>> SimplifySchedule(Dictionary<string, List<List<object>>> schedule) {
+        Dictionary<string, List<List<object>>> final_schedule;
+        index = 0;
+        for (var player in schedule) {
+            final_schedule[player] = new List<List<object>>(schedule[player].Count);
+        }
+
+        for (var player in schedule) {
+            for (int i = 0; i < schedule[player].Count; ++i) {
+                if (game.Count < 3) {
+                    continue;
+                }
+                final_schedule[player][i] = schedule[player][i];
+                final_schedule[schedule[player][i][0]][i] = [index, i]; 
+            }
+            index++;
+        }
+    }
+
     //Endpoint to recieve a file of all schedules and verify it -> add it to file
     [HttpPost("{AssignmentsId}/UploadSchedule")]
-    public async Task<ActionResult<Dictionary<string, List<List<string>>>>> ProcessSubmittedSchedule(string AssignmentsId, [FromForm] IFormFile schedule, [FromBody] Dictionary<string, object> reqBody) {
+    public async Task<ActionResult<List<Tuple<string, List<List<object>>>>>> ProcessSubmittedSchedule(string AssignmentsId, [FromForm] IFormFile schedule, [FromBody] Dictionary<string, object> reqBody) {
         try {
             if (schedule == null || schedule.Length == 0) {
                 return BadRequest();
             }
 
-            Dictionary<string, List<List<string>>> player_schedules;
+            Dictionary<string, List<List<object>>> player_schedules;
 
             using (var streamReader = new StreamReader(schedule.OpenReadStream())) {
                 var fileContent = await streamReader.ReadToEndAsync();
@@ -485,9 +504,18 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 if (!verified) {
                     return BadRequest();
                 }
+
+                Dictionary<string, List<List<object>>> final_schedule = SimplifySchedule(player_schedules);
+
+                List<Tuple<string, List<List<object>>>> final_player_schedule = new List<Tuple<string, List<List<object>>>>();
+
+                for (var player in final_schedule) {
+                    final_player_schedule.add(Tuple.Create(player, final_schedule[player]));
+                }
+
             }
 
-            OkObjectResult res = new OkObjectResult(player_schedules);
+            OkObjectResult res = new OkObjectResult(final_player_schedule);
 
             return Ok(res);
         } catch {

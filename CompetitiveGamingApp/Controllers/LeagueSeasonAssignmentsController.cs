@@ -9,6 +9,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -527,6 +529,18 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         otherGameInfo = new Dictionary<String, String>()
                     };
                     playerGames.add(currGame);
+
+                    using (HttpClient client = new HttpClient()) {
+                        
+                        var jsonData = JsonConvert.SerializeObject(currGame);
+
+                        StringContent reqBody = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                        HttpResponseMessage resMessage = await client.PostAsync("/api/singleGame/Season", reqBody);
+
+                        if (!resMessage.IsSuccessStatusCode) {
+                            return BadRequest();
+                        }
+                    }
                 }
                 playerSchedules.add(Tuple.Create(schedule, playerGames));
             }

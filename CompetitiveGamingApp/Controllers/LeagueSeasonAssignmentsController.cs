@@ -619,4 +619,28 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
 
     //Endpoint to move the collection of games into a bigger collection as an archieve
+    [HttpPut("{AssignmentsId}/Archieve/FinalFullSchedules")]
+    public async Task<ActionResult> ArchievePlayerSchedules(string AssignmentsId) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            var finalSchedules = assignment.FinalFullSchedule;
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["ArchieveFinalFullSchedule"] = true;
+
+            Dictionary<string, object> updatedValues;
+            updatedValues["ArchieveFinalFullSchedule"] = finalSchedules;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
 }

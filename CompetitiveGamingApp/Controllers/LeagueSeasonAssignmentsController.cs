@@ -583,6 +583,38 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     }
 
     //Endpoint to take in a generated schedule (aggregate) and format each possible game and sort them by date
+    [HttpPut("{AssignmentsId}/FinalSeasonSchedule")]
+    public async Task<ActionResult> ProcessFinalSeasonSchedule(string AssignmentsId) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment.Count == 0) {
+                return NotFound();
+            }
+
+            var playerSchedules = assignment.PlayerFullSchedule;
+
+            var allGames = assignment.FinalFullSchedule;
+
+            Dictionary<string, bool> upsertInfo;
+            upsertInfo["FinalFullSchedule"] = true;
+
+            for (var player in playerSchedules) {
+                allGames.AddRange(player.Item2);
+            }
+
+
+            Dictionary<string, object> updatedValues;
+            updatedValues["FinalFullSchedule"] = allGames;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
 
     //Endpoint to move the collection of games into a bigger collection as an archieve
 }

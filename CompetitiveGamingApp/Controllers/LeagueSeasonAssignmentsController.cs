@@ -565,11 +565,11 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     //Endpoint to notify SNS/other MQ with request to generate schedules. 
 
     //Endpoint to take in generated schedules and format it using the SingleGame Objects for each player's schedule
-    {HttpPut("{AssignmentsId}")}
+    [HttpPut("{AssignmentsId}")]    
     public async Task<ActionResult> ProcessPlayerSchedules(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-            if (assignment.Count == 0) {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
                 return NotFound();
             }
 
@@ -580,31 +580,31 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             var playerSchedules = assignment.PlayerFullSchedule;
 
-            var schedules = reqBody["PlayerFullSchedule"];
+            var schedules = (List<Tuple<string, List<object>>>) reqBody["PlayerFullSchedule"];
 
             var size = schedules[0].Item2.Count;
 
             foreach (var schedule in schedules) {
-                List<List<object>> temp = new List<List<object>>(size);
-                playerSchedules.add(temp);
+                List<object> temp = new List<object>(size);
+                playerSchedules.Add(Tuple.Create(schedule.Item1, temp));
             }
 
             int index1 = 0;
 
             foreach (var schedule in schedules) {
                 int index2 = 0;
-                for (var gameInfo in schedule.Item2) {
-                    Type currType = typeof(gameInfo);
-                    if (!currType.IsClass  && !typeToCheck.IsValueType) {
+                foreach (var gameInfo in schedule.Item2) {
+                    Type currType = gameInfo.GetType();
+                    if (!currType.IsClass  && !currType.IsValueType) {
                         continue;
                     }
                     SingleGame currGame = new SingleGame {
                         SingleGameId = Guid.NewGuid().ToString(),
-                        hostPlayer = gameInfo[2] == 'H' ? schedule : gameInfo[0],
-                        guestPlayer = gameInfo[2] == 'A' ? schedule : gameInfo[0],
-                        finalScore = new Tuple<int, int>(),
+                        hostPlayer = (string)((List<object>)gameInfo)[2] == "H" ? schedule.Item1 : (string)((List<object>)gameInfo)[0],
+                        guestPlayer = (string)((List<object>)gameInfo)[2] == "A" ? schedule.Item1 : (string)((List<object>)gameInfo)[0],
+                        finalScore = new Tuple<int, int>(0, 0),
                         inGameScores = new List<Tuple<String, Tuple<int, int>>>(),
-                        timePlayed = gameInfo[1],
+                        timePlayed = (DateTime)((List<object>)gameInfo)[1],
                         videoObjName = "",
                         gameEditor = "",
                         twitchBroadcasterId = "",
@@ -618,7 +618,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         found_index++;
                     }
                     playerSchedules[index1].Item2[index2] = currGame;
-                    playerSchedules[found_index].Item2[index2] = [index1, index2];
+                    playerSchedules[found_index].Item2[index2] = new List<int> { index1, index2 };
 
                     using (HttpClient client = new HttpClient()) {
                         
@@ -651,7 +651,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPut("{AssignmentsId}/Archieve/PlayerSchedules")]
     public async Task<ActionResult> ArchievePlayerSchedules(string AssignmentsId) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
             if (assignment == null) {
                 return NotFound();
             }
@@ -677,7 +677,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     [HttpPut("{AssignmentsId}/FinalSeasonSchedule")]
     public async Task<ActionResult> ProcessFinalSeasonSchedule(string AssignmentsId) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
             if (assignment == null) {
                 return NotFound();
             }
@@ -686,16 +686,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             var allGames = assignment.FinalFullSchedule;
 
-            Dictionary<string, bool> upsertInfo;
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
             upsertInfo["FinalFullSchedule"] = true;
 
-            for (var player in playerSchedules) {
-                for (var game in player.Item2) {
-                    Type currType = typeof(game);
-                    if (!currType.IsClass  && !typeToCheck.IsValueType) {
+            foreach (var player in playerSchedules) {
+                foreach (var game in player.Item2) {
+                    Type currType = game.GetType();
+                    if (!currType.IsClass  && !currType.IsValueType) {
                         continue;
                     }
-                    allGames.add(game);
+                    allGames.Add((SingleGame) game);
                 }
             }
 
@@ -717,9 +717,9 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
     //Endpoint to move the collection of games into a bigger collection as an archieve
     [HttpPut("{AssignmentsId}/Archieve/FinalFullSchedules")]
-    public async Task<ActionResult> ArchievePlayerSchedules(string AssignmentsId) {
+    public async Task<ActionResult> ArchieveFullSchedules(string AssignmentsId) {
         try {
-            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
             if (assignment == null) {
                 return NotFound();
             }
@@ -743,7 +743,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
     [HttpGet("{AssignmentsId}/{playerName}/PlayerSchedule")]
     public async Task<ActionResult<List<SingleGame>>> GetPlayerSchedule(string AssignmentsId, string playerName) {
-        var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
         if (assignment == null) {
             return NotFound();
         }
@@ -755,12 +755,12 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             if (playerSchedule.Item1 == playerName) {
 
                 foreach (var game in playerSchedule.Item2) {
-                    Type currType = typeof(game);
-                    if (!currType.IsClass  && !typeToCheck.IsValueType) {
-                        playerMatches.Add(playerSchedules[game[0]].Item2[game[1]]);
+                    Type currType = game.GetType();
+                    if (!currType.IsClass  && !currType.IsValueType) {
+                        playerMatches.Add((SingleGame) playerSchedules[(int) ((List<Object>)game)[0]].Item2[(int)((List<Object>)game)[1]]);
                     }
                     else {
-                        playerMatches.Add(game);
+                        playerMatches.Add((SingleGame) game);
                     }
                 }
 
@@ -780,7 +780,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
     [HttpGet("{AssignmentsId}/FinalSchedule")]
     public async Task<ActionResult<List<SingleGame>>> GetFinalSchedule(string AssignmentsId) {
-        var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
         if (assignment == null) {
             return NotFound();
         }

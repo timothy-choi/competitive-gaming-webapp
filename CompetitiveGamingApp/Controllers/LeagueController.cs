@@ -570,6 +570,44 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpDelete("{LeagueId}/{PlayerId}/CombinedDivision")]
+    public async Task<ActionResult> RemovePlayerFromCombinedDivision(string LeagueId, string PlayerId) {
+        try {
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            string found_combined_division = "";
+
+            var combDivisions = league.CombinedDivisionStandings;
+            foreach (var combDivision in combDivisions) {
+                if (combDivision.Value.Table.Find(dict => dict["playerId"] == PlayerId).ToList().Count() > 0) {
+                    found_combined_division = combDivision.Key;
+                    break;
+                }
+            }
+
+            if (found_combined_division == "") {
+                return NotFound();
+            }
+
+            combDivisions[found_combined_division].Table.RemoveAll(entry => entry["playerId"] == PlayerId);
+
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
+            upsertStatus["DivisionStandings." + found_combined_division + ".Table"] = false;
+
+            Dictionary<string, object> DivPlayer = new Dictionary<string, object>();
+            DivPlayer["DivisionStandings." + found_combined_division + ".Table"] = combDivisions[found_combined_division].Table;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("{LeagueId}/CombinedDivision/Reset")]
     public async Task<ActionResult> ResetCombinedDivisionStandings(string LeagueId, Dictionary<string, object> reqBody) {
         try {

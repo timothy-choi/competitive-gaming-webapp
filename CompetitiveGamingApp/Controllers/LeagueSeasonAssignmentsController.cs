@@ -612,7 +612,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                     };
                     int found_index = 0;
                     foreach (var player in schedules) {
-                        if (player == schedule) {
+                        if (player.Item1 == (string)((List<object>)gameInfo)[0]) {
                             break;
                         }
                         found_index++;

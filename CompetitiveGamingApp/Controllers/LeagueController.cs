@@ -293,6 +293,44 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpDelete("{LeagueId}/{playerId}/LeagueStandings")]
+    public async Task<ActionResult> DeletePlayerFromLeagueStandings(string LeagueId, string playerId) {
+        try {
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
+            upsertStatus["LeagueStandings.Table"] = false;
+
+            var leagueStandings = league.LeagueStandings.Table;
+
+            int index = -1;
+            for (int i = 0; i < leagueStandings.Count; ++i) {
+                if (leagueStandings[index]["playerId"] == playerId) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1) {
+                return NotFound();
+            }
+
+            leagueStandings.RemoveAt(index);
+
+            Dictionary<string, object> playerStandings = new Dictionary<string, object>();
+            playerStandings["LeagueStandings.Table"] = leagueStandings;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, playerStandings);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("{LeagueId}/Division/Create")]
     public async Task<ActionResult> CreateDivisions(string LeagueId, Dictionary<string, object> reqBody) {
         try {

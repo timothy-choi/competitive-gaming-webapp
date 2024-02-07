@@ -23,7 +23,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
     [HttpGet("{AssignmentId}")]
     public async Task<ActionResult<LeaguePlayerSeasonAssignments>> GetSeasonAssignments(string AssignmentId) {
-        var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
+        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
         if (assignment == null) {
             return NotFound();
         }

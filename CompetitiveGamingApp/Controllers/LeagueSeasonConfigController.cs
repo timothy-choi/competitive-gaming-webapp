@@ -17,7 +17,7 @@ public class LeagueSeasonConfigController : ControllerBase {
 
     [HttpGet("{ConfigId}")]
     public async Task<ActionResult<LeagueSeasonConfig>> GetLeagueSeasonConfig(string ConfigId) {
-        var config = _leagueService.GetData("leagueConfig", ConfigId);
+        var config = (LeagueSeasonConfig) await _leagueService.GetData("leagueConfig", ConfigId);
         if (config == null) {
             return NotFound();
         }

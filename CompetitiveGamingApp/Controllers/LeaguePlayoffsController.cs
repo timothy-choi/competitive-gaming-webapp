@@ -14,7 +14,7 @@ public class LeaguePlayoffsController : ControllerBase {
     private readonly MongoDBService _leagueService;
 
     public LeaguePlayoffsController(MongoDBService leagueService) {
-        leagueService = _leagueService;
+        _leagueService = leagueService;
     }
 
     [HttpGet("{LeaguePlayoffId}")]

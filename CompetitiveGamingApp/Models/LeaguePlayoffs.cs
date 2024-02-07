@@ -10,6 +10,7 @@ public class PlayoffMatchup {
     public int player1_rank {get; set;}
     public String? player2 {get; set;}
     public int player2_rank {get; set;}
+    public String? winner {get; set;}
     public int round {get; set;}
     public String? Division {get; set;}
 }
@@ -24,15 +25,8 @@ public class LeaguePlayoffs {
     public bool CombinedDivisionMode {get; set;} //true = playoff selection is based on combined divisions
 
     public List<Tuple<int, Tuple<String, String>>>? WholeRoundOrdering {get; set;} //sets all matchups based on seed in the inital round (all teams initially play)
-    public List<PlayoffMatchup>? WholePlayoffPairings {get; set;} //list of all pairings in whole mode
-    public List<List<PlayoffMatchup>>? ArchieveWholePlayoffPairings {get; set;}
     public List<Tuple<String, List<Tuple<int, Tuple<String, String>>>>>? CombinedDivisionGroups {get; set;}
-    public List<Tuple<String, List<PlayoffMatchup>>>? CombinedDivisionPlayoffMatchups {get; set;}
-    public List<List<Tuple<String, List<PlayoffMatchup>>>>? ArchieveCombinedDivisionPlayoffMatchups {get; set;}
     public List<Tuple<String, Tuple<int, Tuple<String, String>>>>? DivisionBasedPlayoffPairings {get; set;} //division based playoff format
-    public List<Tuple<String, PlayoffMatchup>>? DivisionBasedPlayoffMatchups {get; set;}
-    public List<List<Tuple<String, PlayoffMatchup>>>? ArchieveDivisionBasedPlayoffMatchups {get; set;}
     public List<Tuple<int, Tuple<String, String>>>? UserDefinedPlayoffMatchups {get; set;} //User Defined Playoff Matchups 
-    public List<PlayoffMatchup>? UserDefinedPlayoffFinalGroups {get; set;}
-    public List<List<PlayoffMatchup>>? ArchieveUserDefinedPlayoffFinalGroups {get; set;}
+    public PlayoffGraph? PlayoffBracket {get; set;}
 }

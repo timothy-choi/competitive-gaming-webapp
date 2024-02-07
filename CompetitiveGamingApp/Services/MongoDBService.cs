@@ -160,17 +160,9 @@ public class MongoDBService {
                 { "DefaultMode", playoffs.DefaultMode },
                 { "CombinedDivisionMode", playoffs.CombinedDivisionMode },
                 { "WholeRoundOrdering", BsonDocumentWrapper.Create(playoffs.WholeRoundOrdering ?? new List<Tuple<int, Tuple<string, string>>>()) },
-                { "WholePlayoffPairings", BsonDocumentWrapper.Create(playoffs.WholePlayoffPairings ?? new List<PlayoffMatchup>()) },
-                { "ArchieveWholePlayoffPairings", BsonDocumentWrapper.Create(playoffs.ArchieveWholePlayoffPairings ?? new List<List<PlayoffMatchup>>()) },
                 { "CombinedDivisionGroups", BsonDocumentWrapper.Create(playoffs.CombinedDivisionGroups ?? new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>()) },
-                { "CombinedDivisionPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.CombinedDivisionPlayoffMatchups ?? new List<Tuple<string, List<PlayoffMatchup>>>()) },
-                { "ArchieveCombinedDivisionPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.ArchieveCombinedDivisionPlayoffMatchups ?? new List<List<Tuple<string, List<PlayoffMatchup>>>>()) },
                 { "DivisionBasedPlayoffPairings", BsonDocumentWrapper.Create(playoffs.DivisionBasedPlayoffPairings ?? new List<Tuple<string, Tuple<int, Tuple<string, string>>>>()) },
-                { "DivisionBasedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.DivisionBasedPlayoffMatchups ?? new List<Tuple<string, PlayoffMatchup>>()) },
-                { "ArchieveDivisionBasedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.ArchieveDivisionBasedPlayoffMatchups ?? new List<List<Tuple<string, PlayoffMatchup>>>()) },
                 { "UserDefinedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.UserDefinedPlayoffMatchups ?? new List<Tuple<int, Tuple<string, string>>>()) },
-                { "UserDefinedPlayoffFinalGroups", BsonDocumentWrapper.Create(playoffs.UserDefinedPlayoffFinalGroups ?? new List<PlayoffMatchup>()) },
-                { "ArchieveUserDefinedPlayoffFinalGroups", BsonDocumentWrapper.Create(playoffs.ArchieveUserDefinedPlayoffFinalGroups ?? new List<List<PlayoffMatchup>>()) }
             };
             break;
 

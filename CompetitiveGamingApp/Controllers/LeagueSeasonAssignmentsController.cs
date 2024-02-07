@@ -36,28 +36,28 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         try {
             LeaguePlayerSeasonAssignments currLeague = new LeaguePlayerSeasonAssignments {
                 AssignmentsId = Guid.NewGuid().ToString(),
-                ConfigId = reqBody["ConfigId"],
-                LeagueId = reqBody["LeagueId"]
-                PartitionsEnabled = reqBody["PartitionsEnabled"],
-                ReassignEverySeason = reqBody["ReassignEverySeason"],
-                AutomaticInduction = reqBody["AutomaticInduction"],
-                NumberOfPlayersPerPartition = reqBody["NumberOfPlayersPerPartition"],
-                NumberOfPartitions = reqBody["NumberOfPartitions"],
-                SamePartitionSize = reqBody["SamePartitionSize"],
-                AutomaticScheduling = reqBody["AutomaticScheduling"],
-                ExcludeOutsideGames = reqBody["ExcludeOutsideGames"],
-                InterDivisionGameLimit = reqBody["InterDivisionGameLimit"],
-                RepeatMatchups = reqBody["RepeatMatchups"],
-                MaxRepeatMatchups = reqBody["MaxRepeatMatchups"],
-                DivisionSelective = reqBody["DivisionSelective"],
+                ConfigId = reqBody["ConfigId"] as string,
+                LeagueId = reqBody["LeagueId"] as string,
+                PartitionsEnabled = Convert.ToBoolean(reqBody["PartitionsEnabled"]),
+                ReassignEverySeason = Convert.ToBoolean(reqBody["ReassignEverySeason"]),
+                AutomaticInduction = Convert.ToBoolean(reqBody["AutomaticInduction"]),
+                NumberOfPlayersPerPartition = Convert.ToInt32(reqBody["NumberOfPlayersPerPartition"]),
+                NumberOfPartitions = Convert.ToInt32(reqBody["NumberOfPartitions"]),
+                SamePartitionSize = Convert.ToBoolean(reqBody["SamePartitionSize"]),
+                AutomaticScheduling = Convert.ToBoolean(reqBody["AutomaticScheduling"]),
+                ExcludeOutsideGames = Convert.ToBoolean(reqBody["ExcludeOutsideGames"]),
+                InterDvisionGameLimit = Convert.ToInt32(reqBody["InterDivisionGameLimit"]),
+                RepeatMatchups = Convert.ToBoolean(reqBody["RepeatMatchups"]),
+                MaxRepeatMatchups = Convert.ToInt32(reqBody["MaxRepeatMatchups"]),
+                DivisionSelective = Convert.ToBoolean(reqBody["DivisionSelective"]),
                 OutsideDivisionSelections = new Dictionary<string, List<string>>(),
-                RandomizeDivisionSelections = reqBody["RandomizeDivisionSelections"],
-                PlayerSelection = reqBody["PlayerSelection"],
+                RandomizeDivisionSelections = Convert.ToBoolean(reqBody["RandomizeDivisionSelections"]),
+                PlayerSelection = Convert.ToBoolean(reqBody["PlayerSelection"]),
                 PlayerExemptLists = new Dictionary<string, List<string>>(),
-                repeatAllMatchups = reqBody["repeatAllMatchups"],
-                minRepeatMatchups = reqBody["minRepeatMatchups"],
-                maxRepeatMatchups = reqBody["maxRepeatMatchups"],
-                playAllPlayers = reqBody["playAllPlayers"],
+                repeatAllMatchups = Convert.ToBoolean(reqBody["repeatAllMatchups"]),
+                minRepeatMatchups = Convert.ToInt32(reqBody["minRepeatMatchups"]),
+                maxRepeatMatchups = Convert.ToInt32(reqBody["maxRepeatMatchups"]),
+                playAllPlayers = Convert.ToBoolean(reqBody["playAllPlayers"]),
                 AllPartitions = new Dictionary<String, List<String>>(),
                 AllCombinedDivisions = new Dictionary<String, List<String>>(),
                 PlayerFullSchedule = new List<Tuple<string, List<object>>>(),
@@ -165,10 +165,13 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             var divisions = (List<String>) reqBody["divisions"];
             for (int x = 0; x < players.Count; ++x) {
                 for (int y = 0; y < divisions.Count; ++y) {
-                    var found = reqBody["division_assignment"][reqBody["divisions"][y]].Find(player => player == reqBody["players"][x]);
-                    if (found != -1) {
-                        player_divisions[reqBody["players"][x]] = reqBody["divisions"][y];
-                        break;
+                    var divisionAssignment = (Dictionary<string, List<string>>)reqBody["division_assignment"];
+                    if (divisionAssignment.TryGetValue(divisions[y], out var divisionPlayers)) {
+                        var foundIndex = divisionPlayers.FindIndex(player => player == players[x]);
+                        if (foundIndex != -1) {
+                            player_divisions[players[x]] = divisions[y];
+                            break;
+                        }
                     }
                 }
             }
@@ -176,12 +179,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             for (int i = 0; i < players.Count; ++i) {
                 var random = new Random();
                 divisions =  (List<String>) reqBody["divisions"];
-                while (divisionSelection[reqBody["players"][i]].Count != reqBody["num_of_selections"]) {
+                 var player = (String) players[i]; 
+                while (divisionSelection[player].Count != (int) reqBody["num_of_selections"]) {
                     var selection = divisions[random.Next(0, divisions.Count-1)];
-                    divisionSelection[reqBody["players"][i]].add(selection);
-                    divisions.removeAll(d => d == selection);
-                    for (int j = 0; j < reqBody["division_assignment"][selection].Count; ++j) {
-                        divisionSelection[reqBody["division_assignment"][selection][j]].add(player_divisions[reqBody["players"][i]]);
+                    divisionSelection[player].Add(selection);
+                    divisions.RemoveAll(d => d == selection);
+
+                    var divisionAssignment = ((Dictionary<string, List<string>>)reqBody["division_assignment"])[selection];
+
+                    for (int j = 0; j < divisionAssignment.Count; ++j) {
+                        divisionSelection[divisionAssignment[j]].Add(player_divisions[player]);
                     }
                 }
             } 
@@ -230,7 +237,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
             foreach (var player in reqBody) {
-                foreach (var update in player.Value) {
+                var updates = (List<Tuple<bool, string, int>>)player.Value;
+                foreach (var update in updates) {
                     upsertInfo[update.Item2] = update.Item1 ? false : true;
                     if (!update.Item1) {
                         var exemptList = assignment.PlayerExemptLists[player.Key];
@@ -273,8 +281,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             var seen = new List<string>();
             foreach (var division in reqBody) {
-                partitions[division.Key] = reqBody[division.Key];
-                foreach (var player in reqBody[division]) {
+                partitions[division.Key] = (List<String>) reqBody[division.Key];
+                foreach (var player in (List<String>) reqBody[division.Key]) {
                     seen.Add(player);
                     count++;
                 }
@@ -430,7 +438,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     private bool verifySchedule(Dictionary<string, List<List<string>>> schedule, List<string> players) {
         foreach (var player in schedule) {
             List<string> schedule_players = schedule[player.Key].Select(p => p.ElementAtOrDefault(0)).Distinct().ToList();
-            var player_ref = players.Except(player.Key).Distinct().ToList();
+            var player_ref = players.Where(p => p != player.Key).Distinct().ToList();
 
             if (schedule_players.Intersect(player_ref).ToList().Count() != schedule_players.Count()) {
                 return false;
@@ -465,7 +473,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         var schedule = new Dictionary<string, List<List<string>>>();
         List<List<string>> currentSchedule = null;
 
-        using (var streamReader = new StreamReader()) {
+        using (var streamReader = new StreamReader(scheduleContent)) {
             string line;
             while ((line = streamReader.ReadLine()) != null) {
                 if (char.IsDigit(line[0])) {
@@ -532,7 +540,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 final_player_schedule = new List<Tuple<string, List<List<object>>>>();
 
                 foreach (var player in final_schedule) {
-                    final_player_schedule.Add(Tuple.Create(player, final_schedule[player.Key]));
+                    final_player_schedule.Add(Tuple.Create(player.Key, final_schedule[player.Key]));
                 }
 
             }

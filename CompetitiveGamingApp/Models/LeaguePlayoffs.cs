@@ -28,5 +28,5 @@ public class LeaguePlayoffs {
     public List<Tuple<String, List<Tuple<int, Tuple<String, String>>>>>? CombinedDivisionGroups {get; set;}
     public List<Tuple<String, Tuple<int, Tuple<String, String>>>>? DivisionBasedPlayoffPairings {get; set;} //division based playoff format
     public List<Tuple<int, Tuple<String, String>>>? UserDefinedPlayoffMatchups {get; set;} //User Defined Playoff Matchups 
-    public List<PlayoffGraph?>? PlayoffBracket {get; set;}
+    public PlayoffBracket? FinalPlayoffBracket {get; set;}
 }

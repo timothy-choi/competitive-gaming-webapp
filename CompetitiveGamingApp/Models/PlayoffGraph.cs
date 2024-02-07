@@ -12,9 +12,23 @@ public class PlayoffGraphNode {
 }
 
 public class PlayoffGraph {
-    List<PlayoffGraphNode?>? PlayoffHeadMatchups {get; set;}
+    public List<PlayoffGraphNode?>? PlayoffHeadMatchups {get; set;}
+    public String? PlayoffName {get; set;}
 
-    public PlayoffGraph() {
-        PlayoffHeadMatchups = new List<PlayoffGraphNode>();
+    public PlayoffGraph(String name) {
+        PlayoffHeadMatchups = new List<PlayoffGraphNode?>();
+        PlayoffName = name;
+    }
+}
+
+public class PlayoffBracket {
+    public List<PlayoffGraph?>? SubPlayoffBrackets {get; set;}
+    public List<PlayoffGraphNode?>? FinalRoundMatchups {get; set;}
+    public String? Champion {get; set;}
+
+    public PlayoffBracket() {
+        SubPlayoffBrackets = new List<PlayoffGraph?>();
+        FinalRoundMatchups = new List<PlayoffGraphNode?>();
+        Champion = "";
     }
 }

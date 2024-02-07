@@ -400,6 +400,44 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpDelete("{LeagueId}/{PlayerId}/Division")]
+    public async Task<ActionResult> RemovePlayerFromDivision(string LeagueId, string PlayerId) {
+        try {
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            string found_division = "";
+
+            var divisions = league.DivisionStandings;
+            foreach (var division in divisions) {
+                if (division.Value.Table.Find(dict => dict["playerId"] == PlayerId).ToList().Count() > 0) {
+                    found_division = division.Key;
+                    break;
+                }
+            }
+
+            if (found_division == "") {
+                return NotFound();
+            }
+
+            divisions[found_division].Table.RemoveAll(entry => entry["playerId"] == PlayerId);
+
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
+            upsertStatus["DivisionStandings." + found_division + ".Table"] = false;
+
+            Dictionary<string, object> DivPlayer = new Dictionary<string, object>();
+            DivPlayer["DivisionStandings." + found_division + ".Table"] = divisions[found_division].Table;
+
+            await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPut("{LeagueId}/ResetDivisions")]
     public async Task<ActionResult> ResetDivisions(string LeagueId, Dictionary<string, object> reqBody) {
         try {

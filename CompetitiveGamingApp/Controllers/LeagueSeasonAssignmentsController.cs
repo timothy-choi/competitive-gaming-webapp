@@ -535,7 +535,13 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                     return BadRequest();
                 }
 
-                Dictionary<string, List<List<object>>> final_schedule = SimplifySchedule(player_schedules);
+                Dictionary<string, List<List<object>>> temp = new Dictionary<string, List<List<object>>>();
+                foreach (var entry in player_schedules) {
+                    var newList = entry.Value.Select(innerList => innerList.Cast<object>().ToList()).ToList();
+                    temp.Add(entry.Key, newList);
+                }
+
+                Dictionary<string, List<List<object>>> final_schedule = SimplifySchedule(temp);
 
                 final_player_schedule = new List<Tuple<string, List<List<object>>>>();
 

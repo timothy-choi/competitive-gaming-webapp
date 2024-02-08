@@ -335,12 +335,29 @@ public class LeaguePlayoffsController : ControllerBase {
                                 return false;
                             }
 
-                            if (int.TryParse(matchup.Item1, out int res)) {
+                            if (matchup.Item1.StartsWith("BYE") && matchup.Item1.Substring(3).GetType() == typeof(String)) {
+                                if (!int.TryParse(matchup.Item1.Substring(3), out int res3) && !(res3 >= 1 && res3 <= player_count)) {
+                                    return false;
+                                }
+                            }
+                            else {
+                                return false;
+                            }
+                            if (matchup.Item2.StartsWith("BYE") && matchup.Item2.Substring(3).GetType() == typeof(String)) {
+                                if (!int.TryParse(matchup.Item2.Substring(3), out int res4) && !(res4 >= 1 && res4 <= player_count)) {
+                                    return false;
+                                }
+                            }
+                            else {
+                                return false;
+                            }
+
+                            if (matchup.Item1.GetType() == typeof(int) && int.TryParse(matchup.Item1, out int res)) {
                                 if (!(res >= 1 && res <= player_count)) {
                                     return false;
                                 }
                             }
-                            if (int.TryParse(matchup.Item2, out int res2)) {
+                            if (matchup.Item2.GetType() == typeof(int) && int.TryParse(matchup.Item2, out int res2)) {
                                 if (!(res2 >= 1 && res2 <= player_count)) {
                                     return false;
                                 }

@@ -156,14 +156,24 @@ public class LeaguePlayoffsController : ControllerBase {
         int ct = player_count / 2;
         int r = 1;
         if (defaultMode) {
-            while (playoffs.ContainsKey("Round" + r)) {
+            while (playoffs.ContainsKey("ROUND" + r)) {
                 if (playoffs["ROUND" + r].Count == ct) {
                     ct /= 2;
                     var seen = new Dictionary<string, bool>();
                     foreach (var matchup in playoffs["ROUND" + r]) {
                         if (r == 1) {
-                            if (matchup.Item1.Contains("/") || matchup.Item2.Contains("/") || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item1, out _)) {
+                            if (matchup.Item1.Contains("/") || matchup.Item2.Contains("/") || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item2, out _)) {
                                 return false;
+                            }
+                            if (int.TryParse(matchup.Item1, out int res)) {
+                                if (!(res >= 1 && res <= player_count)) {
+                                    return false;
+                                }
+                            }
+                            if (int.TryParse(matchup.Item2, out int res2)) {
+                                if (!(res2 >= 1 && res2 <= player_count)) {
+                                    return false;
+                                }
                             }
                             if (seen[matchup.Item1] || seen[matchup.Item2]) {
                                 return false;
@@ -181,6 +191,11 @@ public class LeaguePlayoffsController : ControllerBase {
                                     if (!int.TryParse(elt, out _) || seen[elt]) {
                                         return false;
                                     }
+                                    if (int.TryParse(elt, out int res)) {
+                                        if (!(res >= 1 && res <= player_count)) {
+                                            return false;
+                                        }
+                                    }
                                     seen[elt] = true;
                                 }
                             }
@@ -193,12 +208,27 @@ public class LeaguePlayoffsController : ControllerBase {
                                     if (!int.TryParse(elt, out _) || seen[elt]) {
                                         return false;
                                     }
+                                    if (int.TryParse(elt, out int res)) {
+                                        if (!(res >= 1 && res <= player_count)) {
+                                            return false;
+                                        }
+                                    }
                                     seen[elt] = true;
                                 }
                             }
                             else {
-                                if (seen[matchup.Item1] || seen[matchup.Item2] || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item1, out _)) {
+                                if (seen[matchup.Item1] || seen[matchup.Item2] || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item2, out _)) {
                                     return false;
+                                }
+                                if (int.TryParse(matchup.Item1, out int res)) {
+                                    if (!(res >= 1 && res <= player_count)) {
+                                        return false;
+                                    }
+                                }
+                                if (int.TryParse(matchup.Item2, out int res2)) {
+                                    if (!(res2 >= 1 && res2 <= player_count)) {
+                                        return false;
+                                    }
                                 }
                                 seen[matchup.Item1] = true;
                                 seen[matchup.Item2] = true;
@@ -242,6 +272,17 @@ public class LeaguePlayoffsController : ControllerBase {
                             return false;
                         }
 
+                        if (int.TryParse(matchup.Item1, out int res)) {
+                            if (!(res >= 1 && res <= player_count)) {
+                                return false;
+                            }
+                        }
+                        if (int.TryParse(matchup.Item2, out int res2)) {
+                            if (!(res2 >= 1 && res2 <= player_count)) {
+                                return false;
+                            }
+                        }
+
                         if (seen[matchup.Item1] || seen[matchup.Item2]) {
                             return false;
                         }
@@ -250,10 +291,9 @@ public class LeaguePlayoffsController : ControllerBase {
                         seen[matchup.Item2] = true;
                     }
 
-                    ct -= bye_count;
+                    ct -= bye_count * 2;
                 }
-                else if (playoffs["ROUND" + r].Count / 2 == ct) {
-                    ct /= 2;
+                else if (playoffs["ROUND" + r].Count == ct) {
                     var seen = new Dictionary<string, bool>();
                     foreach (var matchup in playoffs["ROUND" + r]) {
                         if (matchup.Item1.Contains("/")) {
@@ -264,6 +304,11 @@ public class LeaguePlayoffsController : ControllerBase {
                             foreach (var elt in arr) {
                                 if (!int.TryParse(elt, out _) || seen[elt]) {
                                     return false;
+                                }
+                                if (int.TryParse(elt, out int res)) {
+                                    if (!(res >= 1 && res <= player_count)) {
+                                        return false;
+                                    }
                                 }
                                 seen[elt] = true;
                             }
@@ -277,12 +322,28 @@ public class LeaguePlayoffsController : ControllerBase {
                                 if (!int.TryParse(elt, out _) || seen[elt]) {
                                     return false;
                                 }
+                                if (int.TryParse(elt, out int res)) {
+                                    if (!(res >= 1 && res <= player_count)) {
+                                        return false;
+                                    }
+                                }
                                 seen[elt] = true;
                             }
                         }
                         else {
                             if (seen[matchup.Item1] || seen[matchup.Item2] || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item1, out _) || !matchup.Item2.StartsWith("BYE") || !matchup.Item2.StartsWith("BYE")) {
                                 return false;
+                            }
+
+                            if (int.TryParse(matchup.Item1, out int res)) {
+                                if (!(res >= 1 && res <= player_count)) {
+                                    return false;
+                                }
+                            }
+                            if (int.TryParse(matchup.Item2, out int res2)) {
+                                if (!(res2 >= 1 && res2 <= player_count)) {
+                                    return false;
+                                }
                             }
                             seen[matchup.Item1] = true;
                             seen[matchup.Item2] = true;
@@ -296,6 +357,7 @@ public class LeaguePlayoffsController : ControllerBase {
                     return false;
                 }
                 r++;
+                ct /= 2;
             }
             if (ct > 0) {
                 return false;

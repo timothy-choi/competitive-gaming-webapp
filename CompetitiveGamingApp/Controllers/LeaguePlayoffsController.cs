@@ -564,7 +564,7 @@ public class LeaguePlayoffsController : ControllerBase {
                 if (playoffs.RandomRoundMode) {
                     int group_num_size = WholeModePlayoffOrdering.Count;
                     int pos = 0;
-                    while (group_num_size > 2) {
+                    while (group_num_size >= 2) {
                         List<string> tupleGroups = new List<string>();
                         for (int i = pos; i < WholeModePlayoffOrdering.Count; ++i) {
                             string matchupPlayers = WholeModePlayoffOrdering[i].Item2.Item1 + "/" + WholeModePlayoffOrdering[i].Item2.Item2;
@@ -577,15 +577,11 @@ public class LeaguePlayoffsController : ControllerBase {
                         }
                         group_num_size /= 2;
                     }
-                    string one = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item2;
-                    string two = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item2;
-
-                    WholeModePlayoffOrdering.Add(Tuple.Create(round+1, Tuple.Create(one, two)));
                 }
                 else {
-                    int size = WholeModePlayoffOrdering.Count / 2;
+                    int size = WholeModePlayoffOrdering.Count;
                     int curr = 0;
-                    while (size > 2) {
+                    while (size >= 2) {
                         for (int group = curr; group < WholeModePlayoffOrdering.Count; group += 2) {
                             string group1 = WholeModePlayoffOrdering[group].Item2.Item1 + "/" + WholeModePlayoffOrdering[group].Item2.Item2;
                             string group2 = WholeModePlayoffOrdering[group+1].Item2.Item1 + "/" + WholeModePlayoffOrdering[group+1].Item2.Item2;
@@ -594,11 +590,6 @@ public class LeaguePlayoffsController : ControllerBase {
                         curr = WholeModePlayoffOrdering.Count;
                         size /= 2;
                     }
-
-                    string finalHalf = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item2;
-                    string secondHalf = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item2;
-
-                    WholeModePlayoffOrdering.Add(Tuple.Create(round+1, Tuple.Create(finalHalf, secondHalf)));
                 }
             }
             else {

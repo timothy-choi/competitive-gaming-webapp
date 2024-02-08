@@ -37,6 +37,25 @@ public class PlayoffGraph {
         }
         return curr;
     }
+
+    public PlayoffGraphNode FindPlayerMatchup(string player1, string player2) {
+        PlayoffGraphNode? node = null;
+
+        foreach (var startNode in PlayoffHeadMatchups!) {
+            while (startNode != null) {
+                if ((startNode.currentPlayoffMatchup.player1 == player1 && startNode.currentPlayoffMatchup.player2 == player2) || (startNode.currentPlayoffMatchup.player1 == player2 && startNode.currentPlayoffMatchup.player2 == player1)) {
+                    node = startNode;
+                    break;
+                }
+            }
+        }
+
+        if (node == null) {
+            throw new Exception("Couldn't find playoff matchup");
+        }
+
+        return node!;
+    }
     public void ConnectHeadToNext(PlayoffGraphNode nextMatchup, PlayoffGraphNode prevMatchup) {
         prevMatchup.NextPlayoffMatch = nextMatchup;
     }

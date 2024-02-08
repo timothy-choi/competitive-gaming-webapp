@@ -7,6 +7,9 @@ using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+
 
 
 [ApiController]
@@ -486,6 +489,222 @@ public class LeaguePlayoffsController : ControllerBase {
 
             await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
 
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+    private List<List<int>> RandomlyGroup(List<int> objects)
+    {
+        Random rng = new Random();
+        List<int> shuffledObjects = objects.OrderBy(a => rng.Next()).ToList(); // Shuffle the objects randomly
+        List<List<int>> groups = new List<List<int>>();
+        int groupSize = objects.Count / 2;
+
+        for (int i = 0; i < shuffledObjects.Count; i += groupSize)
+        {
+            groups.Add(shuffledObjects.GetRange(i, Math.Min(groupSize, shuffledObjects.Count - i))); // Partition into groups
+        }
+
+        return groups;
+    }
+
+    private List<List<string>> RandomlyGroupTuples(List<string> tuples)
+    {
+        Random rng = new Random();
+        List<string> shuffledTuples = tuples.OrderBy(a => rng.Next()).ToList(); // Shuffle the tuples randomly
+        List<List<string>> groups = new List<List<string>>();
+
+        int groupSize = tuples.Count / 2;
+        int startIndex = 0;
+
+        for (int i = 0; i < tuples.Count; i += groupSize)
+        {
+            int remainingCount = tuples.Count - startIndex;
+            int currentGroupSize = Math.Min(groupSize, remainingCount);
+
+            List<string> currentGroup = shuffledTuples.GetRange(startIndex, currentGroupSize);
+            groups.Add(currentGroup);
+
+            startIndex += currentGroupSize;
+        }
+
+        return groups;
+    }
+
+    [HttpPost("{LeaguePlayoffId}/WholeMode/Random")] 
+    public async Task<ActionResult> RandomSelectionForWholePlayoffs(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = new List<Tuple<int, Tuple<String, String>>>();
+
+            List<List<int>>? groups = new List<List<int>>();
+
+            if (playoffs.DefaultMode) {
+                if (playoffs.RandomInitialMode) {
+                    int group_num = Convert.ToInt32(reqBody["num_of_players"]);
+                    List<int> objects = Enumerable.Range(1, group_num).ToList();
+
+                    groups = RandomlyGroup(objects);
+                }
+                else {
+                    groups = reqBody["groups"] as List<List<int>>;
+                }
+
+                foreach (var group in groups) {
+                    WholeModePlayoffOrdering.Add(Tuple.Create(1, Tuple.Create(group[0].ToString(), group[1].ToString())));
+                }
+
+                int round = 2;
+
+                if (playoffs.RandomRoundMode) {
+                    int group_num_size = WholeModePlayoffOrdering.Count;
+                    int pos = 0;
+                    while (group_num_size > 2) {
+                        List<string> tupleGroups = new List<string>();
+                        for (int i = pos; i < WholeModePlayoffOrdering.Count; ++i) {
+                            string matchupPlayers = WholeModePlayoffOrdering[i].Item2.Item1 + "/" + WholeModePlayoffOrdering[i].Item2.Item2;
+                            tupleGroups.Add(matchupPlayers);
+                        }
+                        pos = WholeModePlayoffOrdering.Count;
+                        List<List<string>> pickedGroups = RandomlyGroupTuples(tupleGroups);
+                        foreach (var group in pickedGroups) {
+                            WholeModePlayoffOrdering.Add(Tuple.Create(round, Tuple.Create(group[0], group[1])));
+                        }
+                        group_num_size /= 2;
+                    }
+                    string one = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item2;
+                    string two = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item2;
+
+                    WholeModePlayoffOrdering.Add(Tuple.Create(round+1, Tuple.Create(one, two)));
+                }
+                else {
+                    int size = WholeModePlayoffOrdering.Count / 2;
+                    int curr = 0;
+                    while (size > 2) {
+                        for (int group = curr; group < WholeModePlayoffOrdering.Count; group += 2) {
+                            string group1 = WholeModePlayoffOrdering[group].Item2.Item1 + "/" + WholeModePlayoffOrdering[group].Item2.Item2;
+                            string group2 = WholeModePlayoffOrdering[group+1].Item2.Item1 + "/" + WholeModePlayoffOrdering[group+1].Item2.Item2;
+                            WholeModePlayoffOrdering.Add(Tuple.Create(round, Tuple.Create(group1, group2)));
+                        }
+                        curr = WholeModePlayoffOrdering.Count;
+                        size /= 2;
+                    }
+
+                    string finalHalf = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-2].Item2.Item2;
+                    string secondHalf = WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item1 + "/" + WholeModePlayoffOrdering[WholeModePlayoffOrdering.Count-1].Item2.Item2;
+
+                    WholeModePlayoffOrdering.Add(Tuple.Create(round+1, Tuple.Create(finalHalf, secondHalf)));
+                }
+            }
+            else {
+                if (playoffs.RandomInitialMode) {
+                    int second_round_bye = Convert.ToInt32(reqBody["second_round_bye"]);
+
+                    int first_round_players = Convert.ToInt32(reqBody["first_round_players"]);
+
+                    List<int> nonByeTeams = Enumerable.Range(second_round_bye+1, first_round_players * 2).ToList();
+
+                    List<List<int>> nonByeGroups = RandomlyGroup(nonByeTeams);
+
+                    int round_num = 1;
+
+                    for (int i = 0; i < nonByeGroups.Count; ++i) {
+                        WholeModePlayoffOrdering.Add(Tuple.Create(round_num, Tuple.Create(nonByeGroups[i][0].ToString(), nonByeGroups[i][0].ToString())));
+                    }
+
+                    var taken = new Dictionary<int, string>();
+                    for (int i = 0; i < second_round_bye + first_round_players; ++i) {
+                        taken[i+1] = "";
+                    }
+
+                    var random = new Random();
+                    int ct = 0;
+                    List<int> total_spots = Enumerable.Range(1, second_round_bye + first_round_players).ToList();
+                    while (ct < nonByeGroups.Count) {
+                        var random_spot = total_spots[random.Next(0, total_spots.Count-1)];
+                        if (taken.ContainsKey(random_spot)) {
+                            continue;
+                        }
+                        taken[random_spot] = "BYE";
+                        ct++;
+                    }
+
+                    List<int> allEmptySpots = new List<int>();
+
+                    foreach (var spot in taken) {
+                        if (spot.Value == "") {
+                            allEmptySpots.Add(spot.Key);
+                        }
+                    }
+
+                    random = new Random();
+                    for (int i = 1; i <= first_round_players; ++i) {
+                        var selection = allEmptySpots[random.Next(0, allEmptySpots.Count-1)];
+                        allEmptySpots.Remove(selection);
+                        taken[selection] = selection.ToString();
+                    }
+
+                    random = new Random();
+
+                    for (int i = 0; i < taken.Count; i += 2) {
+                        var currPair = taken.ElementAt(i);
+                        var first = "";
+                        var second = "";
+                        if (currPair.Value == "BYE") {
+                            var matchupSelection = nonByeGroups[random.Next(0, nonByeGroups.Count-1)];
+                            nonByeGroups.Remove(matchupSelection);
+                            int found = 0;
+                            while (matchupSelection[0] != nonByeGroups[found][0] && matchupSelection[0] != nonByeGroups[found][1]) {
+                                found++;
+                            }
+                            first = "ROUND1INDEX" + found;
+                        }
+                        else {
+                            first = currPair.Value.ToString();
+                        }
+                        var currPair2 = taken.ElementAt(i+1);
+                        if (currPair2.Value == "BYE") {
+                            var matchupSelection2 = nonByeGroups[random.Next(0, nonByeGroups.Count-1)];
+                            nonByeGroups.Remove(matchupSelection2);
+                            int found2 = 0;
+                            while (matchupSelection2[0] != nonByeGroups[found2][0] && matchupSelection2[0] != nonByeGroups[found2][1]) {
+                                found2++;
+                            }
+                            second = "ROUND1INDEX" + found2;
+                        }
+                        else {
+                            second = currPair2.Value.ToString();
+                        }
+
+                        var newPair = Tuple.Create(first, second);
+
+                        WholeModePlayoffOrdering.Add(Tuple.Create(2, newPair));
+                    }
+                }
+                else {
+
+                }
+
+                if (playoffs.RandomRoundMode) {
+
+                }
+                else {
+
+                }
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["WholeRoundOrdering"] = false;
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["WholeRoundOrdering"] = WholeModePlayoffOrdering;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+            
             return Ok();
         } catch {
             return BadRequest();

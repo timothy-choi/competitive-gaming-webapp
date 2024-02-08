@@ -336,7 +336,7 @@ public class LeaguePlayoffsController : ControllerBase {
                             }
 
                             if (matchup.Item1.StartsWith("BYE") && matchup.Item1.Substring(3).GetType() == typeof(String)) {
-                                if (!int.TryParse(matchup.Item1.Substring(3), out int res3) && !(res3 >= 1 && res3 <= player_count)) {
+                                if (!int.TryParse(matchup.Item1.Substring(3), out int res3) && !(res3 >= 0 && res3 <= playoffs["ROUND" + (r-1)].Count - 1)) {
                                     return false;
                                 }
                             }
@@ -344,7 +344,7 @@ public class LeaguePlayoffsController : ControllerBase {
                                 return false;
                             }
                             if (matchup.Item2.StartsWith("BYE") && matchup.Item2.Substring(3).GetType() == typeof(String)) {
-                                if (!int.TryParse(matchup.Item2.Substring(3), out int res4) && !(res4 >= 1 && res4 <= player_count)) {
+                                if (!int.TryParse(matchup.Item2.Substring(3), out int res4) && !(res4 >= 1 && res4 <= playoffs["ROUND" + (r-1)].Count - 1)) {
                                     return false;
                                 }
                             }

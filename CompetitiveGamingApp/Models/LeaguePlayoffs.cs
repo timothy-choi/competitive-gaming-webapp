@@ -10,6 +10,8 @@ public class PlayoffMatchup {
     public int player1_rank {get; set;}
     public String? player2 {get; set;}
     public int player2_rank {get; set;}
+    public int series_player1_wins {get; set;}
+    public int series_player2_wins {get; set;}
     public String? winner {get; set;}
     public int round {get; set;}
     public String? Division {get; set;}

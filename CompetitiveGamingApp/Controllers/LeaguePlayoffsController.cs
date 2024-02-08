@@ -6,6 +6,7 @@ using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO;
 
 
 [ApiController]
@@ -114,6 +115,233 @@ public class LeaguePlayoffsController : ControllerBase {
             await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
 
             return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    private  Dictionary<string, List<Tuple<String, String>>> ParsePlayoffFormat(string PlayoffFormat) {
+        var playoffs = new Dictionary<string, List<Tuple<String, String>>>();
+
+        using (var streamReader = new StreamReader(PlayoffFormat)) {
+            string line;
+            string round = "";
+            int round_num = 1;
+            while ((line = streamReader.ReadLine()) != null) {
+               if (line.StartsWith("ROUND")) {
+                round = line.Substring(0, 5) + round_num;
+                round_num++;
+               }
+               else {
+                if (!line.Contains(" ") && !line.Contains(",")) {
+                    throw new Exception("Invalid Playoff Formatting");
+                }
+
+                if (line.Contains(",")) {
+                    List<string> gameInfo = line.Split(',').ToList();
+                    playoffs[round].Add(Tuple.Create(gameInfo[0], gameInfo[1]));
+                }
+                else {
+                    List<string> gameInfo = line.Split(' ').ToList();
+                    playoffs[round].Add(Tuple.Create(gameInfo[0], gameInfo[1]));
+                }
+               }
+            }
+        }
+
+        return playoffs;
+    }
+
+    private bool VerifyPlayoffFormat( Dictionary<string, List<Tuple<String, String>>> playoffs, int player_count, bool defaultMode) {
+        int ct = player_count / 2;
+        int r = 1;
+        if (defaultMode) {
+            while (playoffs.ContainsKey("Round" + r)) {
+                if (playoffs["ROUND" + r].Count == ct) {
+                    ct /= 2;
+                    var seen = new Dictionary<string, bool>();
+                    foreach (var matchup in playoffs["ROUND" + r]) {
+                        if (r == 1) {
+                            if (matchup.Item1.Contains("/") || matchup.Item2.Contains("/") || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item1, out _)) {
+                                return false;
+                            }
+                            if (seen[matchup.Item1] || seen[matchup.Item2]) {
+                                return false;
+                            }
+                            seen[matchup.Item1] = true;
+                            seen[matchup.Item2] = true;
+                        }
+                        else {
+                            if (matchup.Item1.Contains("/")) {
+                                var arr = matchup.Item1.Split("/").ToList();
+                                if (arr.Count > 2 || arr.Count < 2) {
+                                    return false;
+                                }
+                                foreach (var elt in arr) {
+                                    if (!int.TryParse(elt, out _) || seen[elt]) {
+                                        return false;
+                                    }
+                                    seen[elt] = true;
+                                }
+                            }
+                            if (matchup.Item2.Contains("/")) {
+                                var arr = matchup.Item2.Split("/").ToList();
+                                if (arr.Count > 2 || arr.Count < 2) {
+                                    return false;
+                                }
+                                foreach (var elt in arr) {
+                                    if (!int.TryParse(elt, out _) || seen[elt]) {
+                                        return false;
+                                    }
+                                    seen[elt] = true;
+                                }
+                            }
+                            else {
+                                if (seen[matchup.Item1] || seen[matchup.Item2] || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item1, out _)) {
+                                    return false;
+                                }
+                                seen[matchup.Item1] = true;
+                                seen[matchup.Item2] = true;
+                            }
+                        }
+                    }
+                }
+                else {
+                    return false;
+                }
+                r++;
+            }
+            if (ct > 0) {
+                return false;
+            }
+        }
+        else {
+            while (playoffs.ContainsKey("ROUND" + r)) {
+                if (r == 1) {
+                    if (!playoffs.ContainsKey("ROUND2")) {
+                        return false;
+                    }
+                    int bye_count = 0;
+                    for (int i = 0; i < playoffs["ROUND2"].Count; ++i) {
+                        if (playoffs["ROUND2"][i].Item1.Contains("BYE")) {
+                            bye_count++;
+                        } 
+                        if (playoffs["ROUND2"][i].Item2.Contains("BYE")) {
+                            bye_count++;
+                        } 
+                    }
+
+                    if (bye_count != playoffs["ROUND1"].Count) {
+                        return false;
+                    }
+
+                    var seen = new Dictionary<string, bool>();
+
+                    foreach (var matchup in playoffs["ROUND1"]) {
+                        if (matchup.Item1.Contains("/") || !int.TryParse(matchup.Item1, out _) || matchup.Item2.Contains("/") || !int.TryParse(matchup.Item2, out _)) {
+                            return false;
+                        }
+
+                        if (seen[matchup.Item1] || seen[matchup.Item2]) {
+                            return false;
+                        }
+
+                        seen[matchup.Item1] = true;
+                        seen[matchup.Item2] = true;
+                    }
+
+                    ct -= bye_count;
+                }
+                else if (playoffs["ROUND" + r].Count / 2 == ct) {
+                    ct /= 2;
+                    var seen = new Dictionary<string, bool>();
+                    foreach (var matchup in playoffs["ROUND" + r]) {
+                        if (matchup.Item1.Contains("/")) {
+                            var arr = matchup.Item1.Split("/").ToList();
+                            if (arr.Count > 2 || arr.Count < 2) {
+                                return false;
+                            }
+                            foreach (var elt in arr) {
+                                if (!int.TryParse(elt, out _) || seen[elt]) {
+                                    return false;
+                                }
+                                seen[elt] = true;
+                            }
+                        }
+                        if (matchup.Item2.Contains("/")) {
+                            var arr = matchup.Item2.Split("/").ToList();
+                            if (arr.Count > 2 || arr.Count < 2) {
+                                return false;
+                            }
+                            foreach (var elt in arr) {
+                                if (!int.TryParse(elt, out _) || seen[elt]) {
+                                    return false;
+                                }
+                                seen[elt] = true;
+                            }
+                        }
+                        else {
+                            if (seen[matchup.Item1] || seen[matchup.Item2] || !int.TryParse(matchup.Item1, out _) || !int.TryParse(matchup.Item1, out _) || !matchup.Item2.StartsWith("BYE") || !matchup.Item2.StartsWith("BYE")) {
+                                return false;
+                            }
+                            seen[matchup.Item1] = true;
+                            seen[matchup.Item2] = true;
+                        }
+                    }
+                    if (ct > 0) {
+                        return false;
+                    }
+                }
+                else {
+                    return false;
+                }
+                r++;
+            }
+            if (ct > 0) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    [HttpPost("{LeaguePlayoffId}/WholeMode/ProcessUserFile")]
+    public async Task<ActionResult<Dictionary<string, object>>> ProcessUserSubmittedWholeSchedule(string LeaguePlayoffId, [FromForm] IFormFile PlayoffFormat, [FromBody] Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            if (PlayoffFormat == null || PlayoffFormat.Length == 0) {
+                return BadRequest();
+            }
+
+            int player_count = Convert.ToInt32(reqBody["PlayerCount"]);
+
+            bool defaultMode = Convert.ToBoolean(reqBody["DefaultMode"]);
+
+            Dictionary<string, List<Tuple<String, String>>> parsedPlayoffs = new Dictionary<string, List<Tuple<String, String>>>();
+
+            using (var streamReader = new StreamReader(PlayoffFormat.OpenReadStream())) {
+                var fileContent = await streamReader.ReadToEndAsync();
+
+                parsedPlayoffs = ParsePlayoffFormat(fileContent);
+            }
+
+            if (!VerifyPlayoffFormat(parsedPlayoffs, player_count, defaultMode)) {
+                return BadRequest();
+            }
+
+            Dictionary<string, object> reqPlayoffs = new Dictionary<string, object>();
+
+            foreach (var round in parsedPlayoffs) {
+                reqPlayoffs[round.Key] = round.Value;
+            }
+
+            OkObjectResult res = new OkObjectResult(reqPlayoffs);
+
+            return Ok(res);
         } catch {
             return BadRequest();
         }

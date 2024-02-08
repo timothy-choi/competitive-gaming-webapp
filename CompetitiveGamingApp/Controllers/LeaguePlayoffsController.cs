@@ -29,6 +29,35 @@ public class LeaguePlayoffsController : ControllerBase {
         return Ok(res);
     }
 
+    [HttpPost]
+    public async Task<ActionResult<String>> CreateLeaguePlayoffs(Dictionary<string, object> reqBody) {
+        try {
+            LeaguePlayoffs currPlayoffs = new LeaguePlayoffs {
+                LeaguePlayoffId = Guid.NewGuid().ToString(),
+                LeagueId = reqBody["LeagueId"] as String,
+                RandomInitialMode = Convert.ToBoolean(reqBody["RandomInitialMode"]),
+                RandomRoundMode = Convert.ToBoolean(reqBody["RandomRoundMode"]),
+                WholeMode = Convert.ToBoolean(reqBody["WholeMode"]),
+                DefaultMode = Convert.ToBoolean(reqBody["DefaultMode"]),
+                CombinedDivisionMode = Convert.ToBoolean(reqBody["CombinedDivisionMode"]),
+                WholeRoundOrdering = new List<Tuple<int, Tuple<string, string>>>(),
+                CombinedDivisionGroups = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),
+                DivisionBasedPlayoffPairings = new List<Tuple<string, Tuple<int, Tuple<string, string>>>>(),
+                UserDefinedPlayoffMatchups = new List<Tuple<int, Tuple<string, string>>>(),
+                FinalPlayoffBracket = new PlayoffBracket(),
+                ArchievePlayoffBrackets = new List<Tuple<int, PlayoffBracket?>>()
+            };
+
+            await _leagueService.PostData("leaguePlayoffConfig", currPlayoffs);
+
+            OkObjectResult res = new OkObjectResult(currPlayoffs.LeaguePlayoffId);
+
+            return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
+
 
     [HttpDelete("{LeaguePlayoffId}")]
     public async Task<ActionResult> DeleteLeaguePlayoffs(string LeaguePlayoffId) {

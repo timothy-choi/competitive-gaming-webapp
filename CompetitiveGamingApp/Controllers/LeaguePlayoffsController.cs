@@ -118,4 +118,63 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("{LeaguePlayoffId}/WholeMode")]
+    public async Task<ActionResult> CreateWholeModePlayoffModeFormat(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = new List<Tuple<int, Tuple<String, String>>>();
+
+            if (playoffs.DefaultMode) {
+                int index = 1;
+                foreach (var round in reqBody) {
+                    foreach (var matchup in (List<Tuple<String, String>>) round.Value) {
+                        WholeModePlayoffOrdering.Add(Tuple.Create(index, matchup));
+                    }
+                    index++;
+                }
+            }
+            else {
+                int complex_index = 1;
+                foreach (var round in reqBody) {
+                    foreach (var matchup in (List<Tuple<String, String>>) round.Value) {
+                        string teamA = matchup.Item1;
+                        string teamB = matchup.Item2;
+                        if (matchup.Item1.StartsWith("BYE")) {
+                            teamA = "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(3);
+                        }
+                        if (matchup.Item2.StartsWith("BYE")) {
+                            teamB = "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(3);
+                        }
+                        if (matchup.Item1.EndsWith("BYE")) {
+                            teamA = "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(3);
+                        }
+                        if (matchup.Item2.EndsWith("BYE")) {
+                            teamB = "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(3);
+                        }
+                        Tuple<string, string> modifiedMatchup = new Tuple<string, string>(teamA, teamB);
+                        WholeModePlayoffOrdering.Add(Tuple.Create(complex_index, modifiedMatchup));
+                    }
+                    complex_index++;
+                }
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+
+            upsertOpt["WholeRoundOrdering"] = false;
+
+            updatedData["WholeRoundOrdering"] = WholeModePlayoffOrdering;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

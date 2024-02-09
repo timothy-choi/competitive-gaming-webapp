@@ -249,6 +249,7 @@ public class LeaguePlayoffsController : ControllerBase {
             }
         }
         else {
+            var usedIndex = new Dictionary<int, bool>();
             while (playoffs.ContainsKey("ROUND" + r)) {
                 if (r == 1) {
                     if (!playoffs.ContainsKey("ROUND2")) {
@@ -308,7 +309,7 @@ public class LeaguePlayoffsController : ControllerBase {
                                 if (!int.TryParse(elt, out _) || seen[elt]) {
                                     return false;
                                 }
-                                if (elt.Contains("BYE") && (!int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3), out int result) || !(result > 0 && result <= playoffs["ROUND" + r].Count-1))) {
+                                if (elt.Contains("BYE") && (!int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE"))), out int result) || !(result > 0 && result <= playoffs["ROUND" + r].Count-1) || usedIndex[result])) {
                                     return false;
                                 }
                                 if (int.TryParse(elt, out int res)) {
@@ -317,6 +318,8 @@ public class LeaguePlayoffsController : ControllerBase {
                                     }
                                 }
                                 seen[elt] = true;
+                                bool parseInt = int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE"))), out int num);
+                                usedIndex[num] = true;
                             }
                         }
                         if (matchup.Item2.Contains("/")) {
@@ -328,7 +331,7 @@ public class LeaguePlayoffsController : ControllerBase {
                                 if (!int.TryParse(elt, out _) || seen[elt]) {
                                     return false;
                                 }
-                                if (elt.Contains("BYE") && (!int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3), out int result2) || !(result2 > 0 && result2 <= playoffs["ROUND" + r].Count-1)))
+                                if (elt.Contains("BYE") && (!int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE"))), out int result2) || !(result2 > 0 && result2 <= playoffs["ROUND" + r].Count-1) || usedIndex[result2]))
                                 {
                                     return false;
                                 }
@@ -338,6 +341,8 @@ public class LeaguePlayoffsController : ControllerBase {
                                     }
                                 }
                                 seen[elt] = true;
+                                bool parseInt = int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE"))), out int num);
+                                usedIndex[num] = true;
                             }
                         }
                         else {
@@ -346,17 +351,21 @@ public class LeaguePlayoffsController : ControllerBase {
                             }
 
                             if (matchup.Item1.StartsWith("BYE") && matchup.Item1.Substring(3).GetType() == typeof(String)) {
-                                if (!int.TryParse(matchup.Item1.Substring(3), out int res3) && !(res3 >= 0 && res3 <= playoffs["ROUND" + (r-1)].Count - 1)) {
+                                if ((!int.TryParse(matchup.Item1.Substring(3), out int res3) && !(res3 >= 0 && res3 <= playoffs["ROUND" + (r-1)].Count - 1)) || usedIndex[res3]) {
                                     return false;
                                 }
+                                bool parsedInt = int.TryParse(matchup.Item1.Substring(3), out int res5);
+                                usedIndex[res5] = true;
                             }
                             else {
                                 return false;
                             }
                             if (matchup.Item2.StartsWith("BYE") && matchup.Item2.Substring(3).GetType() == typeof(String)) {
-                                if (!int.TryParse(matchup.Item2.Substring(3), out int res4) && !(res4 >= 1 && res4 <= playoffs["ROUND" + (r-1)].Count - 1)) {
+                                if ((!int.TryParse(matchup.Item2.Substring(3), out int res4) && !(res4 >= 1 && res4 <= playoffs["ROUND" + (r-1)].Count - 1)) || usedIndex[res4]) {
                                     return false;
                                 }
+                                bool parsedInt = int.TryParse(matchup.Item1.Substring(3), out int res6);
+                                usedIndex[res6] = true;
                             }
                             else {
                                 return false;

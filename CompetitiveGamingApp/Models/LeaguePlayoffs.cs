@@ -14,7 +14,6 @@ public class PlayoffMatchup {
     public int series_player2_wins {get; set;}
     public String? winner {get; set;}
     public int round {get; set;}
-    public String? Division {get; set;}
 }
 
 public class LeaguePlayoffs {

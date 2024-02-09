@@ -12,7 +12,8 @@ public class PlayoffGraphNode {
 }
 
 public class PlayoffGraph {
-    public List<PlayoffGraphNode?>? PlayoffHeadMatchups {get; set;}
+    public List<PlayoffGraphNode> PlayoffHeadMatchups {get; set;}
+    public List<Tuple<int, PlayoffGraphNode>> AllOtherMatchups {get; set;}
     public String? PlayoffName {get; set;}
 
     public PlayoffGraph(String name) {
@@ -71,7 +72,7 @@ public class PlayoffGraph {
 }
 
 public class PlayoffBracket {
-    public List<PlayoffGraph?>? SubPlayoffBrackets {get; set;}
+    public List<PlayoffGraph> SubPlayoffBrackets {get; set;}
     public List<PlayoffGraphNode?>? FinalRoundMatchups {get; set;}
     public String? Champion {get; set;}
 

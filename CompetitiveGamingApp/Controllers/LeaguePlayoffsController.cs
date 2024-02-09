@@ -921,12 +921,16 @@ public class LeaguePlayoffsController : ControllerBase {
 
             int num_ct = nextNodes.Count;
 
+            int rd = 2;
+
             while (num_ct >= 2) {
                 for (int i = 0; i < num_ct; i += 2) {
                     PlayoffMatchup playoffMatchup = new PlayoffMatchup();
                     PlayoffGraphNode node = new PlayoffGraphNode(playoffMatchup);
                     ConnectingRounds.Add(Tuple.Create(nextNodes[i], node));
                     ConnectingRounds.Add(Tuple.Create(nextNodes[i+1]!, node));
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups.Add(Tuple.Create(rd, nextNodes[i]));
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups.Add(Tuple.Create(rd, nextNodes[i+1]));
                 }
                 nextNodes.RemoveRange(0, num_ct);
                 var nextRound = leagueBracket.SubPlayoffBrackets[bracket].ConnectRounds(ConnectingRounds);
@@ -935,12 +939,13 @@ public class LeaguePlayoffsController : ControllerBase {
                 for (int i = 0; i < nextRound.Count; i+=2) {
                     nextNodes.Add(nextRound[i].Item2);
                 }
+                rd++;
             }
         }
     }
 
     private void SetUpBracket(int wholeOrderingSize, PlayoffBracket leagueBracket, bool defaultMode, List<Tuple<int, Tuple<string, string>>> WholePlayoffFormat, int bracket) {
-        List<PlayoffGraphNode?>? initialHeadMatchups = new List<PlayoffGraphNode?>();
+        List<PlayoffGraphNode> initialHeadMatchups = new List<PlayoffGraphNode>();
 
         for (int i = 0; i < wholeOrderingSize; i++) {
                 if (WholePlayoffFormat[i].Item1 > 1) {
@@ -956,6 +961,49 @@ public class LeaguePlayoffsController : ControllerBase {
         ConstructBracket(defaultMode, leagueBracket, 0, WholePlayoffFormat);
     }
 
+    private void SetHeadMatchups(PlayoffBracket leagueBracket, bool defaultMode, List<Tuple<int, Tuple<string, string>>> WholePlayoffFormat, int bracket, List<Tuple<int, Dictionary<string, object>>> players) {
+        var first_round = WholePlayoffFormat.GetRange(0, WholePlayoffFormat.Count(t => t.Item1 == 1));
+
+        int index = 0;
+
+        for (int i = 0; i < leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups.Count; ++i) {
+            int rank1 = Convert.ToInt32(first_round[index].Item2.Item1);
+            int rank2 = Convert.ToInt32(first_round[index].Item2.Item2);
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player1 = players[rank1 - 1].Item2["playerName"].ToString();
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player1_rank = rank1;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player2 = players[rank2 - 1].Item2["playerName"].ToString();
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player2_rank = rank2;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.round = 1;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.GameId = players[rank1 - 1].Item2["GameId"].ToString();
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.series_player1_wins = 0;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.series_player2_wins = 0;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.winner = "";
+        }
+
+        if (!defaultMode) {
+            var round_two_nodes = leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups.GetRange(0, leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups.Count(t => t.Item1 == 2));
+            var round_two_ordering = WholePlayoffFormat.GetRange(WholePlayoffFormat.IndexOf(WholePlayoffFormat.FirstOrDefault(t => t.Item1 == 2)!), WholePlayoffFormat.Count(tuple => tuple.Item1 == 2));
+            for (int i = 0; i < round_two_nodes.Count; ++i) {
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.round = 2;
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.series_player1_wins = 0;
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.series_player2_wins = 0;
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.winner = "";
+                if (!round_two_ordering[i].Item2.Item1.Contains("BYE")) {
+                    int parsedRank1 = Convert.ToInt32(round_two_ordering[i].Item2.Item1);
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player1 = players[parsedRank1 - 1].Item2["playerName"].ToString();
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player1_rank = parsedRank1;
+                }
+                if (!round_two_ordering[i].Item2.Item2.Contains("BYE")) {
+                    int parsedRank2 = Convert.ToInt32(round_two_ordering[i].Item2.Item2);
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player2 = players[parsedRank2 - 1].Item2["playerName"].ToString();
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player2_rank = parsedRank2;
+                }
+            }
+        } 
+    }
+
     [HttpPost("{LeaguePlayoffId}/WholePlayoffFormatBracket")]
     public async Task<ActionResult> CreateWholePlayoffFormatBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {
@@ -969,6 +1017,16 @@ public class LeaguePlayoffsController : ControllerBase {
             leagueBracket!.AddSubPlayoffBracket(reqBody["PlayoffName"].ToString()!);
 
             SetUpBracket(playoffs.WholeRoundOrdering!.Count, leagueBracket, playoffs.DefaultMode, playoffs.WholeRoundOrdering, 0);
+
+            List<Tuple<int, Dictionary<string, object>>> allPlayers = new List<Tuple<int, Dictionary<string, object>>>();
+
+            int rank = 1;
+
+            foreach (var pos in (List<Dictionary<string, object>>) reqBody["players"]) {
+                allPlayers.Add(Tuple.Create(rank, pos));
+            }
+
+            SetHeadMatchups(leagueBracket, playoffs.DefaultMode, playoffs.WholeRoundOrdering, 0, allPlayers);
 
             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["WholeRoundOrdering"] = false;

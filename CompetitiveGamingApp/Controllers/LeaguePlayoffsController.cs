@@ -46,8 +46,8 @@ public class LeaguePlayoffsController : ControllerBase {
                 CombinedDivisionMode = Convert.ToBoolean(reqBody["CombinedDivisionMode"]),
                 WholeRoundOrdering = new List<Tuple<int, Tuple<string, string>>>(),
                 CombinedDivisionGroups = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),
-                DivisionBasedPlayoffPairings = new List<Tuple<string, Tuple<int, Tuple<string, string>>>>(),
-                UserDefinedPlayoffMatchups = new List<Tuple<int, Tuple<string, string>>>(),
+                DivisionBasedPlayoffPairings = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),
+                UserDefinedPlayoffMatchups = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),
                 FinalPlayoffBracket = new PlayoffBracket(),
                 ArchievePlayoffBrackets = new List<Tuple<int, PlayoffBracket?>>()
             };

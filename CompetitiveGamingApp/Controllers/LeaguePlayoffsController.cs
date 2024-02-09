@@ -318,7 +318,7 @@ public class LeaguePlayoffsController : ControllerBase {
                                     }
                                 }
                                 seen[elt] = true;
-                                bool parseInt = int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE"))), out int num);
+                                bool parseInt = int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE")) - elt.IndexOf("BYE") + 3), out int num);
                                 usedIndex[num] = true;
                             }
                         }
@@ -331,7 +331,7 @@ public class LeaguePlayoffsController : ControllerBase {
                                 if (!int.TryParse(elt, out _) || seen[elt]) {
                                     return false;
                                 }
-                                if (elt.Contains("BYE") && (!int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE"))), out int result2) || !(result2 > 0 && result2 <= playoffs["ROUND" + r].Count-1) || usedIndex[result2]))
+                                if (elt.Contains("BYE") && (!int.TryParse(elt.Substring(elt.IndexOf("BYE") + 3, elt.LastIndexOf("/", elt.IndexOf("BYE")) - elt.IndexOf("BYE") + 3), out int result2) || !(result2 > 0 && result2 <= playoffs["ROUND" + r].Count-1) || usedIndex[result2]))
                                 {
                                     return false;
                                 }
@@ -477,10 +477,10 @@ public class LeaguePlayoffsController : ControllerBase {
                             teamB = "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item2.Substring(3);
                         }
                         if (matchup.Item1.Contains("BYE")) {
-                            teamA = teamA.Substring(0, teamA.IndexOf("BYE")) + "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(teamA.IndexOf("BYE") + 3);
+                            teamA = teamA.Substring(0, teamA.IndexOf("BYE")) + "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(teamA.IndexOf("BYE") + 3, matchup.Item1.LastIndexOf("/", matchup.Item1.IndexOf("BYE")) - matchup.Item1.IndexOf("BYE") + 3);
                         }
                         if (matchup.Item2.Contains("BYE")) {
-                            teamB = teamB.Substring(0, teamB.IndexOf("BYE")) + "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item2.Substring(teamB.IndexOf("BYE") + 3);
+                            teamB = teamB.Substring(0, teamB.IndexOf("BYE")) + "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item2.Substring(teamB.IndexOf("BYE") + 3, matchup.Item2.LastIndexOf("/", matchup.Item2.IndexOf("BYE")) - matchup.Item2.IndexOf("BYE") + 3);
                         }
                         Tuple<string, string> modifiedMatchup = new Tuple<string, string>(teamA, teamB);
                         WholeModePlayoffOrdering.Add(Tuple.Create(complex_index, modifiedMatchup));

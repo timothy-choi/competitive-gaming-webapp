@@ -1040,4 +1040,53 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
     }
+
+
+    [HttpPost("{LeaguePlayoffId}/ProcessDivisionSubmittedSchedule")]
+    public async Task<ActionResult<Dictionary<string, object>>> ProcessUserSubmittedDivisionSchedule(string LeaguePlayoffId) {
+        try {
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeaguePlayoffId}")]
+    public async Task<ActionResult> UpdatePlayoffBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpGet("{LeaguePlayoffId}/{PlayerA}/{PlayerB}/{mode}/{playoffBracket}")]
+    public async Task<ActionResult<PlayoffMatchup>> GetPlayoffMatchupFromBracket(string LeaguePlayoffId, String PlayerA, String PlayerB, String playoffBracket) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            int bracket = 0;
+
+            if (playoffBracket != "") {
+                for (int i = 0; i < playoffs.FinalPlayoffBracket?.SubPlayoffBrackets.Count; ++i) {
+                    if (playoffBracket == playoffs.FinalPlayoffBracket?.SubPlayoffBrackets[i].PlayoffName) {
+                        bracket = i;
+                        break;
+                    }
+                }
+            }
+
+            PlayoffGraphNode? foundNode = playoffs.FinalPlayoffBracket?.SubPlayoffBrackets[bracket].FindPlayerMatchup(PlayerA, PlayerB);
+
+            OkObjectResult res = new OkObjectResult(foundNode?.currentPlayoffMatchup);
+
+            return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
+
 }

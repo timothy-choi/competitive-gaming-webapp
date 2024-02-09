@@ -659,7 +659,7 @@ public class LeaguePlayoffsController : ControllerBase {
                             var matchupSelection = nonByeGroups[random.Next(0, nonByeGroups.Count-1)];
                             nonByeGroups.Remove(matchupSelection);
                             int found = 0;
-                            while (matchupSelection[0] != nonByeGroups[found][0] && matchupSelection[0] != nonByeGroups[found][1]) {
+                            while (matchupSelection[0] != nonByeGroups[found][0] && matchupSelection[1] != nonByeGroups[found][1]) {
                                 found++;
                             }
                             first = "ROUND1INDEX" + found;
@@ -672,7 +672,7 @@ public class LeaguePlayoffsController : ControllerBase {
                             var matchupSelection2 = nonByeGroups[random.Next(0, nonByeGroups.Count-1)];
                             nonByeGroups.Remove(matchupSelection2);
                             int found2 = 0;
-                            while (matchupSelection2[0] != nonByeGroups[found2][0] && matchupSelection2[0] != nonByeGroups[found2][1]) {
+                            while (matchupSelection2[0] != nonByeGroups[found2][0] && matchupSelection2[1] != nonByeGroups[found2][1]) {
                                 found2++;
                             }
                             second = "ROUND1INDEX" + found2;
@@ -715,11 +715,6 @@ public class LeaguePlayoffsController : ControllerBase {
                 }
 
                 if (playoffs.RandomRoundMode) {
-                    for (int i = 0; i < WholeModePlayoffOrdering.Count; ++i) {
-                        if (WholeModePlayoffOrdering[i].Item1 == 2) {
-                            group_num_size++;
-                        }
-                    }
                     int pos = 0;
                     while (group_num_size >= 2) {
                         List<string> tupleGroups = new List<string>();

@@ -56,8 +56,17 @@ public class PlayoffGraph {
 
         return node!;
     }
-    public void ConnectHeadToNext(PlayoffGraphNode nextMatchup, PlayoffGraphNode prevMatchup) {
+    private void ConnectHeadToNext(PlayoffGraphNode nextMatchup, PlayoffGraphNode prevMatchup) {
         prevMatchup.NextPlayoffMatch = nextMatchup;
+    }
+
+    public List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> ConnectRounds(List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> beginningNodes) {
+        List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> res = new List<Tuple<PlayoffGraphNode, PlayoffGraphNode>>();
+        for (int i = 0; i < beginningNodes.Count; ++i) {
+            ConnectHeadToNext(beginningNodes[i].Item2, beginningNodes[i].Item1);
+            res.Add(Tuple.Create(beginningNodes[i].Item1, beginningNodes[i].Item2));
+        }
+        return res;
     }
 }
 

@@ -868,4 +868,118 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
     }
+    private void ConstructBracket(bool defaultMode, PlayoffBracket leagueBracket, int bracket, List<Tuple<int, Tuple<string, string>>> Ordering) {
+        List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> ConnectingRounds = new List<Tuple<PlayoffGraphNode, PlayoffGraphNode>>();
+        int node_count = leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups.Count;
+        if (defaultMode) {
+            var nextLevel = new List<PlayoffGraphNode>();
+            while (node_count >= 2) {
+                if (node_count == leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups.Count) {
+                    for (int j = 0; j < node_count; j++) {
+                        nextLevel.Add(leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[j]);
+                    }
+                }
+                for (int i = 0; i < node_count; i += 2) {
+                    PlayoffMatchup playoffMatchup = new PlayoffMatchup();
+                    PlayoffGraphNode node = new PlayoffGraphNode(playoffMatchup);
+                    ConnectingRounds.Add(Tuple.Create(nextLevel[i], node));
+                    ConnectingRounds.Add(Tuple.Create(nextLevel[i+1]!, node));
+                }
+                nextLevel.RemoveRange(0, node_count);
+                var nextNodes = leagueBracket.SubPlayoffBrackets[bracket].ConnectRounds(ConnectingRounds);
+                ConnectingRounds = new List<Tuple<PlayoffGraphNode, PlayoffGraphNode>>();
+                node_count /= 2;
+                for (int i = 0; i < nextNodes.Count; i+=2) {
+                    nextLevel.Add(nextNodes[i].Item2);
+                }
+            }
+        }
+        else {
+            var second_round = Ordering.GetRange(Ordering.IndexOf(Ordering.FirstOrDefault(t => t.Item1 == 2)!), Ordering.Count(tuple => tuple.Item1 == 2));
+            var first_round = leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups;
+            int first_round_index = 0;
+            var nextNodes = new List<PlayoffGraphNode>();
+            for (int i = 0; i < second_round.Count; ++i) {
+                PlayoffMatchup playoffMatchup = new PlayoffMatchup();
+                PlayoffGraphNode node = new PlayoffGraphNode(playoffMatchup);
+                if (second_round[i].Item2.Item1.Contains("BYE")) {
+                    ConnectingRounds.Add(Tuple.Create(first_round[first_round_index], node));
+                    var next = leagueBracket.SubPlayoffBrackets[bracket].ConnectRounds(ConnectingRounds);
+                    nextNodes.Add(next[0].Item2);
+                    first_round_index++;
+                }
+                if (second_round[i].Item2.Item2.Contains("BYE")) {
+                    ConnectingRounds.Add(Tuple.Create(first_round[first_round_index], node));
+                    var next2 = leagueBracket.SubPlayoffBrackets[bracket].ConnectRounds(ConnectingRounds); 
+                    nextNodes.Add(next2[0].Item2);
+                    first_round_index++;
+                }
+                if (!second_round[i].Item2.Item1.Contains("BYE") && !second_round[i].Item2.Item2.Contains("BYE")) {
+                    nextNodes.Add(node);
+                }
+            }
+
+            int num_ct = nextNodes.Count;
+
+            while (num_ct >= 2) {
+                for (int i = 0; i < num_ct; i += 2) {
+                    PlayoffMatchup playoffMatchup = new PlayoffMatchup();
+                    PlayoffGraphNode node = new PlayoffGraphNode(playoffMatchup);
+                    ConnectingRounds.Add(Tuple.Create(nextNodes[i], node));
+                    ConnectingRounds.Add(Tuple.Create(nextNodes[i+1]!, node));
+                }
+                nextNodes.RemoveRange(0, num_ct);
+                var nextRound = leagueBracket.SubPlayoffBrackets[bracket].ConnectRounds(ConnectingRounds);
+                ConnectingRounds = new List<Tuple<PlayoffGraphNode, PlayoffGraphNode>>();
+                num_ct /= 2;
+                for (int i = 0; i < nextRound.Count; i+=2) {
+                    nextNodes.Add(nextRound[i].Item2);
+                }
+            }
+        }
+    }
+
+    private void SetUpBracket(int wholeOrderingSize, PlayoffBracket leagueBracket, bool defaultMode, List<Tuple<int, Tuple<string, string>>> WholePlayoffFormat, int bracket) {
+        List<PlayoffGraphNode?>? initialHeadMatchups = new List<PlayoffGraphNode?>();
+
+        for (int i = 0; i < wholeOrderingSize; i++) {
+                if (WholePlayoffFormat[i].Item1 > 1) {
+                    break;
+                }
+                PlayoffMatchup curr = new PlayoffMatchup();
+                PlayoffGraphNode HeadNode = new PlayoffGraphNode(curr);
+                initialHeadMatchups.Add(HeadNode);
+            }
+
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups = initialHeadMatchups;
+
+        ConstructBracket(defaultMode, leagueBracket, 0, WholePlayoffFormat);
+    }
+
+    [HttpPost("{LeaguePlayoffId}/WholePlayoffFormatBracket")]
+    public async Task<ActionResult> CreateWholePlayoffFormatBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            PlayoffBracket leagueBracket = new PlayoffBracket();
+
+            leagueBracket!.AddSubPlayoffBracket(reqBody["PlayoffName"].ToString()!);
+
+            SetUpBracket(playoffs.WholeRoundOrdering!.Count, leagueBracket, playoffs.DefaultMode, playoffs.WholeRoundOrdering, 0);
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["WholeRoundOrdering"] = false;
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["WholeRoundOrdering"] = leagueBracket;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

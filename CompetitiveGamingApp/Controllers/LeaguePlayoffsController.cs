@@ -678,14 +678,66 @@ public class LeaguePlayoffsController : ControllerBase {
                     }
                 }
                 else {
+                    foreach (var matchup in (List<Tuple<string, string>>) reqBody["Round1"]) {
+                        WholeModePlayoffOrdering.Add(Tuple.Create(1, Tuple.Create(matchup.Item1, matchup.Item2)));
+                    }
 
+                    foreach (var matchup in (List<Tuple<string, string>>) reqBody["Round2"]) {
+                        var player1 = matchup.Item1;
+                        var player2 = matchup.Item2;
+                        if (matchup.Item1.Contains("BYE")) {
+                            player1 = "ROUND1INDEX" + matchup.Item1.Substring(3); 
+                        }
+                        if (matchup.Item2.Contains("BYE")) {
+                            player2 = "ROUND1INDEX" + matchup.Item2.Substring(3); 
+                        }
+
+                        WholeModePlayoffOrdering.Add(Tuple.Create(2, Tuple.Create(player1, player2)));
+                    }
+                }
+
+                var round_number = 2;
+
+                int group_num_size = 0;
+                for (int i = 0; i < WholeModePlayoffOrdering.Count; ++i) {
+                    if (WholeModePlayoffOrdering[i].Item1 == 2) {
+                        group_num_size++;
+                    }
                 }
 
                 if (playoffs.RandomRoundMode) {
-
+                    for (int i = 0; i < WholeModePlayoffOrdering.Count; ++i) {
+                        if (WholeModePlayoffOrdering[i].Item1 == 2) {
+                            group_num_size++;
+                        }
+                    }
+                    int pos = 0;
+                    while (group_num_size >= 2) {
+                        List<string> tupleGroups = new List<string>();
+                        for (int i = pos; i < WholeModePlayoffOrdering.Count; ++i) {
+                            string matchupPlayers = WholeModePlayoffOrdering[i].Item2.Item1 + "/" + WholeModePlayoffOrdering[i].Item2.Item2;
+                            tupleGroups.Add(matchupPlayers);
+                        }
+                        pos = WholeModePlayoffOrdering.Count;
+                        List<List<string>> pickedGroups = RandomlyGroupTuples(tupleGroups);
+                        foreach (var group in pickedGroups) {
+                            WholeModePlayoffOrdering.Add(Tuple.Create(round_number, Tuple.Create(group[0], group[1])));
+                        }
+                        group_num_size /= 2;
+                    }
                 }
                 else {
-
+                    int size = group_num_size;
+                    int curr = 0;
+                    while (size >= 2) {
+                        for (int group = curr; group < WholeModePlayoffOrdering.Count; group += 2) {
+                            string group1 = WholeModePlayoffOrdering[group].Item2.Item1 + "/" + WholeModePlayoffOrdering[group].Item2.Item2;
+                            string group2 = WholeModePlayoffOrdering[group+1].Item2.Item1 + "/" + WholeModePlayoffOrdering[group+1].Item2.Item2;
+                            WholeModePlayoffOrdering.Add(Tuple.Create(round_number, Tuple.Create(group1, group2)));
+                        }
+                        curr = WholeModePlayoffOrdering.Count;
+                        size /= 2;
+                    }
                 }
             }
 

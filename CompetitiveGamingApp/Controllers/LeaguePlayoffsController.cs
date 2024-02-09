@@ -503,6 +503,117 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("{LeaguePlayoffId}/VerifyRandomSubmittedHeadMatchups")]
+    public async Task<ActionResult<bool>> VerifyUserSubmittedHeadMatchups(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            bool res = true;
+
+            if (playoffs.DefaultMode) {
+                double sqrt = Math.Sqrt(Convert.ToInt32(reqBody["num_of_players"]));
+                if (!(((List<List<string>>) reqBody["Matchups"]).Count == Convert.ToInt32(reqBody["num_of_players"]) / 2 && (int) sqrt == Math.Sqrt(Convert.ToInt32(reqBody["num_of_players"])))) {
+                    res = true;
+                }
+
+                var seen = new Dictionary<string, bool>();
+                for (int i = 0; i < ((List<List<string>>) reqBody["Matchups"]).Count; ++i) {
+                    if (seen[((List<List<string>>) reqBody["Matchups"])[i][0]] || seen[((List<List<string>>) reqBody["Matchups"])[i][1]]) {
+                        res = false;
+                    }
+
+                    if (Convert.ToInt32(((List<List<string>>) reqBody["Matchups"])[i][0]) < 1 || Convert.ToInt32(((List<List<string>>) reqBody["Matchups"])[i][0]) > Convert.ToInt32(reqBody["num_of_players"])) {
+                        res = false;
+                    }
+
+                    if (Convert.ToInt32(((List<List<string>>) reqBody["Matchups"])[i][1]) < 1 || Convert.ToInt32(((List<List<string>>) reqBody["Matchups"])[i][1]) > Convert.ToInt32(reqBody["num_of_players"])) {
+                        res = false;
+                    }
+
+                    seen[((List<List<string>>) reqBody["Matchups"])[i][0]] = true;
+                    seen[((List<List<string>>) reqBody["Matchups"])[i][1]] = true;
+                }
+
+            }
+            else {
+                var matchups_roundOne = (List<List<string>>) reqBody["matchups_roundOne"];
+                
+                var matchups_roundTwo = (List<List<string>>) reqBody["matchups_roundTwo"];
+
+                int bye_count = 0;
+
+                var repeat = new Dictionary<string, bool>();
+                var repeatIndex = new Dictionary<int, bool>();
+
+                for (int i = 0; i < matchups_roundOne.Count; ++i) {
+                    if (repeat[matchups_roundOne[i][0]] || repeat[matchups_roundOne[i][1]]) {
+                        res = false;
+                    }
+
+                    if (Convert.ToInt32(matchups_roundOne[i][0]) < 1 || Convert.ToInt32(matchups_roundOne[i][0]) > Convert.ToInt32(reqBody["num_of_players"])) {
+                        res = false;
+                    }
+
+                    if (Convert.ToInt32(matchups_roundOne[i][1]) < 1 || Convert.ToInt32(matchups_roundOne[i][1]) > Convert.ToInt32(reqBody["num_of_players"])) {
+                        res = false;
+                    }
+
+                    repeat[((List<List<string>>) reqBody["Matchups"])[i][0]] = true;
+                    repeat[((List<List<string>>) reqBody["Matchups"])[i][1]] = true;
+                }
+
+                for (int i = 0; i < matchups_roundTwo.Count; ++i) {
+                    if (matchups_roundTwo[i][0].Contains("BYE")) {
+                        bye_count++;
+                        if (!int.TryParse(matchups_roundTwo[i][0].Substring(matchups_roundTwo[i][0].IndexOf("BYE") + 3), out int parsed) || !(parsed >= 1 && parsed < matchups_roundOne.Count) || repeatIndex[parsed]) {
+                            res = false;
+                        }
+                        if (int.TryParse(matchups_roundTwo[i][0].Substring(matchups_roundTwo[i][0].IndexOf("BYE") + 3), out int num)) {
+                            repeatIndex[num] = true;
+                        }
+                    }
+                    if (matchups_roundTwo[i][1].Contains("BYE")) {
+                        bye_count++;
+                        if (!int.TryParse(matchups_roundTwo[i][1].Substring(matchups_roundTwo[i][1].IndexOf("BYE") + 3), out int parsed2) || !(parsed2 >= 1 && parsed2 < matchups_roundOne.Count || repeatIndex[parsed2])) {
+                            res = false;
+                        }
+                        if (int.TryParse(matchups_roundTwo[i][1].Substring(matchups_roundTwo[i][1].IndexOf("BYE") + 3), out int num2)) {
+                            repeatIndex[num2] = true;
+                        }
+                    }
+                    if (repeat[matchups_roundTwo[i][0]] || repeat[matchups_roundTwo[i][1]]) {
+                        res = false;
+                    }
+
+                    if (Convert.ToInt32(matchups_roundTwo[i][0]) < 1 || Convert.ToInt32(matchups_roundTwo[i][0]) > Convert.ToInt32(reqBody["num_of_players"])) {
+                        res = false;
+                    }
+
+                    if (Convert.ToInt32(matchups_roundTwo[i][1]) < 1 || Convert.ToInt32(matchups_roundTwo[i][1]) > Convert.ToInt32(reqBody["num_of_players"])) {
+                        res = false;
+                    }
+
+                    repeat[matchups_roundTwo[i][0]] = true;
+                    repeat[matchups_roundTwo[i][1]] = true;
+                }
+
+                if (bye_count != matchups_roundOne.Count) {
+                    res = false;
+                }
+            }
+
+            OkObjectResult verified = new OkObjectResult(res);
+
+            return Ok(verified);
+        } catch {
+            return BadRequest();
+        }
+    }
+
     private List<List<int>> RandomlyGroup(List<int> objects)
     {
         Random rng = new Random();

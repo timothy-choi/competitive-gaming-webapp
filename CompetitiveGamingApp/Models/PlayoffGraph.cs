@@ -57,6 +57,15 @@ public class PlayoffGraph {
 
         return node!;
     }
+
+    public PlayoffGraphNode FindByPosition(int round, int matchup) {
+        if (round == 1) {
+            return PlayoffHeadMatchups[matchup];
+        }
+        var round_matchups = AllOtherMatchups.GetRange(AllOtherMatchups.IndexOf(AllOtherMatchups.FirstOrDefault(t => t.Item1 == round)!), AllOtherMatchups.Count(tuple => tuple.Item1 == round));
+        return round_matchups[matchup].Item2;
+    }
+
     private void ConnectHeadToNext(PlayoffGraphNode nextMatchup, PlayoffGraphNode prevMatchup) {
         prevMatchup.NextPlayoffMatch = nextMatchup;
     }

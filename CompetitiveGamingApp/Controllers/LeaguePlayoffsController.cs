@@ -908,7 +908,7 @@ public class LeaguePlayoffsController : ControllerBase {
                     nextNodes.Add(next[0].Item2);
                     first_round_index++;
                 }
-                if (second_round[i].Item2.Item2.Contains("BYE")) {
+                else if (second_round[i].Item2.Item2.Contains("BYE")) {
                     ConnectingRounds.Add(Tuple.Create(first_round[first_round_index], node));
                     var next2 = leagueBracket.SubPlayoffBrackets[bracket].ConnectRounds(ConnectingRounds); 
                     nextNodes.Add(next2[0].Item2);
@@ -1095,9 +1095,135 @@ public class LeaguePlayoffsController : ControllerBase {
     }
 
     [HttpPut("{LeaguePlayoffId}")]
-    public async Task<ActionResult> UpdatePlayoffBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+    public async Task<ActionResult<Dictionary<string, object>>> UpdatePlayoffBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {
-            return Ok();
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            PlayoffBracket? tempBracket = playoffs.FinalPlayoffBracket;
+
+            string playoffBracket = reqBody["bracket"].ToString() ?? String.Empty;
+
+            int bracket = 0;
+
+            if (playoffBracket != "") {
+                for (int i = 0; i < tempBracket?.SubPlayoffBrackets.Count; ++i) {
+                    if (playoffBracket == tempBracket?.SubPlayoffBrackets[i].PlayoffName) {
+                        bracket = i;
+                        break;
+                    }
+                }
+            }
+
+            string player1 = reqBody["player1"].ToString() ?? String.Empty; 
+            string player2 = reqBody["player2"].ToString() ?? String.Empty;
+
+            PlayoffGraphNode foundMatchup = tempBracket!.SubPlayoffBrackets[bracket].FindPlayerMatchup(player1, player2);
+
+            foundMatchup.currentPlayoffMatchup.winner = reqBody["winner"].ToString() ?? String.Empty;
+
+            Dictionary<string, object> resBody = new Dictionary<string, object>();
+            
+            if (foundMatchup.NextPlayoffMatch != null) {
+                List<Tuple<int, Tuple<string, string>>> Ordering = (List<Tuple<int, Tuple<string, string>>>) reqBody["Ordering"];
+                string rank = "";
+                if (foundMatchup.currentPlayoffMatchup.winner == foundMatchup.currentPlayoffMatchup.player1) {
+                    rank = foundMatchup.currentPlayoffMatchup.player1_rank.ToString();
+                }
+                if (foundMatchup.currentPlayoffMatchup.winner == foundMatchup.currentPlayoffMatchup.player2) {
+                    rank = foundMatchup.currentPlayoffMatchup.player2_rank.ToString();
+                }
+                if (playoffs.DefaultMode) {
+                    int index = 0;
+                    for (int i = 0; i < Ordering.Count; ++i) {
+                        if (Ordering[i].Item1 == foundMatchup.currentPlayoffMatchup.round + 1) {
+                            if (Ordering[i].Item2.Item1.Contains(rank) || Ordering[i].Item2.Item2.Contains(rank)) {
+                                PlayoffGraphNode node = tempBracket!.SubPlayoffBrackets[bracket].FindByPosition(Ordering[i].Item1, index);
+                                node.currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
+                                node.currentPlayoffMatchup.round = Ordering[i].Item1;
+                                node.currentPlayoffMatchup.winner = "";
+                                if (node.currentPlayoffMatchup.player1 != "") {
+                                    node.currentPlayoffMatchup.player2 = foundMatchup.currentPlayoffMatchup.winner;
+                                    node.currentPlayoffMatchup.player2_rank = Convert.ToInt32(rank);
+                                    node.currentPlayoffMatchup.series_player1_wins = 0;
+                                }
+                                else {
+                                    node.currentPlayoffMatchup.player1 = foundMatchup.currentPlayoffMatchup.winner;
+                                    node.currentPlayoffMatchup.player1_rank = Convert.ToInt32(rank);
+                                    node.currentPlayoffMatchup.series_player2_wins = 0;
+                                }
+                                break;
+                            }
+                            index++;
+                        } 
+                    }
+                }
+                else {
+                    if (foundMatchup.currentPlayoffMatchup.round == 1) {
+                        var second_round_ordering = Ordering.GetRange(Ordering.IndexOf(Ordering.FirstOrDefault(t => t.Item1 == 2)!), Ordering.Count(tuple => tuple.Item1 == 2));
+                        for (int i = 0; i < second_round_ordering.Count; ++i) {
+                            int r = -1;
+                            int ind = -1;
+                            if (second_round_ordering[i].Item2.Item1.Contains("ROUND")) {
+                                r = Convert.ToInt32(second_round_ordering[i].Item2.Item1.Substring(second_round_ordering[i].Item2.Item1.IndexOf("ROUND") + 1, 1));
+                                ind = Convert.ToInt32(second_round_ordering[i].Item2.Item1.Substring(second_round_ordering[i].Item2.Item1.IndexOf("INDEX") + 1, 1));
+                            }
+                            else if (second_round_ordering[i].Item2.Item2.Contains("ROUND")) {
+                                r = Convert.ToInt32(second_round_ordering[i].Item2.Item1.Substring(second_round_ordering[i].Item2.Item1.IndexOf("ROUND") + 1, 1));
+                                ind = Convert.ToInt32(second_round_ordering[i].Item2.Item1.Substring(second_round_ordering[i].Item2.Item1.IndexOf("INDEX") + 1, 1)); 
+                            }
+                            if (r == -1 && ind == -1) {
+                                continue;
+                            }
+                            PlayoffGraphNode node = tempBracket!.SubPlayoffBrackets[bracket].FindByPosition(r, ind);
+                            if (node.currentPlayoffMatchup.player2_rank == Convert.ToInt32(rank) || node.currentPlayoffMatchup.player1_rank ==  Convert.ToInt32(rank)) {
+                                if (node.NextPlayoffMatch?.currentPlayoffMatchup.player1 != null) {
+                                    node.NextPlayoffMatch.currentPlayoffMatchup.player2 = foundMatchup.currentPlayoffMatchup.winner;  
+                                    node.NextPlayoffMatch.currentPlayoffMatchup.player2_rank = foundMatchup.currentPlayoffMatchup.player2_rank;
+                                    node.currentPlayoffMatchup.series_player2_wins = 0;
+                                }
+                                else {
+                                    node.NextPlayoffMatch.currentPlayoffMatchup.player1 = foundMatchup.currentPlayoffMatchup.winner;  
+                                    node.NextPlayoffMatch.currentPlayoffMatchup.player1_rank = foundMatchup.currentPlayoffMatchup.player1_rank;  
+                                    node.currentPlayoffMatchup.series_player1_wins = 0;
+                                }
+                                if (node.NextPlayoffMatch.currentPlayoffMatchup.PlayoffMatchupId == null) {
+                                    node.NextPlayoffMatch.currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
+                                }
+                                node.currentPlayoffMatchup.round = second_round_ordering[i].Item1;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        var next_round_ordering = Ordering.GetRange(Ordering.IndexOf(Ordering.FirstOrDefault(t => t.Item1 == foundMatchup.currentPlayoffMatchup.round + 1)!), Ordering.Count(tuple => tuple.Item1 == foundMatchup.currentPlayoffMatchup.round + 1));
+                        for (int j = 0; j < next_round_ordering.Count; ++j) {
+                            
+                        }
+                    }
+                }
+            }
+            else {
+                if (tempBracket.SubPlayoffBrackets.Count == 1) {
+                    resBody["SeasonComplete"] = true;
+                    resBody["Champion"] = reqBody["winner"].ToString() ?? String.Empty;
+                }
+                else {
+                    resBody["SeasonComplete"] = false;
+                    resBody["finalRoundPlayer"] = reqBody["winner"].ToString() ?? String.Empty;
+                }
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["FinalFullBracket"] = false;
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["FinalFullBracket"] = tempBracket;
+
+            OkObjectResult res = new OkObjectResult(resBody);
+            
+            return Ok(res);
         } catch {
             return BadRequest();
         }

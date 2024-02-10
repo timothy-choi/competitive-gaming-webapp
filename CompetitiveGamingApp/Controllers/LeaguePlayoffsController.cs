@@ -1334,4 +1334,50 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeaguePlayoffId}/PlayoffMatchup")]
+    public async Task<ActionResult> AddPlayoffMatchupDate(string LeaguePlayoffId, Dictionary<string, string> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            string player1 = reqBody["player1"].ToString() ?? String.Empty; 
+            string player2 = reqBody["player2"].ToString() ?? String.Empty;
+
+            var leagueBracket = playoffs.FinalPlayoffBracket;
+
+            string playoffBracket = reqBody["bracket"].ToString() ?? String.Empty;
+
+            int bracket = 0;
+
+            if (playoffBracket != "") {
+                for (int i = 0; i < leagueBracket?.SubPlayoffBrackets.Count; ++i) {
+                    if (playoffBracket == leagueBracket?.SubPlayoffBrackets[i].PlayoffName) {
+                        bracket = i;
+                        break;
+                    }
+                }
+            }
+
+            PlayoffGraphNode foundMatchup = leagueBracket!.SubPlayoffBrackets[bracket].FindPlayerMatchup(player1, player2);
+
+            foundMatchup.currentPlayoffMatchup.GameId = reqBody["GameId"];
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["FinalPlayoffBracket"] = false;
+
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["FinalPlayoffBracket"] = leagueBracket;
+
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
 }

@@ -1094,6 +1094,78 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    private List<Tuple<int, Tuple<String, String>>> BuildBracketFromUser(bool defaultMode, Dictionary<string, object> allDivisionBasedBrackets) {
+        List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = new List<Tuple<int, Tuple<String, String>>>();
+
+        if (defaultMode) {
+            int index = 1;
+            foreach (var round in allDivisionBasedBrackets) {
+                foreach (var matchup in (List<Tuple<String, String>>) round.Value) {
+                    WholeModePlayoffOrdering.Add(Tuple.Create(index, matchup));
+                }
+                index++;
+            }
+        }
+        else {
+            int complex_index = 1;
+            foreach (var round in allDivisionBasedBrackets) {
+                foreach (var matchup in (List<Tuple<String, String>>) round.Value) {
+                    string teamA = matchup.Item1;
+                    string teamB = matchup.Item2;
+                    if (matchup.Item1.StartsWith("BYE")) {
+                        teamA = "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(3);
+                    }
+                    if (matchup.Item2.StartsWith("BYE")) {
+                        teamB = "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item2.Substring(3);
+                    }
+                    if (matchup.Item1.Contains("BYE")) {
+                        teamA = teamA.Substring(0, teamA.IndexOf("BYE")) + "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item1.Substring(teamA.IndexOf("BYE") + 3, matchup.Item1.LastIndexOf("/", matchup.Item1.IndexOf("BYE")) - matchup.Item1.IndexOf("BYE") + 3);
+                    }
+                    if (matchup.Item2.Contains("BYE")) {
+                        teamB = teamB.Substring(0, teamB.IndexOf("BYE")) + "ROUND:" + (complex_index-1) + "INDEX:" + matchup.Item2.Substring(teamB.IndexOf("BYE") + 3, matchup.Item2.LastIndexOf("/", matchup.Item2.IndexOf("BYE")) - matchup.Item2.IndexOf("BYE") + 3);
+                    }
+                    Tuple<string, string> modifiedMatchup = new Tuple<string, string>(teamA, teamB);
+                    WholeModePlayoffOrdering.Add(Tuple.Create(complex_index, modifiedMatchup));
+                }
+                complex_index++;
+            }
+        }
+
+        return WholeModePlayoffOrdering;
+    }
+
+    [HttpPost("{LeaguePlayoffsId}/DivisionBasedSchedule")]
+    public async Task<ActionResult> CreateDivisionBasedPlayoffModeFormat(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            string divisionMode = reqBody["divisonMode"].ToString() ?? String.Empty;
+
+            reqBody.Remove("divisionMode");
+
+            List<Tuple<String, List<Tuple<int, Tuple<String, String>>>>> DivisionBasedBracket = new List<Tuple<String, List<Tuple<int, Tuple<String, String>>>>>();
+
+            foreach (var division in reqBody) {
+                List<Tuple<int, Tuple<String, String>>> curr = BuildBracketFromUser(playoffs.DefaultMode, (Dictionary<string, object>) division.Value);
+                DivisionBasedBracket.Add(Tuple.Create(division.Key, curr));
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt[divisionMode] = false;
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData[divisionMode] = DivisionBasedBracket;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPut("{LeaguePlayoffId}")]
     public async Task<ActionResult<Dictionary<string, object>>> UpdatePlayoffBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {

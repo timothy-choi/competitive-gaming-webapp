@@ -1334,6 +1334,17 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpGet("{LeaguePlayoffId}/PlayoffBracket")]
+    public async Task<ActionResult<PlayoffBracket>> GetPlayoffBracket(string LeaguePlayoffId) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        OkObjectResult res = new OkObjectResult(playoffs.FinalPlayoffBracket);
+        return Ok(res);
+    }
+
     [HttpPut("{LeaguePlayoffId}/PlayoffMatchup")]
     public async Task<ActionResult> AddPlayoffMatchupDate(string LeaguePlayoffId, Dictionary<string, string> reqBody) {
         try {

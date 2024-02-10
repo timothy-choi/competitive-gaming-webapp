@@ -1042,10 +1042,53 @@ public class LeaguePlayoffsController : ControllerBase {
     }
 
 
-    [HttpPost("{LeaguePlayoffId}/ProcessDivisionSubmittedSchedule")]
-    public async Task<ActionResult<Dictionary<string, object>>> ProcessUserSubmittedDivisionSchedule(string LeaguePlayoffId) {
+    [HttpPost("{LeaguePlayoffId}/ProcessDivisionTypeSubmittedSchedule")]
+    public async Task<ActionResult<Dictionary<string, object>>> ProcessUserSubmittedDivisionTypeSchedule(string LeaguePlayoffId, [FromForm] List<IFormFile> allBrackets, [FromBody] Dictionary<string, object> reqBody) {
         try {
-            return Ok();
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            if (allBrackets == null || allBrackets.Count == 0) {
+                return BadRequest();
+            }
+
+            for (int i = 0; i < allBrackets.Count; ++i) {
+                if (allBrackets[i].Length == 0) {
+                    return BadRequest();
+                }
+            }
+
+            int player_count = Convert.ToInt32(reqBody["PlayerCount"]);
+
+            bool defaultMode = Convert.ToBoolean(reqBody["DefaultMode"]);
+
+            Dictionary<string, List<Tuple<String, String>>> parsedPlayoffs = new Dictionary<string, List<Tuple<String, String>>>();
+
+            Dictionary<string, object> reqPlayoffs = new Dictionary<string, object>();
+
+            for (int i = 0; i < allBrackets.Count; ++i) {
+                Dictionary<string, object> divisions = new Dictionary<string, object>();
+                using (var streamReader = new StreamReader(allBrackets[i].OpenReadStream())) {
+                    var fileContent = await streamReader.ReadToEndAsync();
+
+                    parsedPlayoffs = ParsePlayoffFormat(fileContent);
+                }
+
+                if (!VerifyPlayoffFormat(parsedPlayoffs, player_count / allBrackets.Count, defaultMode)) {
+                    return BadRequest();
+                }
+
+                foreach (var round in parsedPlayoffs) {
+                    divisions[round.Key] = round.Value;
+                }
+                reqPlayoffs["bracket" + ((List<String>) reqBody["bracketNames"])[0].ToString()] = divisions;
+            }
+
+            OkObjectResult res = new OkObjectResult(reqPlayoffs);
+
+            return Ok(res);
         } catch {
             return BadRequest();
         }

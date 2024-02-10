@@ -1117,6 +1117,8 @@ public class LeaguePlayoffsController : ControllerBase {
                 }
             }
 
+            List<Tuple<int, Tuple<string, string>>> Ordering = (List<Tuple<int, Tuple<string, string>>>) reqBody["Ordering"];
+
             string player1 = reqBody["player1"].ToString() ?? String.Empty; 
             string player2 = reqBody["player2"].ToString() ?? String.Empty;
 
@@ -1127,7 +1129,6 @@ public class LeaguePlayoffsController : ControllerBase {
             Dictionary<string, object> resBody = new Dictionary<string, object>();
             
             if (foundMatchup.NextPlayoffMatch != null) {
-                List<Tuple<int, Tuple<string, string>>> Ordering = (List<Tuple<int, Tuple<string, string>>>) reqBody["Ordering"];
                 string rank = "";
                 if (foundMatchup.currentPlayoffMatchup.winner == foundMatchup.currentPlayoffMatchup.player1) {
                     rank = foundMatchup.currentPlayoffMatchup.player1_rank.ToString();
@@ -1193,6 +1194,50 @@ public class LeaguePlayoffsController : ControllerBase {
                                     node.NextPlayoffMatch.currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
                                 }
                                 node.currentPlayoffMatchup.round = second_round_ordering[i].Item1;
+
+                                string matched = "ROUND" + r + "INDEX" + ind;
+                                var tempOrdering = Ordering;
+                                for (int j = 0; j < Ordering.Count; ++j) {
+                                    if (Ordering[j].Item2.Item1.Contains(matched)) {
+                                        if (Ordering[j].Item2.Item1.Contains("/")) {
+                                            var arr = Ordering[j].Item2.Item1.Split("/").ToList();
+                                            var ranks = new List<string>();
+                                            foreach (var elt in arr) {
+                                                if (elt == matched) {
+                                                    ranks.Add(rank);
+                                                }
+                                                else {
+                                                    ranks.Add(elt);
+                                                }
+                                            }
+
+                                            Ordering[j] = Tuple.Create(Ordering[j].Item1, Tuple.Create(string.Join("/", ranks), Ordering[j].Item2.Item1));
+                                        }
+                                        else {
+                                            Ordering[j] = Tuple.Create(Ordering[j].Item1, Tuple.Create(rank, Ordering[j].Item2.Item2));
+                                        }
+                                        
+                                    }
+                                    else if (Ordering[i].Item2.Item2.Contains(matched)) {
+                                       if (Ordering[j].Item2.Item2.Contains("/")) {
+                                            var arr = Ordering[j].Item2.Item2.Split("/").ToList();
+                                            var ranks = new List<string>();
+                                            foreach (var elt in arr) {
+                                                if (elt == matched) {
+                                                    ranks.Add(rank);
+                                                }
+                                                else {
+                                                    ranks.Add(elt);
+                                                }
+                                            }
+
+                                            Ordering[j] = Tuple.Create(Ordering[j].Item1, Tuple.Create(Ordering[j].Item2.Item1, string.Join("/", ranks)));
+                                        }
+                                        else {
+                                            Ordering[j] = Tuple.Create(Ordering[j].Item1, Tuple.Create(rank, Ordering[j].Item2.Item2));
+                                        }
+                                    } 
+                                }
                                 break;
                             }
                         }
@@ -1200,7 +1245,34 @@ public class LeaguePlayoffsController : ControllerBase {
                     else {
                         var next_round_ordering = Ordering.GetRange(Ordering.IndexOf(Ordering.FirstOrDefault(t => t.Item1 == foundMatchup.currentPlayoffMatchup.round + 1)!), Ordering.Count(tuple => tuple.Item1 == foundMatchup.currentPlayoffMatchup.round + 1));
                         for (int j = 0; j < next_round_ordering.Count; ++j) {
-                            
+                            int r = -1;
+                            int ind = -1;
+                            if (next_round_ordering[j].Item2.Item1.Contains(rank)) {
+                                r = foundMatchup.currentPlayoffMatchup.round + 1;
+                                ind = j;
+                            }
+                            else if (next_round_ordering[j].Item2.Item1.Contains(rank)) {
+                                r = foundMatchup.currentPlayoffMatchup.round + 1;
+                                ind = j;
+                            }
+                            if (r == -1 && ind == -1) {
+                                continue;
+                            }
+
+                            PlayoffGraphNode foundNode = tempBracket!.SubPlayoffBrackets[bracket].FindByPosition(r, ind);
+                            foundNode.currentPlayoffMatchup.PlayoffMatchupId = foundNode.currentPlayoffMatchup.PlayoffMatchupId != "" ? foundNode.currentPlayoffMatchup.PlayoffMatchupId : Guid.NewGuid().ToString();
+                            if (foundNode.currentPlayoffMatchup.player1 != null) {
+                                foundNode.currentPlayoffMatchup.player2 = foundMatchup.currentPlayoffMatchup.winner; 
+                                foundNode.currentPlayoffMatchup.player2_rank = foundMatchup.currentPlayoffMatchup.player2_rank; 
+                                foundNode.currentPlayoffMatchup.series_player2_wins = foundMatchup.currentPlayoffMatchup.series_player2_wins; 
+                            }
+                            else {
+                                foundNode.currentPlayoffMatchup.player1 = foundMatchup.currentPlayoffMatchup.winner; 
+                                foundNode.currentPlayoffMatchup.player1_rank = foundMatchup.currentPlayoffMatchup.player1_rank; 
+                                foundNode.currentPlayoffMatchup.series_player1_wins = foundMatchup.currentPlayoffMatchup.series_player1_wins; 
+                            }
+                            foundNode.currentPlayoffMatchup.round = foundMatchup.currentPlayoffMatchup.round + 1;
+                            break;
                         }
                     }
                 }
@@ -1218,8 +1290,10 @@ public class LeaguePlayoffsController : ControllerBase {
 
             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["FinalFullBracket"] = false;
+            upsertOpt["WholeRoundOrdering"] = false;
             Dictionary<string, object> updatedData = new Dictionary<string, object>();
             updatedData["FinalFullBracket"] = tempBracket;
+            updatedData["WholeRoundOrdering"] = Ordering;
 
             OkObjectResult res = new OkObjectResult(resBody);
             

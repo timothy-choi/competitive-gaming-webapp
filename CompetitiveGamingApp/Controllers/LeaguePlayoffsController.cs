@@ -1142,8 +1142,8 @@ public class LeaguePlayoffsController : ControllerBase {
                         if (Ordering[i].Item1 == foundMatchup.currentPlayoffMatchup.round + 1) {
                             if (Ordering[i].Item2.Item1.Contains(rank) || Ordering[i].Item2.Item2.Contains(rank)) {
                                 PlayoffGraphNode node = tempBracket!.SubPlayoffBrackets[bracket].FindByPosition(Ordering[i].Item1, index);
-                                node.currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
-                                node.currentPlayoffMatchup.round = Ordering[i].Item1;
+                                node.currentPlayoffMatchup.PlayoffMatchupId = node.currentPlayoffMatchup.PlayoffMatchupId != "" ? node.currentPlayoffMatchup.PlayoffMatchupId : Guid.NewGuid().ToString();
+                                node.currentPlayoffMatchup.round = node.currentPlayoffMatchup.round <= 0 ? node.currentPlayoffMatchup.round : Ordering[i].Item1;
                                 node.currentPlayoffMatchup.winner = "";
                                 if (node.currentPlayoffMatchup.player1 != "") {
                                     node.currentPlayoffMatchup.player2 = foundMatchup.currentPlayoffMatchup.winner;
@@ -1234,7 +1234,7 @@ public class LeaguePlayoffsController : ControllerBase {
                                             Ordering[j] = Tuple.Create(Ordering[j].Item1, Tuple.Create(Ordering[j].Item2.Item1, string.Join("/", ranks)));
                                         }
                                         else {
-                                            Ordering[j] = Tuple.Create(Ordering[j].Item1, Tuple.Create(rank, Ordering[j].Item2.Item2));
+                                            Ordering[j] = Tuple.Create(Ordering[j].Item1, Tuple.Create(Ordering[j].Item2.Item2, rank));
                                         }
                                     } 
                                 }
@@ -1251,7 +1251,7 @@ public class LeaguePlayoffsController : ControllerBase {
                                 r = foundMatchup.currentPlayoffMatchup.round + 1;
                                 ind = j;
                             }
-                            else if (next_round_ordering[j].Item2.Item1.Contains(rank)) {
+                            else if (next_round_ordering[j].Item2.Item2.Contains(rank)) {
                                 r = foundMatchup.currentPlayoffMatchup.round + 1;
                                 ind = j;
                             }
@@ -1294,6 +1294,8 @@ public class LeaguePlayoffsController : ControllerBase {
             Dictionary<string, object> updatedData = new Dictionary<string, object>();
             updatedData["FinalFullBracket"] = tempBracket;
             updatedData["WholeRoundOrdering"] = Ordering;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
 
             OkObjectResult res = new OkObjectResult(resBody);
             

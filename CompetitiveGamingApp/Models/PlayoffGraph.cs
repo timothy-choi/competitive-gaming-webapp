@@ -5,7 +5,7 @@ namespace CompetitiveGamingApp.Models;
 public class PlayoffGraphNode {
     public PlayoffMatchup currentPlayoffMatchup {get; set;}
     public PlayoffGraphNode? NextPlayoffMatch {get; set;} 
-    public PlayoffGraphNode? PrevPlayoffRoundMatch {get; set;}
+    public List<PlayoffGraphNode>? PrevPlayoffRoundMatch {get; set;}
     public PlayoffGraphNode(PlayoffMatchup playoffMatchup) {
         currentPlayoffMatchup = playoffMatchup;
         NextPlayoffMatch = null;
@@ -85,7 +85,7 @@ public class PlayoffGraph {
     }
 
     private void ConnectCurrToPrev(PlayoffGraphNode prevMatchup, PlayoffGraphNode currMatchup) {
-        currMatchup.PrevPlayoffRoundMatch = prevMatchup;
+        currMatchup.PrevPlayoffRoundMatch.Add(prevMatchup);
     }
 
     public List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> ConnectRounds(List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> beginningNodes) {

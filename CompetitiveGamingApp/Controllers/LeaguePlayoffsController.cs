@@ -1881,4 +1881,35 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeaguePlayoffsId}/FinalRound/GameId")]
+    public async Task<ActionResult> UpdateFinalRoundMatchupWithGameId(string LeaguePlayoffsId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffsId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            var leagueBracket = playoffs.FinalPlayoffBracket;
+
+            string player1 = reqBody["player1"].ToString() ?? String.Empty;
+            string player2 = reqBody["player2"].ToString() ?? String.Empty;
+
+            PlayoffGraphNode node = leagueBracket!.FindFinalRoundMatchup(player1, player2);
+
+            node.currentPlayoffMatchup.GameId = reqBody["GameId"].ToString() ?? String.Empty;
+
+             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["FinalPlayoffBracket"] = false;
+
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["FinalPlayoffBracket"] = leagueBracket;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
 }

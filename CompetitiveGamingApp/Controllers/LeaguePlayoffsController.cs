@@ -1911,5 +1911,285 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
     }
+    private List<Tuple<string, List<Tuple<int, Tuple<String, String>>>>> ParseUserDefinedPlayoffFormat(string fileContent) {
+        List<Tuple<string, List<Tuple<int, Tuple<String, String>>>>> ParsedPlayoffs = new List<Tuple<string, List<Tuple<int, Tuple<String, String>>>>>();
+
+        using (var streamReader = new StreamReader(fileContent)) {
+            string line;
+            string division = "";
+            string round = "";
+            int round_num = 0;
+            List<Tuple<int, Tuple<String, String>>> allPairs = new List<Tuple<int, Tuple<String, String>>>();
+            while ((line = streamReader.ReadLine()) != null) {
+                if (line.StartsWith("DIVISION")) {
+                    division = line.Substring(line.IndexOf("DIVISION") + 9);
+                } 
+                else if (line.StartsWith("ROUND")) {
+                    round = line.Substring(0, 5) + round_num;
+                    round_num++;
+                }
+                else if (line.StartsWith("END")) {
+                    ParsedPlayoffs.Add(Tuple.Create(division, allPairs));
+                    allPairs = new List<Tuple<int, Tuple<String, String>>>();
+                    continue;
+                }
+                else {
+                    if (!line.Contains(" ") && !line.Contains(",")) {
+                        throw new Exception("Invalid Playoff Formatting");
+                    }
+
+                    if (line.Contains(",")) {
+                        List<string> gameInfo = line.Split(',').ToList();
+                        allPairs.Add(Tuple.Create(round_num, Tuple.Create(gameInfo[0], gameInfo[1])));
+                    }
+                    else {
+                        List<string> gameInfo = line.Split(' ').ToList();
+                        allPairs.Add(Tuple.Create(round_num, Tuple.Create(gameInfo[0], gameInfo[1])));
+                    }
+                }
+            }
+        }
+
+
+        return ParsedPlayoffs;
+    }
+
+    private bool VerifyHeadMatchups(Tuple<string, List<Tuple<int, Tuple<string, string>>>> div,  List<Tuple<String, List<String>>> allDivisions, List<Tuple<String, List<String>>> allCombinedDivisions, Dictionary<string, bool> seen, string mode) {
+        foreach (var matchup in div.Item2) {
+            if (matchup.Item1 > 1) {
+                return false;
+            }
+            string player1 = matchup.Item2.Item1;
+            string player2 = matchup.Item2.Item2;
+        
+            var region = player1.Substring(0, player1.IndexOf(":"));
+            var selectedDiv = allDivisions.Find(d => d.Item1 == region);
+            if (selectedDiv != null) {
+                if (mode == "") {
+                    mode = "divisions";
+                }
+                else {
+                    if (mode != "divisions") {
+                        return false;
+                    }
+                }
+            }
+            var selectedCombDiv = allCombinedDivisions.Find(comb => comb.Item1 == region);
+            if (selectedCombDiv != null) {
+                if (mode == "") {
+                    mode = "combinedDivisions";
+                }
+                else {
+                    if (mode != "combinedDivisions") {
+                        return false;
+                    }
+                }
+            }
+            if (mode == "") {
+                return false;
+            }
+            int rank = Convert.ToInt32(player1.Substring(player1.IndexOf(":") + 1));
+
+            if (rank < 1 || (selectedDiv != null && rank > selectedDiv.Item2.Count) || (selectedDiv != null && rank > selectedCombDiv.Item2.Count) || seen[player1]) {
+                return false;
+            }
+            seen[player1] = true;
+            
+            region = player2.Substring(0, player2.IndexOf(":"));
+            selectedDiv = allDivisions.Find(d => d.Item1 == region);
+            if (selectedDiv != null) {
+                if (mode == "") {
+                    mode = "divisions";
+                }
+                else {
+                    if (mode != "divisions") {
+                        return false;
+                    }
+                }
+            }
+            selectedCombDiv = allCombinedDivisions.Find(comb => comb.Item1 == region);
+            if (selectedCombDiv != null) {
+                if (mode == "") {
+                    mode = "combinedDivisions";
+                }
+                else {
+                    if (mode != "combinedDivisions") {
+                        return false;
+                    }
+                }
+            }
+            if (mode == "") {
+                return false;
+            }
+            rank = Convert.ToInt32(player2.Substring(player2.IndexOf(":") + 1));
+
+            if (rank < 1 || (selectedDiv != null && rank > selectedDiv.Item2.Count) || (selectedDiv != null && rank > selectedCombDiv.Item2.Count) || seen[player2]) {
+                return false;
+            }
+            seen[player2] = true;
+        }
+        return true;
+    }
+
+    private bool VerifyUserDefinedPlayoffFormat(bool defaultMode, List<Tuple<string, List<Tuple<int, Tuple<String, String>>>>> userDefinedPlayoffs, List<int> num_players, List<Tuple<String, List<String>>> allDivisions, List<Tuple<String, List<String>>> allCombinedDivisions) {
+        int index = 0;
+        foreach (var div in userDefinedPlayoffs) {
+            var seen = new Dictionary<string, bool>();
+            var found = allDivisions.Find(d => d.Item1 == div.Item1);
+            var mode = "";
+            if (found == null) {
+                return false;
+            }
+            if (defaultMode) {
+                double s = Math.Sqrt(found.Item2.Count * 2);
+                if ((int) s != Math.Sqrt(found.Item2.Count * 2)) {
+                    return false;
+                }
+                if (!VerifyHeadMatchups(div, allDivisions, allCombinedDivisions, seen, mode)) {
+                    return false;
+                }
+            }
+            else {
+                int ct = 0;
+                var visited = new Dictionary<string, bool>();
+                int first_elts = 0;
+                int byes = 0;
+                var second_tuple = div.Item2;
+                foreach (var entry in second_tuple) {
+                    if (entry.Item1 == 1) {
+                        first_elts++;
+                    }
+                    if (entry.Item1 == 2) {
+                        if (entry.Item2.Item1 == "BYE") {
+                            byes++;
+                        }
+                        if (entry.Item2.Item2 == "BYE") {
+                            byes++;
+                        }
+                    }
+                }
+
+                if (byes != first_elts) {
+                    return false;
+                }
+
+                ct += first_elts * 2;
+
+                if (!VerifyHeadMatchups(div, allDivisions, allCombinedDivisions, seen, mode)) {
+                    return false;
+                }
+
+                foreach (var entry in second_tuple) {
+                    if (entry.Item1 == 2) {
+                        if (entry.Item2.Item1 != "BYE") {
+                            var region = entry.Item2.Item1.Substring(0, entry.Item2.Item1.IndexOf(":"));
+                            var selectedDiv = allDivisions.Find(d => d.Item1 == region);
+                            if (selectedDiv != null) {
+                                if (mode != "divisions") {
+                                    return false;
+                                }
+                            }
+                            var selectedCombDiv = allCombinedDivisions.Find(d => d.Item1 == region);
+                            if (selectedDiv != null) {
+                                if (mode != "combinedDivisons") {
+                                    return false;
+                                }
+                            }
+                            else {
+                                return false;
+                            }
+
+                            int rank = Convert.ToInt32(entry.Item2.Item1.Substring(entry.Item2.Item1.IndexOf(":") + 1));
+
+                            if (rank < 1 || (selectedDiv != null && rank > selectedDiv.Item2.Count) || (selectedDiv != null && rank > selectedCombDiv.Item2.Count) || seen[entry.Item2.Item1]) {
+                                return false;
+                            }
+                            seen[entry.Item2.Item1] = true;
+                            ct++;
+                        }
+                        if (entry.Item2.Item2 != "BYE") {
+                            var region2 = entry.Item2.Item1.Substring(0, entry.Item2.Item2.IndexOf(":"));
+                            var selectedDiv2 = allDivisions.Find(d => d.Item1 == region2);
+                            if (selectedDiv2 != null) {
+                                if (mode != "divisions") {
+                                    return false;
+                                }
+                            }
+                            else {
+                                return false;
+                            }
+                            var selectedCombDiv2 = allDivisions.Find(d => d.Item1 == region2);
+                            if (selectedCombDiv2 != null) {
+                                if (mode != "combinedDivisions") {
+                                    return false;
+                                }
+                            }
+                            else {
+                                return false;
+                            }
+
+                            int rank = Convert.ToInt32(entry.Item2.Item1.Substring(entry.Item2.Item1.IndexOf(":") + 1));
+
+                            if (rank < 1 || (selectedDiv2 != null && rank > selectedDiv2.Item2.Count) || (selectedDiv2 != null && rank > selectedCombDiv2.Item2.Count) || seen[entry.Item2.Item2]) {
+                                return false;
+                            }
+                            seen[entry.Item2.Item2] = true;
+                            ct++;
+                        }
+                    }
+                }
+                if (ct != num_players[index]) {
+                    return false;
+                }
+                index++;
+            }
+        }
+        return true;
+    }
+
+    [HttpPost("{LeaguePlayoffsId}/UserDefinedPlayoffFormat")]
+    public async Task<ActionResult> ProcessUserDefinedPlayoffFormat(string LeaguePlayoffsId, [FromForm] IFormFile userDefinedPlayoffFormat, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffsId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            List<Tuple<string, List<Tuple<int, Tuple<String, String>>>>> userDefinedPlayoffs = new List<Tuple<string, List<Tuple<int, Tuple<String, String>>>>>();
+            
+            if (userDefinedPlayoffFormat == null || userDefinedPlayoffFormat.Length == 0) {
+                return BadRequest();
+            }
+
+            using (var scanner = new StreamReader(userDefinedPlayoffFormat.OpenReadStream())) {
+                var fileContent = await scanner.ReadToEndAsync();
+
+                userDefinedPlayoffs = ParseUserDefinedPlayoffFormat(fileContent);
+
+                List<int> all_player_counts = (List<int>) reqBody["num_players"];
+
+                List<Tuple<String, List<String>>> allDivisions = (List<Tuple<String, List<String>>>) reqBody["allDivisions"];
+
+                List<Tuple<String, List<String>>> allCombinedDivisions = (List<Tuple<String, List<String>>>) reqBody["allCombinedDivisions"];
+
+                if (!VerifyUserDefinedPlayoffFormat(playoffs.DefaultMode, userDefinedPlayoffs, all_player_counts, allDivisions, allCombinedDivisions)) {
+                    return BadRequest();
+                }
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["UserDefinedPlayoffMatchups"] = false;
+
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["UserDefinedPlayoffMatchups"] = userDefinedPlayoffs;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
 
 }

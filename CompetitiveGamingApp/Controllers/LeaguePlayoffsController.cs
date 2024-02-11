@@ -1642,7 +1642,6 @@ public class LeaguePlayoffsController : ControllerBase {
                 }
                 else {
                     resBody["SeasonComplete"] = false;
-                    resBody["finalRoundPlayer"] = reqBody["winner"].ToString() ?? String.Empty;
                 }
             }
 

@@ -1749,4 +1749,28 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPut("{LeaguePlayoffId}/ArchievePlayoffs")]
+    public async Task<ActionResult> ArchieveCurrentPlayoffBracket(string LeaguePlayoffId) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            var playoffBracket = playoffs.FinalPlayoffBracket;
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["ArchievePlayoffBrackets"] = true;
+
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["ArchievePlayoffBrackets"] = Tuple.Create(playoffs.ArchievePlayoffBrackets?.Count + 1, playoffBracket);
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
 }

@@ -2147,6 +2147,81 @@ public class LeaguePlayoffsController : ControllerBase {
         return true;
     }
 
+    private void CompletePlayoffOrdering(bool defaultMode, List<Tuple<string, List<Tuple<int, Tuple<String, String>>>>> userDefinedPlayoffs) {
+        for (int div = 0; div < userDefinedPlayoffs.Count; ++div) {
+            int ct = 0;
+            if (defaultMode) {
+                ct = userDefinedPlayoffs[div].Item2.Count;
+                int rd = 1;
+                int change = 0;
+                while (ct >= 2) {
+                    int size = userDefinedPlayoffs[div].Item2.Count;
+                    for (int i = change; i < size; i+=2) {
+                        var match1 = userDefinedPlayoffs[div].Item2[i].Item2.Item1 + "/" + userDefinedPlayoffs[div].Item2[i].Item2.Item2;
+                        var match2 = userDefinedPlayoffs[div].Item2[i+1].Item2.Item1 + "/" + userDefinedPlayoffs[div].Item2[i+1].Item2.Item2;
+
+                         change += 2;
+
+                        userDefinedPlayoffs[div].Item2.Add(Tuple.Create(rd, Tuple.Create(match1, match2)));
+                    }
+                    ct /= 2;
+                }
+            } else {
+                int rd = 2;
+                int first_rd_index = 0;
+                for (int elt = 0; elt < userDefinedPlayoffs.Count; ++elt) {
+                    for (int i = 0; i < userDefinedPlayoffs[elt].Item2.Count; ++i) {
+                        if (userDefinedPlayoffs[elt].Item2[i].Item1 == 2) {
+                            string newVal = userDefinedPlayoffs[elt].Item2[i].Item2.Item1;
+                            string newVal2 = userDefinedPlayoffs[elt].Item2[i].Item2.Item2;
+                            if (userDefinedPlayoffs[elt].Item2[i].Item2.Item1.Contains("BYE")) {
+                                int rank = Convert.ToInt32(userDefinedPlayoffs[elt].Item2[i].Item2.Item1.Substring(userDefinedPlayoffs[elt].Item2[i].Item2.Item1.IndexOf("BYE") + 4));
+                                newVal = "ROUND1INDEX" + rank;
+                                
+                            }
+                            if (userDefinedPlayoffs[elt].Item2[i].Item2.Item2.Contains("BYE")) {
+                                int rank = Convert.ToInt32(userDefinedPlayoffs[elt].Item2[i].Item2.Item1.Substring(userDefinedPlayoffs[elt].Item2[i].Item2.Item1.IndexOf("BYE") + 4));
+                                newVal2 = "ROUND1INDEX" + rank;
+                            }
+                            var updatedTuple = Tuple.Create(userDefinedPlayoffs[elt].Item2[i].Item1, Tuple.Create(newVal, newVal2));
+                            userDefinedPlayoffs[elt].Item2[i] = updatedTuple;
+                            ct++;
+                        }
+                    }
+
+                    List<Tuple<int, Tuple<string, string>>> addedMatches = new List<Tuple<int, Tuple<string, string>>>();
+
+                    addedMatches = userDefinedPlayoffs[elt].Item2.Skip(userDefinedPlayoffs[elt].Item2.Count - ct).ToList();
+
+                    rd++;
+
+                    while (ct >= 2) {
+                        var total = 0;
+                        var level = new List<Tuple<string, string>>();
+                        for (int i = total; i < ct + total; i += 2) {
+                            string match1 = addedMatches[i].Item2.Item1 + "/" + addedMatches[i].Item2.Item2;
+                            string match2 = addedMatches[i+1].Item2.Item1 + "/" + addedMatches[i+1].Item2.Item2;
+
+                            addedMatches.Add(Tuple.Create(rd, Tuple.Create(match1, match2)));
+                        }
+
+                        if (rd == 3) {
+                            addedMatches.RemoveAll(i => i.Item1 == 2);
+                            total = 0;
+                        } 
+                        else {
+                            total += ct;
+                        }
+                        rd++;
+                        ct /= 2;
+                    }
+
+                    userDefinedPlayoffs[elt].Item2.AddRange(addedMatches);
+                }
+            }
+        }
+    }
+
     [HttpPost("{LeaguePlayoffsId}/UserDefinedPlayoffFormat")]
     public async Task<ActionResult> ProcessUserDefinedPlayoffFormat(string LeaguePlayoffsId, [FromForm] IFormFile userDefinedPlayoffFormat, Dictionary<string, object> reqBody) {
         try {
@@ -2176,6 +2251,8 @@ public class LeaguePlayoffsController : ControllerBase {
                     return BadRequest();
                 }
             }
+
+            CompletePlayoffOrdering(playoffs.DefaultMode, userDefinedPlayoffs);
 
             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["UserDefinedPlayoffMatchups"] = false;

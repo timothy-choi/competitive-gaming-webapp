@@ -984,7 +984,7 @@ public class LeaguePlayoffsController : ControllerBase {
             leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player2 = players[rank2 - 1].Item2["playerName"].ToString();
             leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player2_rank = rank2;
             leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.round = 1;
-            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.GameId = players[rank1 - 1].Item2["GameId"].ToString();
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.GameId.Add(players[rank1 - 1].Item2["GameId"].ToString());
             leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.series_player1_wins = 0;
             leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.series_player2_wins = 0;
             leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.winner = "";
@@ -1739,7 +1739,7 @@ public class LeaguePlayoffsController : ControllerBase {
 
             PlayoffGraphNode foundMatchup = leagueBracket!.SubPlayoffBrackets[bracket].FindPlayerMatchup(player1, player2);
 
-            foundMatchup.currentPlayoffMatchup.GameId = reqBody["GameId"];
+            foundMatchup.currentPlayoffMatchup.GameId.Add(reqBody["GameId"]);
 
             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["FinalPlayoffBracket"] = false;
@@ -1896,7 +1896,7 @@ public class LeaguePlayoffsController : ControllerBase {
 
             PlayoffGraphNode node = leagueBracket!.FindFinalRoundMatchup(player1, player2);
 
-            node.currentPlayoffMatchup.GameId = reqBody["GameId"].ToString() ?? String.Empty;
+            node.currentPlayoffMatchup.GameId.Add(reqBody["GameId"].ToString() ?? String.Empty);
 
              Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["FinalPlayoffBracket"] = false;

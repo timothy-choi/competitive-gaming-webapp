@@ -5,7 +5,7 @@ using MongoDB.Bson.Serialization.Attributes;
 public class PlayoffMatchup {
     [BsonId]
     public String? PlayoffMatchupId {get; set;}
-    public String? GameId {get; set;}
+    public List<String>? GameId {get; set;}
     public String? player1 {get; set;}
     public int player1_rank {get; set;}
     public String? player2 {get; set;}

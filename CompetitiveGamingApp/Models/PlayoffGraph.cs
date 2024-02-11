@@ -108,10 +108,13 @@ public class PlayoffBracket {
         SubPlayoffBrackets?.Add(subBracket);
     }
 
-    public void addFinalRoundMatchup(string winner1, string winner2) {
+    public void addFinalRoundMatchup(string winner1, int rank1, string winner2, int rank2) {
         PlayoffMatchup finalRoundMatchup = new PlayoffMatchup();
+        finalRoundMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
         finalRoundMatchup.player1 = winner1;
+        finalRoundMatchup.player1_rank = rank1;
         finalRoundMatchup.player2 = winner2;
+        finalRoundMatchup.player2_rank = rank2;
 
         FinalRoundMatchups?.Add(new PlayoffGraphNode(finalRoundMatchup));
     }

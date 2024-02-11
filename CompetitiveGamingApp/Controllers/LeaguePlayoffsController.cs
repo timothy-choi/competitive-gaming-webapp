@@ -1773,4 +1773,50 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/FinalRounds")]
+    public async Task<ActionResult> SetupFinalRounds(string LeaguePlayoffId) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            var leagueBracket = playoffs.FinalPlayoffBracket;
+
+            var allWinners = new List<Tuple<string, int>>();
+
+            foreach (var bracket in leagueBracket!.SubPlayoffBrackets) {
+                var finalPlayer = bracket.GetFinalGraphNode();
+                var winner = finalPlayer.currentPlayoffMatchup.winner;
+                var rank  = winner == finalPlayer.currentPlayoffMatchup.player1 ? finalPlayer.currentPlayoffMatchup.player1_rank : finalPlayer.currentPlayoffMatchup.player2_rank;
+
+                allWinners.Add(Tuple.Create(winner!, rank));
+            }
+
+            if (playoffs.RandomRoundMode) {
+                var random = new Random();
+                allWinners = allWinners.OrderBy(t => random.Next()).ToList();
+            }
+
+            for (int i = 0; i < allWinners.Count; i += 2) {
+                leagueBracket.addFinalRoundMatchup(allWinners[i].Item1, allWinners[i].Item2, allWinners[i+1].Item1, allWinners[i+1].Item2);
+            }
+
+            leagueBracket.AddRemainingGames(leagueBracket.FinalRoundMatchups);
+            
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["FinalPlayoffBracket"] = false;
+
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["FinalPlayoffBracket"] = leagueBracket;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
 }

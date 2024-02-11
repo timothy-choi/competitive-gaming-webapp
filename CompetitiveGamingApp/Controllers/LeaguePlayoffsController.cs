@@ -660,6 +660,9 @@ public class LeaguePlayoffsController : ControllerBase {
                 return BadRequest();
             }
 
+            List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = RandomGenerateDivsionBasedBracket(playoffs.DefaultMode, playoffs.RandomInitialMode, playoffs.RandomInitialMode, Convert.ToInt32(reqBody["num_of_players"]), reqBody);
+            /*
+
             List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = new List<Tuple<int, Tuple<String, String>>>();
 
             List<List<int>>? groups = new List<List<int>>();
@@ -855,6 +858,7 @@ public class LeaguePlayoffsController : ControllerBase {
                     }
                 }
             }
+            */
 
             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["WholeRoundOrdering"] = false;

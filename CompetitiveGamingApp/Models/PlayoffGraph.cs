@@ -153,6 +153,25 @@ public class PlayoffBracket {
         return championshipNode;
     }
 
+    public PlayoffGraphNode FindFinalRoundMatchup(string player1, string player2) {
+         PlayoffGraphNode? node = null;
+
+        foreach (var startNode in FinalRoundMatchups!) {
+            while (startNode != null) {
+                if ((startNode.currentPlayoffMatchup.player1 == player1 && startNode.currentPlayoffMatchup.player2 == player2) || (startNode.currentPlayoffMatchup.player1 == player2 && startNode.currentPlayoffMatchup.player2 == player1)) {
+                    node = startNode;
+                    break;
+                }
+            }
+        }
+
+        if (node == null) {
+            throw new Exception("Couldn't find playoff matchup");
+        }
+
+        return node!;
+    }
+
     public void SetChampion(string playerName) {
         Champion = playerName;
     }

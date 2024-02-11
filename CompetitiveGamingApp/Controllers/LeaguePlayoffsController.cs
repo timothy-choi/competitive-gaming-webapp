@@ -1793,11 +1793,6 @@ public class LeaguePlayoffsController : ControllerBase {
                 allWinners.Add(Tuple.Create(winner!, rank));
             }
 
-            if (playoffs.RandomRoundMode) {
-                var random = new Random();
-                allWinners = allWinners.OrderBy(t => random.Next()).ToList();
-            }
-
             for (int i = 0; i < allWinners.Count; i += 2) {
                 leagueBracket.addFinalRoundMatchup(allWinners[i].Item1, allWinners[i].Item2, allWinners[i+1].Item1, allWinners[i+1].Item2);
             }
@@ -1814,6 +1809,65 @@ public class LeaguePlayoffsController : ControllerBase {
             await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
 
             return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeaguePlayoffId}/FinalRounds")]
+    public async Task<ActionResult<Dictionary<string, object>>> UpdateFinalRounds(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            var leagueBracket = playoffs.FinalPlayoffBracket;
+
+            string player1 = reqBody["player1"].ToString() ?? String.Empty;
+            string player2 = reqBody["player2"].ToString() ?? String.Empty;
+
+            PlayoffGraphNode node = leagueBracket.FindFinalRoundMatchup(player1, player2);
+
+            node.currentPlayoffMatchup.winner = reqBody["winner"].ToString() ?? String.Empty;
+
+            if (node.NextPlayoffMatch == null) {
+                leagueBracket.SetChampion(node.currentPlayoffMatchup.winner);
+
+                Dictionary<string, object> resBody = new Dictionary<string, object>();
+                resBody["playoffsDone"] = true;
+                resBody["champion"] = node.currentPlayoffMatchup.winner;
+                OkObjectResult res = new OkObjectResult(resBody);
+
+                return Ok(res);
+            }
+
+            int rank = node.currentPlayoffMatchup.winner == node.currentPlayoffMatchup.player1 ? node.currentPlayoffMatchup.player1_rank : node.currentPlayoffMatchup.player2_rank;
+
+            if (node.NextPlayoffMatch.currentPlayoffMatchup.player1 == "") {
+                node.NextPlayoffMatch.currentPlayoffMatchup.player1 = node.currentPlayoffMatchup.winner;
+                node.NextPlayoffMatch!.currentPlayoffMatchup.player1_rank = rank;
+            }
+            else if (node.NextPlayoffMatch.currentPlayoffMatchup.player2 == "") {
+                node.NextPlayoffMatch.currentPlayoffMatchup.player2 = node.currentPlayoffMatchup.winner;
+                node.NextPlayoffMatch!.currentPlayoffMatchup.player2_rank = rank;
+            }
+            node.NextPlayoffMatch!.currentPlayoffMatchup.PlayoffMatchupId = node.NextPlayoffMatch!.currentPlayoffMatchup.PlayoffMatchupId == "" ? Guid.NewGuid().ToString() : node.NextPlayoffMatch!.currentPlayoffMatchup.PlayoffMatchupId;
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["FinalPlayoffBracket"] = false;
+
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["FinalPlayoffBracket"] = leagueBracket;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            Dictionary<string, object> resBody2 = new Dictionary<string, object>();
+            resBody2["playoffsDone"] = false;
+
+            OkObjectResult status = new OkObjectResult(resBody2);
+
+            return Ok(status);
         } catch {
             return BadRequest();
         }

@@ -453,6 +453,9 @@ public class LeaguePlayoffsController : ControllerBase {
                 return BadRequest();
             }
 
+            List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = BuildBracketFromUser(playoffs.DefaultMode, reqBody);
+
+            /*
             List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = new List<Tuple<int, Tuple<String, String>>>();
 
             if (playoffs.DefaultMode) {
@@ -488,6 +491,8 @@ public class LeaguePlayoffsController : ControllerBase {
                     complex_index++;
                 }
             }
+
+            */
 
             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             Dictionary<string, object> updatedData = new Dictionary<string, object>();

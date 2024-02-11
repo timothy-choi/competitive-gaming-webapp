@@ -1402,6 +1402,56 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/CreateDivisionBasedBracket")]
+    public async Task<ActionResult> CreateDivisionBasedBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            PlayoffBracket leagueBracket = new PlayoffBracket();
+
+            foreach (var name in (List<string>) reqBody["playoffNames"]) {
+                leagueBracket!.AddSubPlayoffBracket(name);
+            }
+
+            for (int i = 0; i < leagueBracket.SubPlayoffBrackets.Count; ++i) {
+                var currOrdering = new List<Tuple<int, Tuple<string, string>>>();
+                if (reqBody["mode"].ToString() == "Division") {
+                    currOrdering = playoffs.DivisionBasedPlayoffPairings?[i].Item2;
+                }
+                else if (reqBody["mode"].ToString() == "CombDivision") {
+                    currOrdering = playoffs.CombinedDivisionGroups?[i].Item2;
+                }
+                SetUpBracket(playoffs.WholeRoundOrdering!.Count, leagueBracket, playoffs.DefaultMode, currOrdering!, i);
+
+                List<Tuple<int, Dictionary<string, object>>> allPlayers = new List<Tuple<int, Dictionary<string, object>>>();
+
+                int rank = 1;
+
+                var div_players = ((List<Tuple<string, List<Dictionary<string, object>>>>) reqBody["players"])[i].Item2;
+
+                foreach (var pos in div_players) {
+                    allPlayers.Add(Tuple.Create(rank, pos));
+                }
+
+                SetHeadMatchups(leagueBracket, playoffs.DefaultMode, currOrdering!, i, allPlayers);
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["FinalPlayoffBracket"] = false;
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["FinalPlayoffBracket"] = leagueBracket;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPut("{LeaguePlayoffId}")]
     public async Task<ActionResult<Dictionary<string, object>>> UpdatePlayoffBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {

@@ -2268,5 +2268,95 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    private Tuple<string, int> getPlayerByDivision(string extracted_player, List<Tuple<string, List<Dictionary<string, object>>>> division_players) {
+        string player1 = extracted_player;
+        string player1_division = player1.Substring(0, player1.IndexOf(":"));
+        int rank = Convert.ToInt32(player1.Substring(player1.IndexOf(":")+1));
+        for (int x = 0; x < division_players.Count; ++x) {
+            if (player1_division == division_players[x].Item1) {
+                Tuple<string, int> player_rank = Tuple.Create(division_players[x].Item2[rank - 1]["playerName"].ToString() ?? String.Empty, rank);
+                return player_rank;
+            }
+        }
+        return new Tuple<string, int>("", -1);
+    }
+
+    private void SetUsersToBracket(PlayoffBracket leagueBracket, bool defaultMode, List<Tuple<int, Tuple<string, string>>> WholePlayoffFormat, int bracket, List<Tuple<string, List<Dictionary<string, object>>>> division_players) {
+        var first_round = WholePlayoffFormat.GetRange(0, WholePlayoffFormat.Count(t => t.Item1 == 1));
+
+        int index = 0;
+
+        for (int i = 0; i < leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups.Count; ++i) {
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
+            var player1_info = getPlayerByDivision(first_round[index].Item2.Item1, division_players);
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player1 = player1_info.Item1;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player1_rank = player1_info.Item2;
+            var player2_info = getPlayerByDivision(first_round[index].Item2.Item2, division_players);
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player2 = player1_info.Item1;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.player2_rank = player1_info.Item2;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.round = 1;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.series_player1_wins = 0;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.series_player2_wins = 0;
+            leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups[i].currentPlayoffMatchup.winner = "";
+        }
+
+        if (!defaultMode) {
+            var round_two_nodes = leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups.GetRange(0, leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups.Count(t => t.Item1 == 2));
+            var round_two_ordering = WholePlayoffFormat.GetRange(WholePlayoffFormat.IndexOf(WholePlayoffFormat.FirstOrDefault(t => t.Item1 == 2)!), WholePlayoffFormat.Count(tuple => tuple.Item1 == 2));
+            for (int i = 0; i < round_two_nodes.Count; ++i) {
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.PlayoffMatchupId = Guid.NewGuid().ToString();
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.round = 2;
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.series_player1_wins = 0;
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.series_player2_wins = 0;
+                leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.winner = "";
+                if (!round_two_ordering[i].Item2.Item1.Contains("ROUND")) {
+                    var player1_info = getPlayerByDivision(round_two_ordering[i].Item2.Item1, division_players);
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player1 = player1_info.Item1;
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player1_rank = player1_info.Item2;
+                }
+                if (!round_two_ordering[i].Item2.Item2.Contains("ROUND")) {
+                    var player2_info = getPlayerByDivision(round_two_ordering[i].Item2.Item2, division_players);
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player2 = player2_info.Item1;
+                    leagueBracket.SubPlayoffBrackets[bracket].AllOtherMatchups[i].Item2.currentPlayoffMatchup.player2_rank = player2_info.Item2;
+                }
+            }
+        } 
+    }
+
+
+   [HttpPost("{LeaguePlayoffsId}")]
+   public async Task<ActionResult> CreateUserBasedBracket(string LeaguePlayoffsId, Dictionary<string, object> reqBody) {
+    try {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffsId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        var leagueBracket = playoffs.FinalPlayoffBracket;
+
+        int index = 0;
+
+        foreach (var bracket in playoffs.UserDefinedPlayoffMatchups!) {
+            SetUpBracket(bracket.Item2.Count, leagueBracket!, playoffs.DefaultMode, bracket.Item2, index);
+
+            SetUsersToBracket(leagueBracket!, playoffs.DefaultMode, bracket.Item2, index, (List<Tuple<string, List<Dictionary<string, object>>>>) reqBody["division_players"]);
+
+            index++;
+        }
+
+        Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+        upsertOpt["FinalPlayoffBracket"] = false;
+
+        Dictionary<string, object> updatedData = new Dictionary<string, object>();
+        updatedData["FinalPlayoffBracket"] = leagueBracket!;
+
+        await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+        return Ok();
+    } catch {
+        return BadRequest();
+    }
+   }
+
 
 }

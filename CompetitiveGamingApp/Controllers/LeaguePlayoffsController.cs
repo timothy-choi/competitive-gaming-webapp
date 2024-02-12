@@ -1918,7 +1918,7 @@ public class LeaguePlayoffsController : ControllerBase {
             string line;
             string division = "";
             string round = "";
-            int round_num = 0;
+            int round_num = 1;
             List<Tuple<int, Tuple<String, String>>> allPairs = new List<Tuple<int, Tuple<String, String>>>();
             while ((line = streamReader.ReadLine()) != null) {
                 if (line.StartsWith("DIVISION")) {

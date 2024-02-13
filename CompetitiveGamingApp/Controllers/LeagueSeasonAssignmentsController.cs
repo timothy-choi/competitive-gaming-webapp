@@ -574,7 +574,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 return NotFound();
             }
 
-            Dictionary<string, object> payload = new Dictionary<string, object>(); 
+            Dictionary<string, object> payload = new Dictionary<string, object>();
+            payload["event_type"] = "send_message"; 
             payload["whole_mode"] = reqBody["WholeMode"];
             payload["playAllTeams"] = assignment.playAllPlayers;
             payload["players"] = (List<string>) reqBody["players"];

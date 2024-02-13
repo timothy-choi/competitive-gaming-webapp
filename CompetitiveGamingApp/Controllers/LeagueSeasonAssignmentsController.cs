@@ -12,6 +12,9 @@ using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.Text;
+using Amazon;
+using Amazon.Lambda;
+using Amazon.Lambda.Model;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -563,6 +566,67 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     }
 
     //Endpoint to notify SNS/other MQ with request to generate schedules. 
+    [HttpPost("{AssignmentsId}")]
+    public async Task<ActionResult<List<Tuple<string, List<object>>>>> GeneratePlayerSchedules(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, object> payload = new Dictionary<string, object>(); 
+            payload["whole_mode"] = reqBody["WholeMode"];
+            payload["playAllTeams"] = assignment.playAllPlayers;
+            payload["players"] = (List<string>) reqBody["players"];
+            payload["num_games"] = Convert.ToInt32(reqBody["num_games"]);
+            payload["min_repeat_times"] = assignment.minRepeatMatchups;
+            payload["max_repeat_times"] = assignment.maxRepeatMatchups;
+            payload["start_dates"] = (Dictionary<string, DateTime>) reqBody["start_dates"];
+            payload["intervals_between_games"] = Convert.ToInt32(reqBody["intervals_between_games"]);
+            payload["intervals_between_games_hours"] = Convert.ToInt32(reqBody["intervals_between_games_hours"]);
+            payload["do_not_play"] = reqBody.ContainsKey("do_not_play") ? (Dictionary<string, List<string>>) reqBody["do_not_play"] : new Dictionary<string, List<string>>();
+            payload["groups"] =   reqBody.ContainsKey("groups") ? (Dictionary<string, List<string>>) reqBody["groups"] : new Dictionary<string, List<string>>();
+            payload["outside_groups"] = reqBody.ContainsKey("outside_groups")  ? (Dictionary<string, List<string>>) reqBody["outside_groups"] : new Dictionary<string, List<string>>();
+            payload["player_groups"] = reqBody.ContainsKey("player_groups") ? (Dictionary<string, List<string>>) reqBody["player_groups"] : new Dictionary<string, List<string>>();
+            payload["outside_player_limit"] = reqBody.ContainsKey("outside_player_limit") ? Convert.ToInt32(reqBody["outside_player_limit"]) : 0;
+            payload["max_repeat_outside_matches"] = assignment.MaxRepeatMatchups;
+            payload["exclude_outside_divisions"] = assignment.ExcludeOutsideGames;
+            payload["repeat_matchups"] = assignment.RepeatMatchups;
+
+            var lambdaConfig = new AmazonLambdaConfig
+            {
+                RegionEndpoint = RegionEndpoint.USEast1,
+            };
+
+            using var lambdaClient = new AmazonLambdaClient(lambdaConfig);
+
+            var request = new InvokeRequest
+            {
+                FunctionName = "ScheduleHandler",
+                Payload = JsonConvert.SerializeObject(payload)
+            };
+
+            var response = await lambdaClient.InvokeAsync(request);
+
+            if (response.HttpStatusCode != HttpStatusCode.OK) {
+                return BadRequest();
+            }
+
+            Dictionary<string, List<object>>? dictionary = JsonConvert.DeserializeObject<Dictionary<string, List<object>>>(Encoding.UTF8.GetString(response.Payload.ToArray()));
+
+            List<Tuple<string, List<object>>> tupleList = new List<Tuple<string, List<object>>>();
+            foreach (var kvp in dictionary!)
+            {
+                tupleList.Add(new Tuple<string, List<object>>(kvp.Key, kvp.Value));
+            }
+
+            OkObjectResult res = new OkObjectResult(tupleList);
+
+            return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
 
     //Endpoint to take in generated schedules and format it using the SingleGame Objects for each player's schedule
     [HttpPut("{AssignmentsId}")]    

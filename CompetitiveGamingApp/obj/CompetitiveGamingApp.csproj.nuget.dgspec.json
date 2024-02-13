@@ -38,6 +38,10 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "dependencies": {
+            "AWSSDK.Lambda": {
+              "target": "Package",
+              "version": "[3.7.303.44, )"
+            },
             "AWSSDK.S3": {
               "target": "Package",
               "version": "[3.7.205.17, )"

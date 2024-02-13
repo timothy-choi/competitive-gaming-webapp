@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "UzuNKdh8YS3uKPX0xV/cEeCekzjKvqeEkUGzqDZ743Dd8yOKnLwjJyGv6YumUHFzT+DO7ZInyFCUEMhpMMhisQ==",
+  "dgSpecHash": "lXjOnGrSbKsGIdTTqsXmEp7F55b5UTgpUf/ImiDA5Hqt12sfC2K1q+acNDDa+O34mrYG9PDKSvZ4iDWw1x0JDQ==",
   "success": true,
   "projectFilePath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
   "expectedPackageFiles": [
-    "/Users/timchoi/.nuget/packages/awssdk.core/3.7.204.8/awssdk.core.3.7.204.8.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/awssdk.core/3.7.302.8/awssdk.core.3.7.302.8.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/awssdk.lambda/3.7.303.44/awssdk.lambda.3.7.303.44.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/awssdk.s3/3.7.205.17/awssdk.s3.3.7.205.17.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/awssdk.securitytoken/3.7.100.14/awssdk.securitytoken.3.7.100.14.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/azure.core/1.25.0/azure.core.1.25.0.nupkg.sha512",

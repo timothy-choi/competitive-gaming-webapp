@@ -47,7 +47,7 @@ public class SingleGameController : ControllerBase {
     }
 
     [HttpPost]
-    public async Task<ActionResult> createNewGame([FromBody] Dictionary<string, string> gameInfo) {
+    public async Task<ActionResult<string>> createNewGame([FromBody] Dictionary<string, string> gameInfo) {
         try {
             SingleGame scheduledGame = new SingleGame {
                 SingleGameId = Guid.NewGuid().ToString(),
@@ -63,7 +63,9 @@ public class SingleGameController : ControllerBase {
 
             await _singleGameService.CreateGame(scheduledGame);
 
-            return Ok();
+            OkObjectResult res = new OkObjectResult(scheduledGame.SingleGameId);
+
+            return Ok(res);
         }
         catch {
             return BadRequest();

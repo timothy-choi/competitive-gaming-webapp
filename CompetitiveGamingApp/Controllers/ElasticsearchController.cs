@@ -82,13 +82,31 @@ public class ElasticsearchController : ControllerBase {
     }
 
     [HttpGet("Player/{query}")]
-    public async Task<ActionResult<List<string>>> SearchPlayerResults(string query) {
+    public async Task<ActionResult<List<PlayerInfo>>> SearchPlayerResults(string query) {
         try {
-            var searchResponse = await _client.SearchAsync<LeagueInfo>(s => s
-                .Index("your_index_name") // Specify the index name
+            var allPlayers = new List<PlayerInfo>();
+            var searchResponse = await _client.SearchAsync<PlayerInfo>(s => s
+                .Index("Player") // Specify the index name
                 .Query(q => q
                     .Fuzzy(m => m
-                        .Field(f => f.LeagueName) // Specify the field to search
+                        .Field(f => f.Name) // Specify the field to search
+                        .Value(query) // Specify the search query
+                        .Fuzziness(new Fuzziness(1))
+                    )
+                )
+            );
+            if (searchResponse.IsValidResponse) {
+                allPlayers.AddRange((List<PlayerInfo>)searchResponse.Hits);
+            }
+            else {
+                return BadRequest();
+            }
+
+            searchResponse = await _client.SearchAsync<PlayerInfo>(s => s
+                .Index("Player") // Specify the index name
+                .Query(q => q
+                    .Fuzzy(m => m
+                        .Field(f => f.Username) // Specify the field to search
                         .Value(query) // Specify the search query
                         .Fuzziness(new Fuzziness(1))
                     )
@@ -97,15 +115,16 @@ public class ElasticsearchController : ControllerBase {
 
             if (searchResponse.IsValidResponse)
             {
-                var hits = searchResponse.Hits;
-                OkObjectResult res = new OkObjectResult(hits);
-
-                return Ok(res);
+                allPlayers.AddRange((List<PlayerInfo>)searchResponse.Hits);
             }
             else
             {
                 return BadRequest();
             }
+            
+            OkObjectResult res = new OkObjectResult(allPlayers);
+
+            return Ok(res);
         } catch {
             return BadRequest();
         }
@@ -165,11 +184,11 @@ public class ElasticsearchController : ControllerBase {
     [HttpGet("Game/{query}")]
     public async Task<ActionResult<List<string>>> SearchGameResults(string query) {
         try {
-            var searchResponse = await _client.SearchAsync<LeagueInfo>(s => s
+            var searchResponse = await _client.SearchAsync<GameInfo>(s => s
                 .Index("your_index_name") // Specify the index name
                 .Query(q => q
                     .Fuzzy(m => m
-                        .Field(f => f.LeagueName) // Specify the field to search
+                        .Field(f => f.Matchup) // Specify the field to search
                         .Value(query) // Specify the search query
                         .Fuzziness(new Fuzziness(1))
                     )

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 [ApiController]
 [Route("api/playerPayment")]
@@ -42,6 +43,33 @@ public class PlayerPaymentController : ControllerBase {
 
             await _playerPaymentService.AddAsync(playerAcct);
             await _playerPaymentService.SaveChangesAsync();
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{username}/IdempotencyKey")]
+    public async Task<ActionResult> changeIdempotencyKey(string username) {
+        try {
+            var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (acct == null) {
+                return NotFound();
+            }
+            
+            byte[] randomNumber = new byte[16]; // 16 bytes for a GUID
+
+            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(randomNumber);
+            }
+
+            Guid randomGuid = new Guid(randomNumber);
+
+            acct[0].idempotencyKey = randomGuid.ToString();
+
+            await _playerPaymentService.SaveChangesAsync();
+
             return Ok();
         } catch {
             return BadRequest();

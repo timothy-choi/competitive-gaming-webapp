@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "CRhH8xumvznAXE3V2yliZVygILcgyPKccgoz84fz9oTs/9oRk+2iiNWtayqDuqJGP9G3m05cZCNfttHdyn1qxw==",
+  "dgSpecHash": "RMrMUa2inJSgcdqRswsYu62UdWQsh+qnG84OSP4eyhgqii85FsuQgGAuuEDosodAVdP/esqtKxZNH+WyDJf+sQ==",
   "success": true,
   "projectFilePath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
   "expectedPackageFiles": [
@@ -12,11 +12,12 @@
     "/Users/timchoi/.nuget/packages/azure.identity/1.7.0/azure.identity.1.7.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/dapper/2.1.11/dapper.2.1.11.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/dnsclient/1.6.1/dnsclient.1.6.1.nupkg.sha512",
-    "/Users/timchoi/.nuget/packages/elasticsearch.net/7.17.5/elasticsearch.net.7.17.5.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/elastic.clients.elasticsearch/8.12.0/elastic.clients.elasticsearch.8.12.0.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/elastic.transport/0.4.17/elastic.transport.0.4.17.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.aspnetcore.openapi/7.0.11/microsoft.aspnetcore.openapi.7.0.11.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.bcl.asyncinterfaces/1.1.1/microsoft.bcl.asyncinterfaces.1.1.1.nupkg.sha512",
-    "/Users/timchoi/.nuget/packages/microsoft.csharp/4.6.0/microsoft.csharp.4.6.0.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/microsoft.csharp/4.5.0/microsoft.csharp.4.5.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.data.sqlclient/5.1.1/microsoft.data.sqlclient.5.1.1.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.data.sqlclient.sni.runtime/5.1.0/microsoft.data.sqlclient.sni.runtime.5.1.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.entityframeworkcore/7.0.14/microsoft.entityframeworkcore.7.0.14.nupkg.sha512",

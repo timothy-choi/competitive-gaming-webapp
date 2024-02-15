@@ -50,9 +50,9 @@
               "target": "Package",
               "version": "[2.1.11, )"
             },
-            "Elasticsearch.Net": {
+            "Elastic.Clients.Elasticsearch": {
               "target": "Package",
-              "version": "[7.17.5, )"
+              "version": "[8.12.0, )"
             },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",

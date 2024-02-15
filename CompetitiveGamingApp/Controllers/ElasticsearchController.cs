@@ -182,7 +182,7 @@ public class ElasticsearchController : ControllerBase {
 
 
     [HttpGet("Game/{query}")]
-    public async Task<ActionResult<List<string>>> SearchGameResults(string query) {
+    public async Task<ActionResult<List<GameInfo>>> SearchGameResults(string query) {
         try {
             var searchResponse = await _client.SearchAsync<GameInfo>(s => s
                 .Index("your_index_name") // Specify the index name
@@ -264,7 +264,7 @@ public class ElasticsearchController : ControllerBase {
 
 
     [HttpGet("League/{query}")]
-    public async Task<ActionResult<List<string>>> SearchLeagueResults(string query) {
+    public async Task<ActionResult<List<LeagueInfo>>> SearchLeagueResults(string query) {
         try {
             var searchResponse = await _client.SearchAsync<LeagueInfo>(s => s
                 .Index("your_index_name") // Specify the index name

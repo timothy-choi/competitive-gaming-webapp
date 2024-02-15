@@ -5,5 +5,6 @@ public class PlayerPaymentAccount {
     public String? playerUsername {get; set;}
     public String? playerPaymentUsername {get; set;}
     public String? playerCashAppId {get; set;}
+    public String? MerchantId {get; set;}
     public String? idempotencyKey {get; set;}
 };

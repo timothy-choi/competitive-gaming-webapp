@@ -36,6 +36,7 @@ public class PlayerPaymentController : ControllerBase {
                 playerUsername = acctInfo["username"],
                 playerPaymentUsername = acctInfo["cashAppUsername"],
                 playerCashAppId = acctInfo["playerCashAppId"],
+                MerchantId = acctInfo["MerchantId"],
                 idempotencyKey = Guid.NewGuid().ToString()
             };
 

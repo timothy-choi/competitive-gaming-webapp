@@ -9,8 +9,7 @@ public class PlayerInfo {
 
 public class GameInfo {
     public String? Id {get; set;}
-    public String? Player1 {get; set;}
-    public String? Player2 {get; set;}
+    public String? Matchup {get; set;}
     public String? GameId {get; set;}
 }
 

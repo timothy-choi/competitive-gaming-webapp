@@ -91,6 +91,24 @@ public class PlayerPaymentController : ControllerBase {
         }
     }
 
+    [HttpPut("{username}/{merchantId}/Merchants")]
+    public async Task<ActionResult> UpdateMerchantId(string username, string merchantId) {
+        try {
+            var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (acct == null) {
+                return NotFound();
+            }
+            
+            acct[0].MerchantId = merchantId;
+
+            await _playerPaymentService.SaveChangesAsync();
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPut("{username}/IdempotencyKey")]
     public async Task<ActionResult> changeIdempotencyKey(string username) {
         try {

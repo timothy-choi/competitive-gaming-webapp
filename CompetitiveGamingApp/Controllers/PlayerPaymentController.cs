@@ -6,13 +6,18 @@ using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
 [ApiController]
 [Route("api/playerPayment")]
 public class PlayerPaymentController : ControllerBase {
     private readonly PlayerPaymentServices _playerPaymentService;
+    private readonly HttpClient _client;
     public PlayerPaymentController(PlayerPaymentServices playerPaymentServices) {
         _playerPaymentService = playerPaymentServices;
+        _client = new HttpClient();
     }
 
     [HttpGet("{username}")]
@@ -44,6 +49,43 @@ public class PlayerPaymentController : ControllerBase {
             await _playerPaymentService.AddAsync(playerAcct);
             await _playerPaymentService.SaveChangesAsync();
             return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("{username}/Merchant")]
+    public async Task<ActionResult<Dictionary<string, string>>> createMerchantAccount(string username, Dictionary<string, string> reqBody) {
+        try {
+            var content = JsonConvert.SerializeObject(reqBody);
+            var request = new HttpRequestMessage {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://api.cash.app/network/v1/merchants"),
+                Headers = {
+                    { "X-Region", "" },
+                    { "X-Signature", "" },
+                    { "Accept", "application/json" },
+                },
+                Content = new StringContent(content) {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("application/json")
+                    }
+                }
+            };
+
+            using (var response = await _client.SendAsync(request)) {
+                response.EnsureSuccessStatusCode();
+                var body = await response.Content.ReadAsStringAsync();
+                var merchant = JsonConvert.DeserializeObject<Dictionary<string, string>>(body)!;
+                Dictionary<string, string> resBody = new Dictionary<string, string>();
+
+                resBody["username"] = username;
+                resBody["merchant_id"] = merchant["id"];
+                OkObjectResult merchantInfo = new OkObjectResult(resBody);
+
+                return Ok(merchantInfo);
+            }
         } catch {
             return BadRequest();
         }

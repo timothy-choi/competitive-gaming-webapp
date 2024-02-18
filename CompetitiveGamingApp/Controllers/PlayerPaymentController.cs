@@ -110,6 +110,65 @@ public class PlayerPaymentController : ControllerBase {
         }
     }
 
+    [HttpPost("{username}/Webhooks")]
+    public async Task<ActionResult> AddWebhook(string username, Dictionary<string, string> reqBody) {
+        try {
+            var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (acct == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, object> webhookContent = new Dictionary<string, object>();
+
+            webhookContent["idempotency_key"] = reqBody["idempotency_key"];
+            webhookContent["webhook_endpoint"] = new {
+                api_key_id = reqBody["api_key_id"],
+                event_configurations = new[] {
+                    new
+                    {
+                        event_type = webhookContent["event_type"]
+                    }
+                },
+                api_version = "v1",
+                url = reqBody["url"]
+            };
+
+            var content = JsonConvert.SerializeObject(webhookContent);
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://api.cash.app/management/v1/webhook-endpoints"),
+                Headers =
+                {
+                    { "X-Region", "" },
+                    { "X-Signature", "" },
+                    { "Accept", "application/json" },
+                },
+                Content = new StringContent(content)
+                {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("application/json")
+                    }
+                }
+            };
+
+            using (var response = await _client.SendAsync(request)) {
+                response.EnsureSuccessStatusCode();
+
+                acct[0].webhookEndpoints[reqBody["event_type"]] = reqBody["url"];
+
+                await _playerPaymentService.SaveChangesAsync();
+
+                return Ok();
+            }
+
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("{username}/Grant")]
     public async Task<ActionResult<Dictionary<string, string>>> RequestCustomerGrant(string username, Dictionary<string, string> reqBody) {
         try {

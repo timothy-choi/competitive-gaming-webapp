@@ -191,19 +191,19 @@ public class PlayerPaymentController : ControllerBase {
             using (var response = await _client.SendAsync(request)) {
                 response.EnsureSuccessStatusCode();
                 var body = await response.Content.ReadAsStringAsync();
-                var grant_info = JsonConvert.DeserializeObject<Dictionary<string, string>>(body)!;
+                var grant_info = JsonConvert.DeserializeObject<Dictionary<string, object>>(body)!;
 
                 Dictionary<string, string> resBody = new Dictionary<string, string>();
 
                 var allGrants = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(resBody["grants"])!;
 
-                if (grant_info["status"] == "approved") {
+                if ((string) grant_info["status"] == "approved") {
                     resBody["username"] = username;
                     resBody["grant_id"] = allGrants[0]["id"];
                     resBody["failedStatus"] = false.ToString();
                     resBody["pending"] = false.ToString();
                 }
-                if (grant_info["status"] == "declined") {
+                if ((string) grant_info["status"] == "declined") {
                     resBody["username"] = username;
                     resBody["failedStatus"] = true.ToString();
                     resBody["pending"] = false.ToString();
@@ -216,6 +216,59 @@ public class PlayerPaymentController : ControllerBase {
 
                 OkObjectResult res = new OkObjectResult(resBody);
                 return Ok(res);
+            }
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("{username}/Payment")]
+    public async Task<ActionResult> ProcessPayment(string username, Dictionary<string, string> reqBody) {
+        try {
+            var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (acct == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, object> paymentInfo = new Dictionary<string, object>();
+
+            paymentInfo["idempotency_key"] = reqBody["idempotency_key"];
+            paymentInfo["payment"] = new {
+                amount = Convert.ToInt32(reqBody["amount"]),
+                currency = reqBody["currency"],
+                merchant_id = acct[0].MerchantId,
+                grant_id = reqBody["grant_id"]
+            };
+
+            string content = JsonConvert.SerializeObject(paymentInfo);
+
+            var request = new HttpRequestMessage {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://api.cash.app/management/v1/webhook-endpoints"),
+                Headers =
+                {
+                    { "X-Region", "" },
+                    { "X-Signature", "" },
+                    { "Accept", "application/json" },
+                },
+                Content = new StringContent(content)
+                {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("application/json")
+                    }
+                }
+            };
+
+            using (var response = await _client.SendAsync(request)) {
+                response.EnsureSuccessStatusCode();
+                var body = await response.Content.ReadAsStringAsync();
+                var payment_info = JsonConvert.DeserializeObject<Dictionary<string, object>>(body)!;
+                if (payment_info["status"].ToString() == "Voided" || payment_info["status"].ToString() == "Declined") {
+                    return BadRequest();
+                }
+                return Ok();
+
             }
         } catch {
             return BadRequest();

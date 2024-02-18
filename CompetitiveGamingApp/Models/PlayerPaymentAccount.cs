@@ -7,4 +7,5 @@ public class PlayerPaymentAccount {
     public String? playerCashAppId {get; set;}
     public String? MerchantId {get; set;}
     public String? idempotencyKey {get; set;}
+    public Dictionary<string, string> webhookEndpoints {get; set;}
 };

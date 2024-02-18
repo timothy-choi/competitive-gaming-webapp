@@ -43,7 +43,8 @@ public class PlayerPaymentController : ControllerBase {
                 playerPaymentUsername = acctInfo["cashAppUsername"],
                 playerCashAppId = acctInfo["playerCashAppId"],
                 MerchantId = acctInfo["MerchantId"],
-                idempotencyKey = Guid.NewGuid().ToString()
+                idempotencyKey = Guid.NewGuid().ToString(),
+                webhookEndpoints = new Dictionary<string, string>()
             };
 
             await _playerPaymentService.AddAsync(playerAcct);

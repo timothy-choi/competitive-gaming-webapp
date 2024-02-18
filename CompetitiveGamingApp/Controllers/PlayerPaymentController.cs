@@ -109,6 +109,59 @@ public class PlayerPaymentController : ControllerBase {
         }
     }
 
+    [HttpPost("{username}/Grant")]
+    public async Task<ActionResult<Dictionary<string, string>>> RequestCustomerGrant(string username, Dictionary<string, string> reqBody) {
+        try {
+            var content = JsonConvert.SerializeObject(reqBody);
+            var request = new HttpRequestMessage {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://api.cash.app/customer-request/v1/requests"),
+                Headers =
+                {
+                    { "Accept", "application/json" },
+                },
+                Content = new StringContent(content) {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("application/json")
+                    }
+                }
+            };
+
+            using (var response = await _client.SendAsync(request)) {
+                response.EnsureSuccessStatusCode();
+                var body = await response.Content.ReadAsStringAsync();
+                var grant_info = JsonConvert.DeserializeObject<Dictionary<string, string>>(body)!;
+
+                Dictionary<string, string> resBody = new Dictionary<string, string>();
+
+                var allGrants = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(resBody["grants"])!;
+
+                if (grant_info["status"] == "approved") {
+                    resBody["username"] = username;
+                    resBody["grant_id"] = allGrants[0]["id"];
+                    resBody["failedStatus"] = false.ToString();
+                    resBody["pending"] = false.ToString();
+                }
+                if (grant_info["status"] == "declined") {
+                    resBody["username"] = username;
+                    resBody["failedStatus"] = true.ToString();
+                    resBody["pending"] = false.ToString();
+                }
+                else {
+                    resBody["username"] = username;
+                    resBody["failedStatus"] = false.ToString();
+                    resBody["pending"] = true.ToString();
+                }
+
+                OkObjectResult res = new OkObjectResult(resBody);
+                return Ok(res);
+            }
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPut("{username}/IdempotencyKey")]
     public async Task<ActionResult> changeIdempotencyKey(string username) {
         try {

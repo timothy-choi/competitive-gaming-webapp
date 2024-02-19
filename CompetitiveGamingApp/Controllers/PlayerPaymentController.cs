@@ -9,6 +9,75 @@ using System.Security.Cryptography;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Http.HttpResults;
+
+[ApiController]
+[Route("[controller]")]
+public class WebhookCashApp : Controller {
+    [HttpPost]
+    public async Task<ActionResult<Dictionary<string, string>>> HandleWebhook() {
+        try {
+            Dictionary<string, string> resBody = new Dictionary<string, string>();
+            using (var res = new StreamReader(Request.Body)) {
+                var requestBody = await res.ReadToEndAsync();
+
+                Dictionary<string, dynamic> webhookRes = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(requestBody)!;
+
+                if (webhookRes["status"].ToString() != "Active") {
+                    return BadRequest();
+                }
+
+                switch (webhookRes["type"].ToString()) {
+                    case "customer_request.state.updated":
+                        if (webhookRes["data"]["object"]["request"]["status"] == "Declined") {
+                            resBody["type"] = webhookRes["type"].ToString();
+                            resBody["status"] = "Declined"; 
+                        }
+                        if (webhookRes["data"]["object"]["request"]["status"] == "Accepted") {
+                            resBody["type"] = webhookRes["type"].ToString();
+                            resBody["status"] = "Accepted";
+                        }
+                        break;
+
+                    case "grant.created":
+                        if (webhookRes["data"]["object"]["status"] != "ACTIVE") {
+                            resBody["type"] = webhookRes["type"].ToString();
+                            resBody["status"] = "Invalid";
+                        }
+                        else {
+                            resBody["type"] = webhookRes["type"].ToString();
+                            resBody["status"] = "Valid";
+                            resBody["grant_id"] = webhookRes["data"]["object"]["grant"]["id"];
+                        }
+                        break;
+
+                    case "payment.status.updated":
+                        if (webhookRes["data"]["object"]["payment"]["status"] != "Authorized" && webhookRes["data"]["object"]["payment"]["status"] != "Captured") {
+                            resBody["type"] = webhookRes["type"].ToString();
+                            resBody["status"] = "Payment_Error";
+                        }
+                        else {
+                            resBody["type"] = webhookRes["type"].ToString();
+                            resBody["status"] = webhookRes["data"]["object"]["payment"]["status"];
+                        }
+                        break;
+
+                    case "merchant.status.updated":
+                        resBody["type"] = webhookRes["type"].ToString();
+                        resBody["status"] = webhookRes["data"]["object"]["payment"]["status"];
+                        break;
+
+                    default:
+                        return BadRequest();
+                }
+            }
+            OkObjectResult updateResponse = new OkObjectResult(resBody);
+            return Ok(updateResponse);
+        } catch {
+            return BadRequest();
+        }
+    }
+}
 
 [ApiController]
 [Route("api/playerPayment")]

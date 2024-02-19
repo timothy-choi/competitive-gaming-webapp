@@ -337,11 +337,67 @@ public class PlayerPaymentController : ControllerBase {
                     return BadRequest();
                 }
                 Dictionary<string, string> resBody = new Dictionary<string, string>();
-                resBody["username"] = reqBody["username"];
+                resBody["username"] = username;
                 resBody["payment_id"] = payment_info["payment"]["id"];
+                resBody["amount"] = payment_info["payment"]["amount"];
                 OkObjectResult res = new OkObjectResult(resBody);
                 return Ok(res);
             }
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("{username}/Refund")]
+    public async Task<ActionResult> ProcessRefund(string username, Dictionary<string, string> reqBody) {
+        try {
+            var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (acct == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, object> refundInfo = new Dictionary<string, object>();
+
+            refundInfo["idempotency_key"] = acct[0].idempotencyKey!;
+            refundInfo["refund"] = new {
+                amount = reqBody["amount"],
+                currency = reqBody["currency"],
+                merchant_id = acct[0].MerchantId,
+                payment_id = reqBody["payment_id"]
+            };
+
+            var content = JsonConvert.SerializeObject(refundInfo);
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://api.cash.app/network/v1/refunds"),
+                Headers =
+                {
+                    { "X-Region", "" },
+                    { "X-Signature", "" },
+                    { "Accept", "application/json" },
+                },
+                Content = new StringContent(content)
+                {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("application/json")
+                    }
+                }
+            };
+
+            using (var response = await _client.SendAsync(request)) {
+                response.EnsureSuccessStatusCode();
+                var body = await response.Content.ReadAsStringAsync();
+                var refund_info = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(body)!;
+                if (refund_info["refund"]["status"] == "Voided" || refund_info["refund"]["status"] == "Declined") {
+                    return BadRequest();
+                }
+
+            } 
+            
+            return Ok();
         } catch {
             return BadRequest();
         }

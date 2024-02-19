@@ -292,7 +292,7 @@ public class PlayerPaymentController : ControllerBase {
     }
 
     [HttpPost("{username}/Payment")]
-    public async Task<ActionResult> ProcessPayment(string username, Dictionary<string, string> reqBody) {
+    public async Task<ActionResult<Dictionary<string, string>>> ProcessPayment(string username, Dictionary<string, string> reqBody) {
         try {
             var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
             if (acct == null) {
@@ -332,12 +332,15 @@ public class PlayerPaymentController : ControllerBase {
             using (var response = await _client.SendAsync(request)) {
                 response.EnsureSuccessStatusCode();
                 var body = await response.Content.ReadAsStringAsync();
-                var payment_info = JsonConvert.DeserializeObject<Dictionary<string, object>>(body)!;
-                if (payment_info["status"].ToString() == "Voided" || payment_info["status"].ToString() == "Declined") {
+                var payment_info = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(body)!;
+                if (payment_info["payment"]["status"].ToString() == "Voided" || payment_info["payment"]["status"].ToString() == "Declined") {
                     return BadRequest();
                 }
-                return Ok();
-
+                Dictionary<string, string> resBody = new Dictionary<string, string>();
+                resBody["username"] = reqBody["username"];
+                resBody["payment_id"] = payment_info["payment"]["id"];
+                OkObjectResult res = new OkObjectResult(resBody);
+                return Ok(res);
             }
         } catch {
             return BadRequest();

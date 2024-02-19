@@ -66,6 +66,11 @@ public class WebhookCashApp : Controller {
                         resBody["type"] = webhookRes["type"].ToString();
                         resBody["status"] = webhookRes["data"]["object"]["payment"]["status"];
                         break;
+                    
+                    case "refund.status.updated":
+                        resBody["type"] = webhookRes["type"].ToString();
+                        resBody["status"] = webhookRes["data"]["object"]["payment"]["status"];
+                        break;
 
                     default:
                         return BadRequest();

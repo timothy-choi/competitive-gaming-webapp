@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "RMrMUa2inJSgcdqRswsYu62UdWQsh+qnG84OSP4eyhgqii85FsuQgGAuuEDosodAVdP/esqtKxZNH+WyDJf+sQ==",
+  "dgSpecHash": "xPb3k9jMA/51HMiq3m+qcYg25bLsTEP6s12vw8QFQ7hOGqb0h45WuNxNhvp37suezLX0FRUJrfXY0S+kXzQVtQ==",
   "success": true,
   "projectFilePath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
   "expectedPackageFiles": [
@@ -59,6 +59,7 @@
     "/Users/timchoi/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/npgsql/7.0.6/npgsql.7.0.6.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/pipelines.sockets.unofficial/2.2.8/pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/rabbitmq.client/6.8.1/rabbitmq.client.6.8.1.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/sharpcompress/0.30.1/sharpcompress.0.30.1.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/snappier/1.0.0/snappier.1.0.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/stackexchange.redis/2.7.17/stackexchange.redis.2.7.17.nupkg.sha512",
@@ -89,6 +90,7 @@
     "/Users/timchoi/.nuget/packages/system.text.encoding.codepages/6.0.0/system.text.encoding.codepages.6.0.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/system.text.encodings.web/7.0.0/system.text.encodings.web.7.0.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/system.text.json/7.0.0/system.text.json.7.0.0.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/system.threading.channels/7.0.0/system.threading.channels.7.0.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/websocketsharp/1.0.3-rc11/websocketsharp.1.0.3-rc11.nupkg.sha512",

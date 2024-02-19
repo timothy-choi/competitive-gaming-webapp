@@ -37,6 +37,7 @@ public class WebhookCashApp : Controller {
                             resBody["type"] = webhookRes["type"].ToString();
                             resBody["status"] = "Accepted";
                         }
+                        resBody["customer_id"] = webhookRes["data"]["object"]["customer_profile"]["id"];
                         break;
 
                     case "grant.created":
@@ -49,6 +50,7 @@ public class WebhookCashApp : Controller {
                             resBody["status"] = "Valid";
                             resBody["grant_id"] = webhookRes["data"]["object"]["grant"]["id"];
                         }
+                        resBody["customer_id"] =  webhookRes["data"]["object"]["grant"]["customer_id"];
                         break;
 
                     case "payment.status.updated":
@@ -60,20 +62,27 @@ public class WebhookCashApp : Controller {
                             resBody["type"] = webhookRes["type"].ToString();
                             resBody["status"] = webhookRes["data"]["object"]["payment"]["status"];
                         }
+                        resBody["merchant_id"] = webhookRes["data"]["object"]["payment"]["merchant_id"];
                         break;
 
                     case "merchant.status.updated":
                         resBody["type"] = webhookRes["type"].ToString();
-                        resBody["status"] = webhookRes["data"]["object"]["payment"]["status"];
+                        resBody["status"] = webhookRes["data"]["object"]["merchant"]["status"];
+                        resBody["merchant_id"] = webhookRes["data"]["object"]["merchant"]["id"];
                         break;
                     
                     case "refund.status.updated":
                         resBody["type"] = webhookRes["type"].ToString();
-                        resBody["status"] = webhookRes["data"]["object"]["payment"]["status"];
+                        resBody["status"] = webhookRes["data"]["object"]["refund"]["status"];
+                        resBody["customer_id"] = webhookRes["data"]["object"]["refund"]["customer_id"];
                         break;
-
+                    
+                    case "customer.created":
+                        resBody["type"] = webhookRes["type"].ToString();
+                        resBody["customer_id"] = webhookRes["data"]["id"];
+                        break;
                     default:
-                        return BadRequest();
+                        break;
                 }
             }
             OkObjectResult updateResponse = new OkObjectResult(resBody);

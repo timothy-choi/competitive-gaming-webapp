@@ -243,7 +243,7 @@ public class ElasticsearchController : ControllerBase {
                 var hits = searchResponse.Hits;
 
                 var strList = JsonConvert.SerializeObject(hits);
-                await db.StringSetAsync("all_games", strList, TimeSpan.FromSeconds(3600));
+                await db.StringSetAsync(query, strList, TimeSpan.FromSeconds(3600));
 
                 OkObjectResult res = new OkObjectResult(hits);
 
@@ -347,7 +347,7 @@ public class ElasticsearchController : ControllerBase {
             {
                 var hits = searchResponse.Hits;
                 var strList = JsonConvert.SerializeObject(hits);
-                await db.StringSetAsync("all_leagues", strList, TimeSpan.FromSeconds(3600));
+                await db.StringSetAsync(query, strList, TimeSpan.FromSeconds(3600));
                 OkObjectResult res = new OkObjectResult(hits);
 
                 return Ok(res);

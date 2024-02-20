@@ -10,6 +10,7 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http.HttpResults;
+using CompetitiveGamingApp.RabbitMQ;
 
 [ApiController]
 [Route("[controller]")]
@@ -98,9 +99,11 @@ public class WebhookCashApp : Controller {
 public class PlayerPaymentController : ControllerBase {
     private readonly PlayerPaymentServices _playerPaymentService;
     private readonly HttpClient _client;
+    private readonly Producer _producer;
     public PlayerPaymentController(PlayerPaymentServices playerPaymentServices) {
         _playerPaymentService = playerPaymentServices;
         _client = new HttpClient();
+        _producer = new Producer();
     }
 
     [HttpGet("{username}")]
@@ -139,7 +142,7 @@ public class PlayerPaymentController : ControllerBase {
     }
 
     [HttpPost("{username}/Merchant")]
-    public async Task<ActionResult<Dictionary<string, string>>> createMerchantAccount(string username, Dictionary<string, string> reqBody) {
+    public async Task<ActionResult<Dictionary<string, string>>> createMerchantAccount(string username, Dictionary<string, object> reqBody) {
         try {
             var content = JsonConvert.SerializeObject(reqBody);
             var request = new HttpRequestMessage {
@@ -173,6 +176,17 @@ public class PlayerPaymentController : ControllerBase {
         } catch {
             return BadRequest();
         }
+    }
+
+    [HttpPost("{username}/MerchantMQ")]
+    public async Task<ActionResult> AddToMerchantMQ(string username, Dictionary<string, object> reqBody) {
+        var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+        if (acct == null) {
+            return NotFound();
+        }
+        reqBody["username"] = username;
+        _producer.SendMerchantCreationMessage(reqBody);
+        return Ok();
     }
 
     [HttpPut("{username}/{merchantId}/Merchants")]

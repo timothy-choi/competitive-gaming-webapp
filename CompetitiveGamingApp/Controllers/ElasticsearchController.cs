@@ -185,7 +185,7 @@ public class ElasticsearchController : ControllerBase {
     public async Task<ActionResult<List<GameInfo>>> SearchGameResults(string query) {
         try {
             var searchResponse = await _client.SearchAsync<GameInfo>(s => s
-                .Index("your_index_name") // Specify the index name
+                .Index("Game") // Specify the index name
                 .Query(q => q
                     .Fuzzy(m => m
                         .Field(f => f.Matchup) // Specify the field to search
@@ -267,7 +267,7 @@ public class ElasticsearchController : ControllerBase {
     public async Task<ActionResult<List<LeagueInfo>>> SearchLeagueResults(string query) {
         try {
             var searchResponse = await _client.SearchAsync<LeagueInfo>(s => s
-                .Index("your_index_name") // Specify the index name
+                .Index("League") // Specify the index name
                 .Query(q => q
                     .Fuzzy(m => m
                         .Field(f => f.LeagueName) // Specify the field to search

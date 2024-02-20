@@ -15,6 +15,7 @@ using System.Text;
 using Amazon;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
+using CompetitiveGamingApp;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -813,6 +814,20 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return NotFound();
         }
 
+        var db = RedisConnector.db;
+        if (db.KeyExists("assignment_" + playerName + "_schedule")) {
+            var initSchedule = await db.StringGetAsync("assignment_" + playerName + "_schedule");
+            var strSchedule = initSchedule.ToString();
+
+            Dictionary<string, object> resBody = new Dictionary<string, object>();
+            resBody["playerName"] = playerName;
+            resBody["schedule"] = JsonConvert.DeserializeObject<List<SingleGame>>(strSchedule)!;
+
+            OkObjectResult res = new OkObjectResult(resBody);
+
+            return Ok(res);
+        }
+
         var playerMatches = new List<SingleGame>();
 
         var playerSchedules = assignment.PlayerFullSchedule;
@@ -832,6 +847,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 Dictionary<string, object> resBody = new Dictionary<string, object>();
                 resBody["playerName"] = playerName;
                 resBody["schedule"] = playerMatches;
+
+                await db.StringSetAsync("assignment_" + playerName + "_schedule", JsonConvert.SerializeObject(playerMatches), TimeSpan.FromSeconds(3600));
 
                 OkObjectResult res = new OkObjectResult(resBody);
 

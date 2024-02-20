@@ -1,3 +1,4 @@
+using CompetitiveGamingApp;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,8 @@ builder.Services.AddDbContext<PlayerServices>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PlayerTable")));
 
 builder.Services.AddSingleton<MongoDBService>();
+
+builder.Services.AddSingleton<RedisConnector>();
 
 var app = builder.Build();
 

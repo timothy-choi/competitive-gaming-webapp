@@ -267,7 +267,7 @@ public class PlayerPaymentController : ControllerBase {
     }
 
     [HttpPost("{username}/Grant")]
-    public async Task<ActionResult<Dictionary<string, string>>> RequestCustomerGrant(string username, Dictionary<string, string> reqBody) {
+    public async Task<ActionResult<Dictionary<string, string>>> RequestCustomerGrant(string username, Dictionary<string, object> reqBody) {
         try {
             var content = JsonConvert.SerializeObject(reqBody);
             var request = new HttpRequestMessage {
@@ -317,6 +317,17 @@ public class PlayerPaymentController : ControllerBase {
         } catch {
             return BadRequest();
         }
+    }
+
+    [HttpPost("{username}/CustomerGrantMQ")]
+    public async Task<ActionResult> AddToCustomerGrantQueue(string username, Dictionary<string, object> reqBody) {
+        var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+        if (acct == null) {
+            return NotFound();
+        }
+        reqBody["username"] = username;
+        _producer.SendCustomerGrantRequestMessage(reqBody);
+        return Ok();
     }
 
     [HttpPost("{username}/Payment")]
@@ -376,6 +387,17 @@ public class PlayerPaymentController : ControllerBase {
         }
     }
 
+    [HttpPost("{username}/PaymentProcessingMQ")]
+    public async Task<ActionResult> AddToPaymentProcessingQueue(string username, Dictionary<string, string> reqBody) {
+        var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+        if (acct == null) {
+            return NotFound();
+        }
+        reqBody["username"] = username;
+        _producer.SendProcessPaymentMessage(reqBody);
+        return Ok();
+    }
+
     [HttpPost("{username}/Refund")]
     public async Task<ActionResult> ProcessRefund(string username, Dictionary<string, string> reqBody) {
         try {
@@ -429,6 +451,17 @@ public class PlayerPaymentController : ControllerBase {
         } catch {
             return BadRequest();
         }
+    }
+
+    [HttpPost("{username}/RefundProcessingQueue")]
+    public async Task<ActionResult> AddToRefundProcessingQueue(string username, Dictionary<string, string> reqBody) {
+        var acct = await _playerPaymentService.PlayerPaymentAccounts.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+        if (acct == null) {
+            return NotFound();
+        }
+        reqBody["username"] = username;
+        _producer.SendProcessRefundMessage(reqBody);
+        return Ok();
     }
 
     [HttpPut("{username}/IdempotencyKey")]

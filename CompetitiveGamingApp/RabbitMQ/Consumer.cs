@@ -2,19 +2,24 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CompetitiveGamingApp.RabbitMQ;
 
 public class Consumer {
      private readonly ConnectionFactory _factory;
 
+     private readonly NotifyRequest _req;
+
      public Consumer() {
         _factory = new ConnectionFactory {
             HostName = "localhost"
         };
+
+        _req = new NotifyRequest();
     }
 
-    public dynamic RecieveMerchantCreationMessage() {
+    public async Task RecieveMerchantCreationMessage() {
         using var connection = _factory.CreateConnection();
         using var channel = connection.CreateModel();
 
@@ -36,10 +41,10 @@ public class Consumer {
 
         channel.BasicConsume(queue: "MerchantCreation", autoAck: false, consumer: consumer);
 
-        return MerchantCreationInfo;
+        await _req.NotifyToCallRequest("MerchantCreation", MerchantCreationInfo);
     }
 
-    public dynamic RecieveCustomerGrantRequestMessage() {
+    public async Task RecieveCustomerGrantRequestMessage() {
         using var connection = _factory.CreateConnection();
         using var channel = connection.CreateModel();
 
@@ -61,10 +66,10 @@ public class Consumer {
 
         channel.BasicConsume(queue: "CustomerGrantRequest", autoAck: false, consumer: consumer);
 
-        return CustomerGrantRequestInfo;
+        await _req.NotifyToCallRequest("CustomerGrantRequest", CustomerGrantRequestInfo);
     }
 
-    public dynamic RecieveProcessPaymentMessage() {
+    public async Task RecieveProcessPaymentMessage() {
         using var connection = _factory.CreateConnection();
         using var channel = connection.CreateModel();
 
@@ -86,10 +91,10 @@ public class Consumer {
 
         channel.BasicConsume(queue: "ProcessPayment", autoAck: false, consumer: consumer);
 
-        return ProcessPaymentInfo;
+        await _req.NotifyToCallRequest("ProcessPayment", ProcessPaymentInfo);
     }
 
-    public dynamic RecieveProcessRefundMessage() {
+    public async Task RecieveProcessRefundMessage() {
         using var connection = _factory.CreateConnection();
         using var channel = connection.CreateModel();
 
@@ -111,6 +116,6 @@ public class Consumer {
 
         channel.BasicConsume(queue: "ProcessRefund", autoAck: false, consumer: consumer);
 
-        return ProcessRefundInfo;
+        await _req.NotifyToCallRequest("ProcessRefund", ProcessRefundInfo);
     }
 }

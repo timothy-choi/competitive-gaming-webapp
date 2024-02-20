@@ -17,4 +17,10 @@ public class RedisConnector
             return lazyConnection.Value;
         }
     }
+
+    public static IDatabase db {
+        get {
+            return Connection.GetDatabase();
+        }
+    }
 }

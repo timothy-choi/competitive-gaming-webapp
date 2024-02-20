@@ -6,8 +6,9 @@ using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using Elastic.Clients.Elasticsearch;
-using StackExchange.Redis;
+using CompetitiveGamingApp;
 using Elastic.Transport;
+using Newtonsoft.Json;
 
 [ApiController]
 [Route("api/Search")]
@@ -61,6 +62,14 @@ public class ElasticsearchController : ControllerBase {
     [HttpGet("Player")]
     public async Task<ActionResult<List<PlayerInfo>>> GetAllPlayers() {
         try {
+            var db = RedisConnector.db;
+            if (db.KeyExists("all_players")) {
+                var results = await db.StringGetAsync("all_players");
+                string strVersion = results.ToString();
+                List<PlayerInfo> allPlayerList = JsonConvert.DeserializeObject<List<PlayerInfo>>(strVersion)!;
+                OkObjectResult res = new OkObjectResult(allPlayerList);
+                return Ok(res);
+            }
             var searchResponse = await _client.SearchAsync<PlayerInfo>(s => s
                 .Index("Player") 
                 .Query(q => q
@@ -70,6 +79,10 @@ public class ElasticsearchController : ControllerBase {
 
             if (searchResponse.IsValidResponse) {
                 OkObjectResult res = new OkObjectResult(searchResponse.Documents);
+
+                var strList = JsonConvert.SerializeObject(searchResponse.Documents);
+
+                await db.StringSetAsync("all_players", strList, TimeSpan.FromSeconds(3600));
 
                 return Ok(res);
             }
@@ -84,6 +97,14 @@ public class ElasticsearchController : ControllerBase {
     [HttpGet("Player/{query}")]
     public async Task<ActionResult<List<PlayerInfo>>> SearchPlayerResults(string query) {
         try {
+            var db = RedisConnector.db;
+            if (db.KeyExists(query)) {
+                var results = await db.StringGetAsync(query);
+                string strVersion = results.ToString();
+                List<PlayerInfo> allPlayerList = JsonConvert.DeserializeObject<List<PlayerInfo>>(strVersion)!;
+                OkObjectResult res2 = new OkObjectResult(allPlayerList);
+                return Ok(res2);
+            }
             var allPlayers = new List<PlayerInfo>();
             var searchResponse = await _client.SearchAsync<PlayerInfo>(s => s
                 .Index("Player") // Specify the index name
@@ -121,6 +142,10 @@ public class ElasticsearchController : ControllerBase {
             {
                 return BadRequest();
             }
+
+            var strList = JsonConvert.SerializeObject(allPlayers);
+            
+            await db.StringSetAsync(query, strList, TimeSpan.FromSeconds(3600));
             
             OkObjectResult res = new OkObjectResult(allPlayers);
 
@@ -160,6 +185,14 @@ public class ElasticsearchController : ControllerBase {
     [HttpGet("Game")]
     public async Task<ActionResult<List<GameInfo>>> GetAllGames() {
         try {
+            var db = RedisConnector.db;
+            if (db.KeyExists("all_games")) {
+                var results = await db.StringGetAsync("all_games");
+                string strVersion = results.ToString();
+                List<GameInfo> allGameList = JsonConvert.DeserializeObject<List<GameInfo>>(strVersion)!;
+                OkObjectResult res2 = new OkObjectResult(allGameList);
+                return Ok(res2);
+            }
             var searchResponse = await _client.SearchAsync<GameInfo>(s => s
                 .Index("Game") 
                 .Query(q => q
@@ -168,6 +201,8 @@ public class ElasticsearchController : ControllerBase {
             );
 
             if (searchResponse.IsValidResponse) {
+                var strList = JsonConvert.SerializeObject(searchResponse.Documents);
+                await db.StringSetAsync("all_games", strList, TimeSpan.FromSeconds(3600));
                 OkObjectResult res = new OkObjectResult(searchResponse.Documents);
 
                 return Ok(res);
@@ -184,6 +219,14 @@ public class ElasticsearchController : ControllerBase {
     [HttpGet("Game/{query}")]
     public async Task<ActionResult<List<GameInfo>>> SearchGameResults(string query) {
         try {
+            var db = RedisConnector.db;
+            if (db.KeyExists(query)) {
+                var results = await db.StringGetAsync(query);
+                string strVersion = results.ToString();
+                List<GameInfo> allGameList = JsonConvert.DeserializeObject<List<GameInfo>>(strVersion)!;
+                OkObjectResult res2 = new OkObjectResult(allGameList);
+                return Ok(res2);
+            }
             var searchResponse = await _client.SearchAsync<GameInfo>(s => s
                 .Index("Game") // Specify the index name
                 .Query(q => q
@@ -198,6 +241,10 @@ public class ElasticsearchController : ControllerBase {
             if (searchResponse.IsValidResponse)
             {
                 var hits = searchResponse.Hits;
+
+                var strList = JsonConvert.SerializeObject(hits);
+                await db.StringSetAsync("all_games", strList, TimeSpan.FromSeconds(3600));
+
                 OkObjectResult res = new OkObjectResult(hits);
 
                 return Ok(res);
@@ -242,6 +289,14 @@ public class ElasticsearchController : ControllerBase {
     [HttpGet("League")]
     public async Task<ActionResult<List<LeagueInfo>>> GetAllLeagues() {
         try {
+            var db = RedisConnector.db;
+            if (db.KeyExists("all_leagues")) {
+                var results = await db.StringGetAsync("all_leagues");
+                string strVersion = results.ToString();
+                List<LeagueInfo> allGameList = JsonConvert.DeserializeObject<List<LeagueInfo>>(strVersion)!;
+                OkObjectResult res2 = new OkObjectResult(allGameList);
+                return Ok(res2);
+            }
             var searchResponse = await _client.SearchAsync<LeagueInfo>(s => s
                 .Index("League") 
                 .Query(q => q
@@ -250,6 +305,9 @@ public class ElasticsearchController : ControllerBase {
             );
 
             if (searchResponse.IsValidResponse) {
+                var strList = JsonConvert.SerializeObject(searchResponse.Documents);
+                await db.StringSetAsync("all_leagues", strList, TimeSpan.FromSeconds(3600));
+
                 OkObjectResult res = new OkObjectResult(searchResponse.Documents);
 
                 return Ok(res);
@@ -266,6 +324,14 @@ public class ElasticsearchController : ControllerBase {
     [HttpGet("League/{query}")]
     public async Task<ActionResult<List<LeagueInfo>>> SearchLeagueResults(string query) {
         try {
+            var db = RedisConnector.db;
+            if (db.KeyExists(query)) {
+                var results = await db.StringGetAsync(query);
+                string strVersion = results.ToString();
+                List<LeagueInfo> allGameList = JsonConvert.DeserializeObject<List<LeagueInfo>>(strVersion)!;
+                OkObjectResult res2 = new OkObjectResult(allGameList);
+                return Ok(res2);
+            }
             var searchResponse = await _client.SearchAsync<LeagueInfo>(s => s
                 .Index("League") // Specify the index name
                 .Query(q => q
@@ -280,6 +346,8 @@ public class ElasticsearchController : ControllerBase {
             if (searchResponse.IsValidResponse)
             {
                 var hits = searchResponse.Hits;
+                var strList = JsonConvert.SerializeObject(hits);
+                await db.StringSetAsync("all_leagues", strList, TimeSpan.FromSeconds(3600));
                 OkObjectResult res = new OkObjectResult(hits);
 
                 return Ok(res);

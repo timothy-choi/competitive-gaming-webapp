@@ -12,6 +12,7 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 using AWSHelper;
+using RabbitMQ;
 
 [ApiController]
 [Route("api/singleGame")]
@@ -20,9 +21,11 @@ public class SingleGameController : ControllerBase {
 
     private readonly HttpClient client;
     private readonly SingleGameServices _singleGameService;
+    private readonly Producer _producer;
     public SingleGameController(SingleGameServices singleGameServices) {
         _singleGameService = singleGameServices;
         client = new HttpClient();
+        _producer = new Producer();
     }
 
     [HttpGet]
@@ -290,6 +293,16 @@ public class SingleGameController : ControllerBase {
         catch {
             return BadRequest();
         }
+    }
+
+    [HttpPost("/ProcessRecordingMQ")]
+    public async Task<ActionResult> AddToProcessRecordQueue(Dictionary<string, string> reqBody) {
+        SingleGame? game = await _singleGameService.GetGame(reqBody["gameId"]);
+        if (game == null) {
+            return NotFound();
+        }
+        _producer.SendProcessRecordingMessage(reqBody);
+        return Ok();
     }
 
     [HttpPost("/downloadVideo")]

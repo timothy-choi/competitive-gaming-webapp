@@ -62,4 +62,15 @@ public class Producer {
         ProcessRefundChannel.BasicPublish(exchange: "", routingKey: "ProcessRefund", body: data);
     }
 
+    public void SendProcessRecordingMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessRecordingChannel = connection.CreateModel();
+
+        ProcessRecordingChannel.QueueDeclare("ProcessRecord", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessRecordingChannel.BasicPublish(exchange: "", routingKey: "ProcessRecord", body: data);
+    }
 }

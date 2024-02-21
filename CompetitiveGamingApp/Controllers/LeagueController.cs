@@ -331,6 +331,25 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpGet("{LeagueId}/{playerId}")]
+    public async Task<ActionResult<Dictionary<string, object>>> GetPlayer(string LeagueId, string playerId) {
+        var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null) {
+            return NotFound();
+        }
+
+        var standings = league.LeagueStandings!.Table;
+
+        foreach (var entry in standings!) {
+            if (entry["playerId"].ToString() == playerId) {
+                OkObjectResult res = new OkObjectResult(entry.Values);
+                return Ok(res);
+            }
+        }
+
+        return NotFound();
+    }
+ 
     [HttpPost("{LeagueId}/Division/Create")]
     public async Task<ActionResult> CreateDivisions(string LeagueId, Dictionary<string, object> reqBody) {
         try {

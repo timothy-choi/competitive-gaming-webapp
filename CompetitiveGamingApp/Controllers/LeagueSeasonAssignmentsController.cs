@@ -83,6 +83,21 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
+    [HttpDelete("{AssignmentsId}")]
+    public async Task<ActionResult> DeleteSeasonAssignments(string AssignmentsId) {
+        try {
+            var assignment = _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            await _leagueService.DeleteData("leagueSeasonAssignments", AssignmentsId);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPut("{AssignmentsId}")]
     public async Task<ActionResult> EditSeasonAssignmentsOptions(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {

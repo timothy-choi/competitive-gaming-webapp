@@ -16,13 +16,17 @@ using Amazon;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using CompetitiveGamingApp;
+using RabbitMQ;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
 public class LeagueSeasonAssignmentsController : ControllerBase {
     private readonly MongoDBService _leagueService;
+
+    private readonly Producer _producer;
     public LeagueSeasonAssignmentsController(MongoDBService leagueService) {
         _leagueService = leagueService;
+        _producer = new Producer();
     }
 
     [HttpGet("{AssignmentId}")]
@@ -628,6 +632,18 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         } catch {
             return BadRequest();
         }
+    }
+
+    [HttpPost("{AssignmentsId}/GenerateScheduleMQ")]
+    public async Task<ActionResult> AddGenerateScheduleRequestToQueue(string AssignmentsId, Dictionary<string, object> reqBody) {
+        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        if (assignment == null) {
+            return NotFound();
+        }
+
+        reqBody["assignmentsId"] = AssignmentsId;
+        _producer.SendGenerateScheduleMessage(reqBody);
+        return Ok();
     }
 
     //Endpoint to take in generated schedules and format it using the SingleGame Objects for each player's schedule

@@ -75,6 +75,22 @@ public class SingleGameController : ControllerBase {
         }
     }
 
+    [HttpDelete("{gameId}")]
+    public async Task<ActionResult> deleteGame(string gameId) {
+        try {
+            SingleGame? game = await _singleGameService.GetGame(gameId);
+            if (game == null) {
+                return NotFound();
+            }
+
+            await _singleGameService.DeleteGame(gameId);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("/Season")]
     public async Task<ActionResult> addSeasonGame([FromBody] Dictionary<string, object> gameInfo) {
         try {

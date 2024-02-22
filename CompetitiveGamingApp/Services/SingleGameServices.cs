@@ -36,6 +36,15 @@ public class SingleGameServices {
             throw new Exception("Couldn't create game!");
         }
     }
+
+    public async Task DeleteGame(string gameId) {
+        try {
+            string cmd = "DELETE FROM public.singleGames WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {gameId});
+        } catch {
+            throw new Exception("Couldn't create game!");
+        }
+    }
     public async Task UpdateFinalScore(Tuple<int, int> completedScore, string gameId) {
         try {
             string cmd = "UPDATE public.singleGames SET finalScore = @completedScore WHERE SingleGameId = @gameId";

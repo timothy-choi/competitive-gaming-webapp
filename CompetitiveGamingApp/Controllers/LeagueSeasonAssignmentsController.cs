@@ -757,6 +757,19 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
+    [HttpPost("{AssignmentsId}/ProcessedSchedulesMQ")]
+    public async Task<ActionResult> AddToProcessedSchedulesMQ(string AssignmentsId, Dictionary<string, object> reqBody) {
+        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        if (assignment == null) {
+            return NotFound();
+        }
+
+        reqBody["AssignmentsId"] = AssignmentsId;
+        _producer.SendProcessGeneratedScheduleMessage(reqBody);
+
+        return Ok();
+    }
+
     //Endpoint to move the collection of player schedules into a bigger collection as an archieve
     [HttpPut("{AssignmentsId}/Archieve/PlayerSchedules")]
     public async Task<ActionResult> ArchievePlayerSchedules(string AssignmentsId) {

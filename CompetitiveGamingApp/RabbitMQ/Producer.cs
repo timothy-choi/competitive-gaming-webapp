@@ -85,4 +85,16 @@ public class Producer {
 
         ProcessGenerateScheduleChannel.BasicPublish(exchange: "", routingKey: "GenerateSchedule", body: data);
     }
+
+    public void SendProcessSubmittedScheduleMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessSubmittedScheduleChannel = connection.CreateModel();
+
+        ProcessSubmittedScheduleChannel.QueueDeclare("SubmittedSchedule", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessSubmittedScheduleChannel.BasicPublish(exchange: "", routingKey: "SubmittedSchedule", body: data);
+    }
 }

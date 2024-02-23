@@ -145,15 +145,19 @@ public class PlayoffBracket {
         if (one != null && two != null)
         {
             championshipNode.NextPlayoffMatch = one;
+            one.PrevPlayoffRoundMatch?.Add(championshipNode);
             one.NextPlayoffMatch = two;
+            two.PrevPlayoffRoundMatch?.Add(one);
         }
         else if (one != null)
         {
             championshipNode.NextPlayoffMatch = one;
+            one.PrevPlayoffRoundMatch?.Add(championshipNode);
         }
         else if (two != null)
         {
             championshipNode.NextPlayoffMatch = two;
+            two.PrevPlayoffRoundMatch?.Add(championshipNode);
         }
 
         return championshipNode;

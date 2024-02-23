@@ -2161,4 +2161,73 @@ public class LeaguePlayoffsController : ControllerBase {
    }
 
 
+   [HttpGet("{LeaguePlayoffId}/{division}/GamesByRound/{round}")]
+   public async Task<ActionResult<Dictionary<string, object>>> GetGamesByRound(string LeaguePlayoffId, string division, int round) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        var bracket = playoffs.FinalPlayoffBracket!.SubPlayoffBrackets.Find(t => t.PlayoffName == division)!;
+
+        List<string?> allRoundGames = new List<string?>();
+
+        if (round == 1) {
+            foreach (var match in bracket.PlayoffHeadMatchups) {
+                allRoundGames.Add(match.currentPlayoffMatchup.PlayoffMatchupId);
+            }
+        }
+        else if (round > 1) {
+           int num_rounds = 1;
+           int curr_rd = -1;
+           foreach (var match in bracket.AllOtherMatchups) {
+                if (curr_rd != match.Item1) {
+                    curr_rd = match.Item1;
+                    num_rounds++;
+                }
+           }
+
+           if (round >= num_rounds) {
+                var finalRounds = playoffs.FinalPlayoffBracket.FinalRoundMatchups;
+                var currMatch = finalRounds?[0];
+                int curr_round = num_rounds;
+                while (currMatch?.NextPlayoffMatch != null) {
+                    currMatch = currMatch.NextPlayoffMatch;
+                    curr_round++;
+                }
+
+                while (round <= curr_round) {
+                    if (round == curr_round - 1) {
+                        foreach (var match in currMatch?.PrevPlayoffRoundMatch!) {
+                            allRoundGames.Add(match.currentPlayoffMatchup.PlayoffMatchupId);
+                        }
+                        break;
+                    }
+                    curr_round--;
+                }
+           }
+           else {
+                var firstNode = bracket.GetFinalGraphNode();
+                var matches = new List<PlayoffGraphNode>();
+                while (round <= num_rounds) {
+                        matches = firstNode.PrevPlayoffRoundMatch;
+                        if (round == num_rounds - 1) {
+                            foreach (var match in matches!) {
+                                allRoundGames.Add(match.currentPlayoffMatchup.PlayoffMatchupId);
+                            }
+                            break;
+                        }
+                        num_rounds--;
+                }
+           }
+        }
+
+        Dictionary<string, object> games = new Dictionary<string, object>();
+        games["LeaguePlayoffId"] = LeaguePlayoffId;
+        games["roundGames"] = allRoundGames;
+
+        OkObjectResult res = new OkObjectResult(games);
+
+        return Ok(res);
+   }
 }

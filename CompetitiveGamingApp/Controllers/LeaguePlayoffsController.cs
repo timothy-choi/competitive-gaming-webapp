@@ -2230,4 +2230,42 @@ public class LeaguePlayoffsController : ControllerBase {
 
         return Ok(res);
    }
+
+   [HttpPut("{LeaguePlayoffId}/UpdateSeries")]
+   public async Task<ActionResult> UpdateMatchupSeries(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            var leagueBracket = playoffs.FinalPlayoffBracket;
+
+            var player1 = reqBody["player1"].ToString()!;
+            var player2 = reqBody["player2"].ToString()!;
+
+            if (Convert.ToBoolean(reqBody["finalRound"])) {
+                var finalRoundMatchup = leagueBracket?.FindFinalRoundMatchup(player1, player2)!;
+                finalRoundMatchup.currentPlayoffMatchup.series_player1_wins = reqBody["winner"].ToString() == finalRoundMatchup.currentPlayoffMatchup.player1 ? (finalRoundMatchup.currentPlayoffMatchup.series_player1_wins + 1) : finalRoundMatchup.currentPlayoffMatchup.series_player1_wins;
+                finalRoundMatchup.currentPlayoffMatchup.series_player2_wins = reqBody["winner"].ToString() == finalRoundMatchup.currentPlayoffMatchup.player2 ? (finalRoundMatchup.currentPlayoffMatchup.series_player2_wins + 1) : finalRoundMatchup.currentPlayoffMatchup.series_player2_wins;
+            }
+            else {
+                var matchup = leagueBracket?.SubPlayoffBrackets.Find(t => t.PlayoffName == reqBody["bracket"].ToString())!.FindPlayerMatchup(player1, player2)!;
+                matchup.currentPlayoffMatchup.series_player1_wins = reqBody["winner"].ToString() == matchup.currentPlayoffMatchup.player1 ? (matchup.currentPlayoffMatchup.series_player1_wins + 1) : matchup.currentPlayoffMatchup.series_player1_wins;
+                matchup.currentPlayoffMatchup.series_player2_wins = reqBody["winner"].ToString() == matchup.currentPlayoffMatchup.player2 ? (matchup.currentPlayoffMatchup.series_player2_wins + 1) : matchup.currentPlayoffMatchup.series_player2_wins;
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["FinalPlayoffBracket"] = false;
+
+            Dictionary<string, object> updatedData = new Dictionary<string, object>();
+            updatedData["FinalPlayoffBracket"] = leagueBracket!;
+
+            await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+   }
 }

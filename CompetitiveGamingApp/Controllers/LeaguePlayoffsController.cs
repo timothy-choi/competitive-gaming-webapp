@@ -2154,6 +2154,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+     [HttpPost("{LeaguePlayoffId}/UserDefinedPlayoffMQ")]
+    public async Task<ActionResult> AddUserDefinedPlayoffMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendUserDefinedPlayoffMessage(reqBody);
+        return Ok();
+    }
+
     private Tuple<string, int> getPlayerByDivision(string extracted_player, List<Tuple<string, List<Dictionary<string, object>>>> division_players) {
         string player1 = extracted_player;
         string player1_division = player1.Substring(0, player1.IndexOf(":"));

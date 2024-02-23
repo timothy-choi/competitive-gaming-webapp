@@ -173,7 +173,7 @@ public class LeaguePlayoffsController : ControllerBase {
         return playoffs;
     }
 
-    private bool VerifyPlayoffFormat( Dictionary<string, List<Tuple<String, String>>> playoffs, int player_count, bool defaultMode) {
+    private bool VerifyPlayoffFormat( Dictionary<string, List<Tuple<String, String>>> playoffs, int player_count, bool defaultMode, int seriesLength) {
         int ct = player_count / 2;
         int r = 1;
         if (defaultMode) {
@@ -416,6 +416,9 @@ public class LeaguePlayoffsController : ControllerBase {
                 return false;
             }
         }
+        if (r != seriesLength) {
+            return false;
+        }
         
         return true;
     }
@@ -444,7 +447,7 @@ public class LeaguePlayoffsController : ControllerBase {
                 parsedPlayoffs = ParsePlayoffFormat(fileContent);
             }
 
-            if (!VerifyPlayoffFormat(parsedPlayoffs, player_count, defaultMode)) {
+            if (!VerifyPlayoffFormat(parsedPlayoffs, player_count, defaultMode, Convert.ToInt32(reqBody["NumSeries"]))) {
                 return BadRequest();
             }
 
@@ -869,7 +872,7 @@ public class LeaguePlayoffsController : ControllerBase {
                     parsedPlayoffs = ParsePlayoffFormat(fileContent);
                 }
 
-                if (!VerifyPlayoffFormat(parsedPlayoffs, player_count / allBrackets.Count, defaultMode)) {
+                if (!VerifyPlayoffFormat(parsedPlayoffs, player_count / allBrackets.Count, defaultMode, Convert.ToInt32(reqBody["NumSeries"]))) {
                     return BadRequest();
                 }
 
@@ -1864,8 +1867,11 @@ public class LeaguePlayoffsController : ControllerBase {
                     return false;
                 }
 
+                int allSecondRoundMatches = 0;
+
                 foreach (var entry in second_tuple) {
                     if (entry.Item1 == 2) {
+                        allSecondRoundMatches++;
                         if (entry.Item2.Item1 != "BYE") {
                             var region = entry.Item2.Item1.Substring(0, entry.Item2.Item1.IndexOf(":"));
                             var selectedDiv = allDivisions.Find(d => d.Item1 == region);
@@ -1924,6 +1930,10 @@ public class LeaguePlayoffsController : ControllerBase {
                     }
                 }
                 if (ct != num_players[index]) {
+                    return false;
+                }
+                double matchCt = Math.Sqrt(allSecondRoundMatches);
+                if ((int) matchCt != Math.Sqrt(allSecondRoundMatches)) {
                     return false;
                 }
                 index++;

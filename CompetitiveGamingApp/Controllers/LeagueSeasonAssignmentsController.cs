@@ -903,4 +903,31 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         OkObjectResult res = new OkObjectResult(assignment.FinalFullSchedule);
         return Ok(res);
     }
+
+    [HttpGet("{AssignmentsId}/GamesByDate/{date}")]
+    public async Task<ActionResult<List<string>>> GetGamesByDate(string AssignmentsId, string date) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            List<string> allSelectedGames = new List<string>();
+
+            var allGames = assignment.FinalFullSchedule;
+
+            DateTime dateFormat = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+
+            foreach (var game in allGames!) {
+                if (dateFormat.Date == game.timePlayed.Date) {
+                    allSelectedGames.Add(game.SingleGameId!);
+                }
+            }
+
+            OkObjectResult res = new OkObjectResult(allSelectedGames);
+            return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
 }

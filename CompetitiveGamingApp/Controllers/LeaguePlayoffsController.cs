@@ -1260,6 +1260,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/GenerateRandomDivisionBasedBracketMQ")]
+    public async Task<ActionResult> AddRandomDivisionBasedBracketMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendRandomDivisionBasedBracketMessage(reqBody);
+        return Ok();
+    }
+
     [HttpPost("{LeaguePlayoffId}/CreateDivisionBasedBracket")]
     public async Task<ActionResult> CreateDivisionBasedBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {

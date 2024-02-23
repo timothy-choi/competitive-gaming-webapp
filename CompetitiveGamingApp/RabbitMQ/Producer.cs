@@ -193,4 +193,16 @@ public class Producer {
 
         ProcessUserSubmittedDivisionTypeScheduleChannel.BasicPublish(exchange: "", routingKey: "ProcessCreateDivisionBasedPlayoffModeFormat", body: data);
     }
+
+    public void SendRandomDivisionBasedBracketMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessRandomDivisionBasedBracketChannel = connection.CreateModel();
+
+        ProcessRandomDivisionBasedBracketChannel.QueueDeclare("ProcessRandomDivisionBasedBracket", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessRandomDivisionBasedBracketChannel.BasicPublish(exchange: "", routingKey: "ProcessRandomDivisionBasedBracket", body: data);
+    }
 }

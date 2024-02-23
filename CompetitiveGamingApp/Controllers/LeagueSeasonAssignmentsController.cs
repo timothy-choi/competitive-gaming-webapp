@@ -927,7 +927,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 if (((SingleGame) game).hostPlayer == reqBody["player"].ToString()) {
                     match += ". vs " + ((SingleGame) game).guestPlayer;
                 }
-                else if (((SingleGame) game).hostPlayer == reqBody["player"].ToString()) {
+                else if (((SingleGame) game).guestPlayer == reqBody["player"].ToString()) {
                     match += ". @ " + ((SingleGame) game).hostPlayer;
                 }
                 match += " at " + ((SingleGame) game).timePlayed;

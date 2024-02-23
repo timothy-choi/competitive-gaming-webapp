@@ -145,4 +145,16 @@ public class Producer {
 
         ProcessVerifyHeadMatchupsChannel.BasicPublish(exchange: "", routingKey: "ProcessVerifyHeadMatchups", body: data);
     }
+
+    public void SendRandomSelectionWholePlayoffsMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessRandomSelectionWholePlayoffsChannel = connection.CreateModel();
+
+        ProcessRandomSelectionWholePlayoffsChannel.QueueDeclare("ProcessRandomSelectionWholePlayoffs", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessRandomSelectionWholePlayoffsChannel.BasicPublish(exchange: "", routingKey: "ProcessRandomSelectionWholePlayoffs", body: data);
+    }
 }

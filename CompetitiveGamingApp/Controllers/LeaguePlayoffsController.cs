@@ -678,6 +678,18 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("{LeaguePlayoffId}/RandomSelectionWholePlayoffsMQ")]
+    public async Task<ActionResult> AddToRandomSelectionWholePlayoffsMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendRandomSelectionWholePlayoffsMessage(reqBody);
+        return Ok();
+    } 
     private void ConstructBracket(bool defaultMode, PlayoffBracket leagueBracket, int bracket, List<Tuple<int, Tuple<string, string>>> Ordering) {
         List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> ConnectingRounds = new List<Tuple<PlayoffGraphNode, PlayoffGraphNode>>();
         int node_count = leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups.Count;

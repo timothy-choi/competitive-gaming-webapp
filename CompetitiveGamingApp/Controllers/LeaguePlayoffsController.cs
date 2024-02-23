@@ -928,6 +928,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/ConstructWholeBracketMQ")]
+    public async Task<ActionResult> AddUserSubmittedDivisionTypeScheduleMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendUserSubmittedDivisionTypeScheduleMessage(reqBody);
+        return Ok();
+    }
+
     private List<Tuple<int, Tuple<String, String>>> BuildBracketFromUser(bool defaultMode, Dictionary<string, object> allDivisionBasedBrackets) {
         List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = new List<Tuple<int, Tuple<String, String>>>();
 

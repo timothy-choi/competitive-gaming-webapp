@@ -169,4 +169,16 @@ public class Producer {
 
         ProcessConstructWholeBracketChannel.BasicPublish(exchange: "", routingKey: "ProcessConstructWholeBracket", body: data);
     }
+
+    public void SendUserSubmittedDivisionTypeScheduleMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessUserSubmittedDivisionTypeScheduleChannel = connection.CreateModel();
+
+        ProcessUserSubmittedDivisionTypeScheduleChannel.QueueDeclare("ProcessUserSubmittedDivisionTypeSchedule", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessUserSubmittedDivisionTypeScheduleChannel.BasicPublish(exchange: "", routingKey: "ProcessUserSubmittedDivisionTypeSchedule", body: data);
+    }
 }

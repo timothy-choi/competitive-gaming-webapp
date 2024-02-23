@@ -121,4 +121,16 @@ public class Producer {
 
         ProcessUserSubmittedWholeModeChannel.BasicPublish(exchange: "", routingKey: "ProcessUserSubmittedWholeMode", body: data);
     }
+
+    public void SendCreateWholeModeOrderingMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessCreateWholeModeOrderingChannel = connection.CreateModel();
+
+        ProcessCreateWholeModeOrderingChannel.QueueDeclare("ProcessCreateWholeModeOrdering", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessCreateWholeModeOrderingChannel.BasicPublish(exchange: "", routingKey: "ProcessCreateWholeModeOrdering", body: data);
+    }
 }

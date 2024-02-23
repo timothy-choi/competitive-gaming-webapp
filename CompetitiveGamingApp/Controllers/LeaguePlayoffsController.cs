@@ -484,6 +484,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/CreateWholeModeFormatMQ")]
+    public async Task<ActionResult> AddToCreateWholeModeMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendCreateWholeModeOrderingMessage(reqBody);
+        return Ok();
+    }
+
     [HttpPost("{LeaguePlayoffId}/VerifyRandomSubmittedHeadMatchups")]
     public async Task<ActionResult<bool>> VerifyUserSubmittedHeadMatchups(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {

@@ -368,4 +368,29 @@ public class Consumer {
 
         await _req.NotifyToCallRequest("ProcessUserSubmittedDivisionTypeSchedule", GenerateSchedulesInfo);
     }
+
+    public async Task RecieveCreateDivisionBasedPlayoffModeFormatMessage() {
+        using var connection = _factory.CreateConnection();
+        using var channel = connection.CreateModel();
+
+        channel.QueueDeclare(queue: "ProcessCreateDivisionBasedPlayoffModeFormat", durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+        var consumer = new EventingBasicConsumer(channel);
+
+        Dictionary<string, object> GenerateSchedulesInfo = new Dictionary<string, object>();
+
+        consumer.Received += (model, ea) => {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(message)!;
+
+            GenerateSchedulesInfo = data;
+            
+            channel.BasicAck(ea.DeliveryTag, false);
+        };
+
+        channel.BasicConsume(queue: "ProcessCreateDivisionBasedPlayoffModeFormat", autoAck: false, consumer: consumer);
+
+        await _req.NotifyToCallRequest("ProcessCreateDivisionBasedPlayoffModeFormat", GenerateSchedulesInfo);
+    }
 }

@@ -181,4 +181,16 @@ public class Producer {
 
         ProcessUserSubmittedDivisionTypeScheduleChannel.BasicPublish(exchange: "", routingKey: "ProcessUserSubmittedDivisionTypeSchedule", body: data);
     }
+
+    public void SendCreateDivisionBasedPlayoffModeFormatMessage<T>(T message) {
+         var connection = _factory.CreateConnection();
+
+        using var ProcessUserSubmittedDivisionTypeScheduleChannel = connection.CreateModel();
+
+        ProcessUserSubmittedDivisionTypeScheduleChannel.QueueDeclare("ProcessCreateDivisionBasedPlayoffModeFormat", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessUserSubmittedDivisionTypeScheduleChannel.BasicPublish(exchange: "", routingKey: "ProcessCreateDivisionBasedPlayoffModeFormat", body: data);
+    }
 }

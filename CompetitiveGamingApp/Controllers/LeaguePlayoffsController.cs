@@ -1012,6 +1012,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/DivisionBasedPlayoffModeFormatMQ")]
+    public async Task<ActionResult> AddDivisionBasedPlayoffModeFormatMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendCreateDivisionBasedPlayoffModeFormatMessage(reqBody);
+        return Ok();
+    }
+
     private List<Tuple<int, Tuple<String, String>>> RandomGenerateDivsionBasedBracket(bool defaultMode, bool randomInitialMode, bool randomRoundMode, int group_num, Dictionary<string, object> division) {
         List<Tuple<int, Tuple<String, String>>> WholeModePlayoffOrdering = new List<Tuple<int, Tuple<String, String>>>();
 

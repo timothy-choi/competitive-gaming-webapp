@@ -217,4 +217,16 @@ public class Producer {
 
         ProcessCreateDivisionBasedBracketChannel.BasicPublish(exchange: "", routingKey: "ProcessCreateDivisionBasedBracket", body: data);
     }
+
+    public void SendSetupFinalRoundsMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessSetupFinalRoundsChannel = connection.CreateModel();
+
+        ProcessSetupFinalRoundsChannel.QueueDeclare("ProcessSetupFinalRounds", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessSetupFinalRoundsChannel.BasicPublish(exchange: "", routingKey: "ProcessSetupFinalRounds", body: data);
+    }
 }

@@ -1696,6 +1696,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/SetupFinalRoundsMQ")]
+    public async Task<ActionResult> AddSetupFinalRoundsMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendSetupFinalRoundsMessage(reqBody);
+        return Ok();
+    }
+
     [HttpPut("{LeaguePlayoffId}/FinalRounds")]
     public async Task<ActionResult<Dictionary<string, object>>> UpdateFinalRounds(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {

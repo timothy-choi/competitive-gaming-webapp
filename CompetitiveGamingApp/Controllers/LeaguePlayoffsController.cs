@@ -532,6 +532,11 @@ public class LeaguePlayoffsController : ControllerBase {
                 
                 var matchups_roundTwo = (List<List<string>>) reqBody["matchups_roundTwo"];
 
+                double sqrt = Math.Sqrt(Convert.ToInt32(reqBody["num_of_players"]));
+                if (!(((List<List<string>>) reqBody["matchups_roundTwo"]).Count == (Convert.ToInt32(reqBody["num_of_players"]) - matchups_roundOne.Count * 2) / 2 && (int) sqrt == Math.Sqrt(Convert.ToInt32(reqBody["num_of_players"]) - matchups_roundOne.Count * 2))) {
+                    res = true;
+                }
+
                 int bye_count = 0;
 
                 var repeat = new Dictionary<string, bool>();

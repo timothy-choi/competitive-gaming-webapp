@@ -312,12 +312,12 @@ public class SingleGameController : ControllerBase {
     }
 
     [HttpPost("/ProcessRecordingMQ")]
-    public async Task<ActionResult> AddToProcessRecordQueue(Dictionary<string, string> reqBody) {
-        SingleGame? game = await _singleGameService.GetGame(reqBody["gameId"]);
+    public async Task<ActionResult> AddToProcessRecordQueue(Dictionary<string, object> reqBody) {
+        SingleGame? game = await _singleGameService.GetGame(reqBody["gameId"].ToString()!);
         if (game == null) {
             return NotFound();
         }
-        _producer.SendProcessRecordingMessage(reqBody);
+        _producer.SendMessage("ProcessRecord", reqBody);
         return Ok();
     }
 

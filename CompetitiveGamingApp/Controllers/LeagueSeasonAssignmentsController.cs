@@ -98,6 +98,20 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
+    [HttpPost("{AssignmentsId}/MQ")]
+    public async Task<ActionResult> AddToMQ(string AssignmentsId, Dictionary<string, object> reqBody) {
+        var assignment = await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+        if (assignment == null) {
+            return NotFound();
+        }
+
+        reqBody["AssignmentsId"] = AssignmentsId;
+        string queue = reqBody["queue"].ToString()!;
+        reqBody.Remove("queue");
+        _producer.SendMessage(queue, reqBody);
+        return Ok();
+    }
+
     [HttpPut("{AssignmentsId}")]
     public async Task<ActionResult> EditSeasonAssignmentsOptions(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
@@ -585,19 +599,6 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
-    [HttpPost("{AssignmentsId}/SendProcessScheduleMQ")]
-    public async Task<ActionResult> SendSubmittedScheduleToMQ(string AssignmentsId, Dictionary<string, object> reqBody) {
-        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-        if (assignment == null) {
-            return NotFound();
-        }
-
-        reqBody["assignmentsId"] = AssignmentsId;
-        _producer.SendProcessSubmittedScheduleMessage(reqBody);
-
-        return Ok();
-    }
-
     //Endpoint to notify SNS/other MQ with request to generate schedules. 
     [HttpPost("{AssignmentsId}")]
     public async Task<ActionResult<List<Tuple<string, List<object>>>>> GeneratePlayerSchedules(string AssignmentsId, Dictionary<string, object> reqBody) {
@@ -660,18 +661,6 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         } catch {
             return BadRequest();
         }
-    }
-
-    [HttpPost("{AssignmentsId}/GenerateScheduleMQ")]
-    public async Task<ActionResult> AddGenerateScheduleRequestToQueue(string AssignmentsId, Dictionary<string, object> reqBody) {
-        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-        if (assignment == null) {
-            return NotFound();
-        }
-
-        reqBody["assignmentsId"] = AssignmentsId;
-        _producer.SendGenerateScheduleMessage(reqBody);
-        return Ok();
     }
 
     //Endpoint to take in generated schedules and format it using the SingleGame Objects for each player's schedule
@@ -755,19 +744,6 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         catch {
             return BadRequest();
         }
-    }
-
-    [HttpPost("{AssignmentsId}/ProcessedSchedulesMQ")]
-    public async Task<ActionResult> AddToProcessedSchedulesMQ(string AssignmentsId, Dictionary<string, object> reqBody) {
-        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
-        if (assignment == null) {
-            return NotFound();
-        }
-
-        reqBody["AssignmentsId"] = AssignmentsId;
-        _producer.SendProcessGeneratedScheduleMessage(reqBody);
-
-        return Ok();
     }
 
     //Endpoint to move the collection of player schedules into a bigger collection as an archieve

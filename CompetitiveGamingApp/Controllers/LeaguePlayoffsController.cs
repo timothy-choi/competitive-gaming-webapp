@@ -82,6 +82,21 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/MQ")]
+    public async Task<ActionResult> AddToMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        string queue = reqBody["queue"].ToString()!;
+        reqBody.Remove("queue");
+        _producer.SendMessage(queue, reqBody);
+        return Ok();
+    }
+
+
     [HttpPut("{LeaguePlayoffId}/{LeagueId}")]
     public async Task<ActionResult> AddLeagueId(string LeaguePlayoffId, string LeagueId) {
         try {
@@ -447,17 +462,6 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
-    [HttpPost("{LeaguePlayoffId}/ProcessUserSubmittedWholeModeMQ")]
-    public async Task<ActionResult> AddToProcessUserSubmittedWholeModeMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendProcessUserSubmittedWholeModeMessage(reqBody);
-        return Ok();
-    }
 
     [HttpPost("{LeaguePlayoffId}/WholeMode")]
     public async Task<ActionResult> CreateWholeModePlayoffModeFormat(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
@@ -484,17 +488,6 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
-    [HttpPost("{LeaguePlayoffId}/CreateWholeModeFormatMQ")]
-    public async Task<ActionResult> AddToCreateWholeModeMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendCreateWholeModeOrderingMessage(reqBody);
-        return Ok();
-    }
 
     [HttpPost("{LeaguePlayoffId}/VerifyRandomSubmittedHeadMatchups")]
     public async Task<ActionResult<bool>> VerifyUserSubmittedHeadMatchups(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
@@ -606,17 +599,6 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
-    [HttpPost("{LeaguePlayoffId}/VerifyHeadMatchupsMQ")]
-    public async Task<ActionResult> AddToVerifyHeadMatchupsMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendVerifyHeadMatchupsMessage(reqBody);
-        return Ok();
-    }
 
     private List<List<int>> RandomlyGroup(List<int> objects)
     {
@@ -679,17 +661,6 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
-    [HttpPost("{LeaguePlayoffId}/RandomSelectionWholePlayoffsMQ")]
-    public async Task<ActionResult> AddToRandomSelectionWholePlayoffsMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendRandomSelectionWholePlayoffsMessage(reqBody);
-        return Ok();
-    } 
     private void ConstructBracket(bool defaultMode, PlayoffBracket leagueBracket, int bracket, List<Tuple<int, Tuple<string, string>>> Ordering) {
         List<Tuple<PlayoffGraphNode, PlayoffGraphNode>> ConnectingRounds = new List<Tuple<PlayoffGraphNode, PlayoffGraphNode>>();
         int node_count = leagueBracket.SubPlayoffBrackets[bracket].PlayoffHeadMatchups.Count;
@@ -863,18 +834,6 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
-    [HttpPost("{LeaguePlayoffId}/ConstructWholeBracketMQ")]
-    public async Task<ActionResult> AddToConstructWholeBracketMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendConstructWholeBracketMessage(reqBody);
-        return Ok();
-    }
-
 
     [HttpPost("{LeaguePlayoffId}/ProcessDivisionTypeSubmittedSchedule")]
     public async Task<ActionResult<Dictionary<string, object>>> ProcessUserSubmittedDivisionTypeSchedule(string LeaguePlayoffId, [FromForm] List<IFormFile> allBrackets, [FromBody] Dictionary<string, object> reqBody) {
@@ -926,18 +885,6 @@ public class LeaguePlayoffsController : ControllerBase {
         } catch {
             return BadRequest();
         }
-    }
-
-    [HttpPost("{LeaguePlayoffId}/ConstructWholeBracketMQ")]
-    public async Task<ActionResult> AddUserSubmittedDivisionTypeScheduleMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendUserSubmittedDivisionTypeScheduleMessage(reqBody);
-        return Ok();
     }
 
     private List<Tuple<int, Tuple<String, String>>> BuildBracketFromUser(bool defaultMode, Dictionary<string, object> allDivisionBasedBrackets) {
@@ -1010,18 +957,6 @@ public class LeaguePlayoffsController : ControllerBase {
         } catch {
             return BadRequest();
         }
-    }
-
-    [HttpPost("{LeaguePlayoffId}/DivisionBasedPlayoffModeFormatMQ")]
-    public async Task<ActionResult> AddDivisionBasedPlayoffModeFormatMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendCreateDivisionBasedPlayoffModeFormatMessage(reqBody);
-        return Ok();
     }
 
     private List<Tuple<int, Tuple<String, String>>> RandomGenerateDivsionBasedBracket(bool defaultMode, bool randomInitialMode, bool randomRoundMode, int group_num, Dictionary<string, object> division) {
@@ -1260,18 +1195,6 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
-    [HttpPost("{LeaguePlayoffId}/GenerateRandomDivisionBasedBracketMQ")]
-    public async Task<ActionResult> AddRandomDivisionBasedBracketMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendRandomDivisionBasedBracketMessage(reqBody);
-        return Ok();
-    }
-
     [HttpPost("{LeaguePlayoffId}/CreateDivisionBasedBracket")]
     public async Task<ActionResult> CreateDivisionBasedBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {
@@ -1320,18 +1243,6 @@ public class LeaguePlayoffsController : ControllerBase {
         } catch {
             return BadRequest();
         }
-    }
-
-    [HttpPost("{LeaguePlayoffId}/CreateDivisionBasedBracketMQ")]
-    public async Task<ActionResult> AddCreateDivisionBasedBracketMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendCreateDivisionBasedBracketMessage(reqBody);
-        return Ok();
     }
 
     [HttpPut("{LeaguePlayoffId}")]
@@ -1694,18 +1605,6 @@ public class LeaguePlayoffsController : ControllerBase {
         } catch {
             return BadRequest();
         }
-    }
-
-    [HttpPost("{LeaguePlayoffId}/SetupFinalRoundsMQ")]
-    public async Task<ActionResult> AddSetupFinalRoundsMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendSetupFinalRoundsMessage(reqBody);
-        return Ok();
     }
 
     [HttpPut("{LeaguePlayoffId}/FinalRounds")]
@@ -2154,17 +2053,6 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
-     [HttpPost("{LeaguePlayoffId}/UserDefinedPlayoffMQ")]
-    public async Task<ActionResult> AddUserDefinedPlayoffMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendUserDefinedPlayoffMessage(reqBody);
-        return Ok();
-    }
 
     private Tuple<string, int> getPlayerByDivision(string extracted_player, List<Tuple<string, List<Dictionary<string, object>>>> division_players) {
         string player1 = extracted_player;
@@ -2255,18 +2143,6 @@ public class LeaguePlayoffsController : ControllerBase {
         return BadRequest();
     }
    }
-
-   [HttpPost("{LeaguePlayoffId}/ConstructUserDefinedPlayoffMQ")]
-    public async Task<ActionResult> AddConstructUserDefinedPlayoffMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
-        if (playoffs == null) {
-            return BadRequest();
-        }
-
-        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
-        _producer.SendConstructUserDefinedPlayoffMessage(reqBody);
-        return Ok();
-    }
 
 
    [HttpGet("{LeaguePlayoffId}/{division}/GamesByRound/{round}")]

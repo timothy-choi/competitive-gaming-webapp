@@ -109,4 +109,16 @@ public class Producer {
 
         ProcessGeneratedScheduleChannel.BasicPublish(exchange: "", routingKey: "ProcessedSchedule", body: data);
     }
+
+    public void SendProcessUserSubmittedWholeModeMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessUserSubmittedWholeModeChannel = connection.CreateModel();
+
+        ProcessUserSubmittedWholeModeChannel.QueueDeclare("ProcessUserSubmittedWholeMode", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessUserSubmittedWholeModeChannel.BasicPublish(exchange: "", routingKey: "ProcessUserSubmittedWholeMode", body: data);
+    }
 }

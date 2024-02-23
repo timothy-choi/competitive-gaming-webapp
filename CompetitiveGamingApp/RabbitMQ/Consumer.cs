@@ -218,4 +218,29 @@ public class Consumer {
 
         await _req.NotifyToCallRequest("ProcessedSchedule", GenerateSchedulesInfo);
     }
+
+    public async Task RecieveProcessUserSubmittedWholeModeMessage() {
+        using var connection = _factory.CreateConnection();
+        using var channel = connection.CreateModel();
+
+        channel.QueueDeclare(queue: "ProcessUserSubmittedWholeMode", durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+        var consumer = new EventingBasicConsumer(channel);
+
+        Dictionary<string, object> GenerateSchedulesInfo = new Dictionary<string, object>();
+
+        consumer.Received += (model, ea) => {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(message)!;
+
+            GenerateSchedulesInfo = data;
+            
+            channel.BasicAck(ea.DeliveryTag, false);
+        };
+
+        channel.BasicConsume(queue: "ProcessUserSubmittedWholeMode", autoAck: false, consumer: consumer);
+
+        await _req.NotifyToCallRequest("ProcessUserSubmittedWholeMode", GenerateSchedulesInfo);
+    }
 }

@@ -9,6 +9,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using RabbitMQ;
 
 
 
@@ -16,9 +17,11 @@ using System.Linq;
 [Route("api/LeaguePlayoffs")]
 public class LeaguePlayoffsController : ControllerBase {
     private readonly MongoDBService _leagueService;
+    private readonly Producer _producer;
 
     public LeaguePlayoffsController(MongoDBService leagueService) {
         _leagueService = leagueService;
+        _producer = new Producer();
     }
 
     [HttpGet("{LeaguePlayoffId}")]
@@ -442,6 +445,18 @@ public class LeaguePlayoffsController : ControllerBase {
         } catch {
             return BadRequest();
         }
+    }
+
+    [HttpPost("{LeaguePlayoffId}/ProcessUserSubmittedWholeModeMQ")]
+    public async Task<ActionResult> AddToProcessUserSubmittedWholeModeMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendProcessUserSubmittedWholeModeMessage(reqBody);
+        return Ok();
     }
 
     [HttpPost("{LeaguePlayoffId}/WholeMode")]

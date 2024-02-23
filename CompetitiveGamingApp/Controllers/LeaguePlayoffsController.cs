@@ -1322,6 +1322,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/CreateDivisionBasedBracketMQ")]
+    public async Task<ActionResult> AddCreateDivisionBasedBracketMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendCreateDivisionBasedBracketMessage(reqBody);
+        return Ok();
+    }
+
     [HttpPut("{LeaguePlayoffId}")]
     public async Task<ActionResult<Dictionary<string, object>>> UpdatePlayoffBracket(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {

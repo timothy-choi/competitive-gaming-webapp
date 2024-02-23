@@ -205,4 +205,16 @@ public class Producer {
 
         ProcessRandomDivisionBasedBracketChannel.BasicPublish(exchange: "", routingKey: "ProcessRandomDivisionBasedBracket", body: data);
     }
+
+    public void SendCreateDivisionBasedBracketMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessCreateDivisionBasedBracketChannel = connection.CreateModel();
+
+        ProcessCreateDivisionBasedBracketChannel.QueueDeclare("ProcessCreateDivisionBasedBracket", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessCreateDivisionBasedBracketChannel.BasicPublish(exchange: "", routingKey: "ProcessCreateDivisionBasedBracket", body: data);
+    }
 }

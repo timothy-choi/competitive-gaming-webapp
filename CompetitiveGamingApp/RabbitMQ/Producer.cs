@@ -157,4 +157,16 @@ public class Producer {
 
         ProcessRandomSelectionWholePlayoffsChannel.BasicPublish(exchange: "", routingKey: "ProcessRandomSelectionWholePlayoffs", body: data);
     }
+
+    public void SendConstructWholeBracketMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessConstructWholeBracketChannel = connection.CreateModel();
+
+        ProcessConstructWholeBracketChannel.QueueDeclare("ProcessConstructWholeBracket", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessConstructWholeBracketChannel.BasicPublish(exchange: "", routingKey: "ProcessConstructWholeBracket", body: data);
+    }
 }

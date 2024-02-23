@@ -863,6 +863,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/ConstructWholeBracketMQ")]
+    public async Task<ActionResult> AddToConstructWholeBracketMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendConstructWholeBracketMessage(reqBody);
+        return Ok();
+    }
+
 
     [HttpPost("{LeaguePlayoffId}/ProcessDivisionTypeSubmittedSchedule")]
     public async Task<ActionResult<Dictionary<string, object>>> ProcessUserSubmittedDivisionTypeSchedule(string LeaguePlayoffId, [FromForm] List<IFormFile> allBrackets, [FromBody] Dictionary<string, object> reqBody) {

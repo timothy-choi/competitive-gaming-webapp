@@ -17,6 +17,7 @@ using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using CompetitiveGamingApp;
 using RabbitMQ;
+using Email;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -890,6 +891,62 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
 
         return NotFound();
+    }
+
+    [HttpPost("{AssignmentsId}/SendPlayerSchedule")]
+    public async Task<ActionResult> SendPlayerScheduleEmail(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            var schedules = assignment.PlayerFullSchedule;
+            List<object> allGames = new List<object>();
+            foreach (var schedule in schedules!) {
+                if (schedule.Item1 == reqBody["player"].ToString()) {
+                    allGames = schedule.Item2;
+                    break;
+                }
+            }
+
+            var subject = "Your Season Schedule.";
+
+            StringBuilder bodyBuilder = new StringBuilder();
+
+            bodyBuilder.AppendLine("Hello,");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine("Your season schedule in League " + reqBody["League"].ToString() + " has been created. Here is the complete list of all the matchups for this season along with the times:");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine(reqBody["player"] + "'s Schedule: ");
+            bodyBuilder.AppendLine();
+
+            int pos = 1;
+            foreach (var game in allGames) {
+                string match = pos.ToString();
+                if (((SingleGame) game).hostPlayer == reqBody["player"].ToString()) {
+                    match += ". vs " + ((SingleGame) game).guestPlayer;
+                }
+                else if (((SingleGame) game).hostPlayer == reqBody["player"].ToString()) {
+                    match += ". @ " + ((SingleGame) game).hostPlayer;
+                }
+                match += " at " + ((SingleGame) game).timePlayed;
+                pos++;
+                bodyBuilder.AppendLine(match);
+            }
+
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine("Please take note of the times so that you do not miss any of these games!");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine("Have a good season!");
+            bodyBuilder.AppendLine("From " + reqBody["League"].ToString());
+
+            Email.SendEmail(reqBody["sender"].ToString()!, reqBody["recipient"].ToString()!, subject, bodyBuilder.ToString());
+            
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
     }
 
 

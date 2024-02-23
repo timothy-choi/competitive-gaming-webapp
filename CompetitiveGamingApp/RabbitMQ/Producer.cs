@@ -241,4 +241,16 @@ public class Producer {
 
         ProcessUserDefinedPlayoffFormatChannel.BasicPublish(exchange: "", routingKey: "ProcessUserDefinedPlayoff", body: data);
     }
+
+    public void SendConstructUserDefinedPlayoffMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessConstructUserDefinedPlayoffFormatChannel = connection.CreateModel();
+
+        ProcessConstructUserDefinedPlayoffFormatChannel.QueueDeclare("ProcessConstructUserDefinedPlayoff", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessConstructUserDefinedPlayoffFormatChannel.BasicPublish(exchange: "", routingKey: "ProcessConstructUserDefinedPlayoff", body: data);
+    }
 }

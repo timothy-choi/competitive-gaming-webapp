@@ -133,4 +133,16 @@ public class Producer {
 
         ProcessCreateWholeModeOrderingChannel.BasicPublish(exchange: "", routingKey: "ProcessCreateWholeModeOrdering", body: data);
     }
+
+    public void SendVerifyHeadMatchupsMessage<T>(T message) {
+        var connection = _factory.CreateConnection();
+
+        using var ProcessVerifyHeadMatchupsChannel = connection.CreateModel();
+
+        ProcessVerifyHeadMatchupsChannel.QueueDeclare("ProcessVerifyHeadMatchups", exclusive: false);
+
+        var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+
+        ProcessVerifyHeadMatchupsChannel.BasicPublish(exchange: "", routingKey: "ProcessVerifyHeadMatchups", body: data);
+    }
 }

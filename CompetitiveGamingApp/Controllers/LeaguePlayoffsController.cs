@@ -606,6 +606,18 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeaguePlayoffId}/VerifyHeadMatchupsMQ")]
+    public async Task<ActionResult> AddToVerifyHeadMatchupsMQ(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        reqBody["LeaguePlayoffId"] = LeaguePlayoffId;
+        _producer.SendVerifyHeadMatchupsMessage(reqBody);
+        return Ok();
+    }
+
     private List<List<int>> RandomlyGroup(List<int> objects)
     {
         Random rng = new Random();

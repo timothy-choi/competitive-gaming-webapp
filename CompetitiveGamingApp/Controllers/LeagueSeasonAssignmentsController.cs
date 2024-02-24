@@ -987,4 +987,30 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("{AssignmentsId}/EliminationEmail")]
+    public async Task<ActionResult> SendEliminationEmail(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            string sender = "You were eliminated from playoff contention.";
+
+            StringBuilder bodyBuilder = new StringBuilder();
+            bodyBuilder.AppendLine("Hello,");
+            bodyBuilder.AppendLine("As of today, you have ended the season with a record of " + Convert.ToInt32(reqBody["wins"]) + "-" + Convert.ToInt32(reqBody["losses"]) + "-" + Convert.ToInt32(reqBody["draws"]) + ", which unfortunately, was not enough for playoff contention this season.  Thus, you have been eliminated from playoff contention.");
+            bodyBuilder.AppendLine("You may sit back and watch how the playoffs unfold however. We hope that you had a good experience playing in this league and we wish you best for next season and beyond!");
+            bodyBuilder.AppendLine("Thanks for playing!");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine(reqBody["League"].ToString()!);
+
+            Email.SendEmail(reqBody["sender"].ToString()!, reqBody["recipient"].ToString()!, sender, bodyBuilder.ToString());
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

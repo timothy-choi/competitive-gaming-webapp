@@ -10,8 +10,8 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using RabbitMQ;
-
-
+using System.Text;
+using Email;
 
 [ApiController]
 [Route("api/LeaguePlayoffs")]
@@ -1488,6 +1488,84 @@ public class LeaguePlayoffsController : ControllerBase {
             OkObjectResult res = new OkObjectResult(foundNode?.currentPlayoffMatchup);
 
             return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPost("{LeaguePlayoffId}/EmailPlayoffMatchup")]
+    public async Task<ActionResult> EmailPlayoffMatchupToPlayer(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return BadRequest();
+            }
+
+            var matchup = playoffs.FinalPlayoffBracket!.SubPlayoffBrackets.Find(t => t.PlayoffName == reqBody["playoffName"].ToString())!.FindPlayerMatchup(reqBody["player"].ToString()!, reqBody["opponent"].ToString()!);
+
+            int round = Convert.ToInt32(reqBody["round"]);
+            string subject = "";
+            string opening = "";
+            string closing = "";
+            if (round == 1) {
+                subject = "Congratulations! You've entered the race for the title in " + reqBody["League"].ToString() + "! Here's details about your Round 1 matchup";
+                opening = "You've made it to the playoffs! ";
+            }
+            else {
+                if (Convert.ToInt32(reqBody["numRounds"]) - round == 1 && Convert.ToInt32(reqBody["numBrackets"]) == 1) {
+                    subject = "Congratulations! You've one of the last 4 players! Here's details about your semifinal matchup";
+                    opening = "You've made it to the Semifinal round! ";
+                    closing = " in the semifinal round.";
+                }
+                else if (Convert.ToInt32(reqBody["numRounds"]) == round && Convert.ToInt32(reqBody["numBrackets"]) == 1) {
+                    subject = "Congratulations! You've on the brink of winning it all! Here's details about your championship matchup";
+                    opening = "You've made it to the Championship round! ";
+                    closing = " in the championship game.";
+                }
+                else {
+                    subject = "Congratulations! You've advanced to the next round! Here's details about your next round matchup";
+                    opening = "You've advanced to the next round! ";
+                    closing = " in round " + round + ".";
+                }
+            }
+
+            StringBuilder bodyBuilder = new StringBuilder();
+            bodyBuilder.AppendLine("Hello!");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine(opening + "You'll be facing player " + reqBody["opponent"].ToString() + closing);
+            if (Convert.ToBoolean(reqBody["series"])) {
+                bodyBuilder.AppendLine("This is not a series matchup, so you will only play one game in this round. The game is to be played on " + Convert.ToDateTime(reqBody["datetimePlayed"]).Date + " at " + Convert.ToDateTime(reqBody["datetimePlayed"]).TimeOfDay.ToString("HH:mm") + ".");
+                bodyBuilder.AppendLine("Go to your league Portal for more information about this match");
+            }
+            else {
+                bodyBuilder.AppendLine("This is a series matchup, so here are all the games that will be played in this series. Keep in mind that the games marked with asterisks indicate games that will be played if none of the players wins a certain amount of games before then.  In this case, " + Convert.ToInt32(reqBody["winReq"]) + " wins are needed to advance.");
+                bodyBuilder.AppendLine("Go to your league Portal for more information about this series");
+                bodyBuilder.AppendLine("Here's how the series will unfold:");
+                var allGames = (List<Tuple<string, string>>) reqBody["seriesGames"];
+                int game_pos = 1;
+                foreach (var game in allGames) {
+                    var gameLine = "Game " + game_pos + ": ";
+                    if (game.Item1 == "H") {
+                        gameLine += "vs " + reqBody["opponent"].ToString() + " on " + Convert.ToDateTime(game.Item2).Date + " at " + Convert.ToDateTime(game.Item2).TimeOfDay.ToString("HH:mm");
+                    }
+                    else {
+                        gameLine += "@ " + reqBody["opponent"].ToString() + " on " + Convert.ToDateTime(game.Item2).Date + " at " + Convert.ToDateTime(game.Item2).TimeOfDay.ToString("HH:mm");
+                    }
+                    if (game_pos > Convert.ToInt32(reqBody["winReq"])) {
+                        gameLine += "*";
+                    }
+                    bodyBuilder.AppendLine(gameLine);
+                    game_pos++;
+                }
+            }
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine("Please make sure to keep track of the game(s) and time(s) to avoid potentially missing the match(es).");
+            bodyBuilder.AppendLine("Have fun and good luck!");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine(reqBody["League"].ToString());
+
+            Email.SendEmail(reqBody["sender"].ToString()!, reqBody["recipient"].ToString()!, subject, bodyBuilder.ToString());
+            return Ok();
         } catch {
             return BadRequest();
         }

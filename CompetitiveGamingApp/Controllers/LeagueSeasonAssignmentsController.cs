@@ -882,7 +882,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 resBody["playerName"] = playerName;
                 resBody["schedule"] = playerMatches;
 
-                await db.StringSetAsync("assignment_" + playerName + "_schedule", JsonConvert.SerializeObject(playerMatches), TimeSpan.FromSeconds(3600));
+                await db.StringSetAsync("assignment_" + playerName + "_schedule", JsonConvert.SerializeObject(playerMatches), TimeSpan.FromSeconds(60));
 
                 OkObjectResult res = new OkObjectResult(resBody);
 
@@ -891,6 +891,39 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
 
         return NotFound();
+    }
+
+    [HttpPut("{AssignmentsId}/UpdatePlayerScores")]
+    public async Task<ActionResult> UpdatePlayerScheduleScores(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            var game_pos = Convert.ToInt32(reqBody["game_pos"]);
+            var schedules = assignment.PlayerFullSchedule;
+            for (int i = 0; i < schedules!.Count; ++i) {
+                if (schedules[i].Item1 == reqBody["player"].ToString()!) {
+                    if (((SingleGame) schedules[i].Item2[game_pos]).finalScore!.Item1 != Convert.ToInt32(reqBody["host_score"]) || ((SingleGame) schedules[i].Item2[game_pos]).finalScore!.Item2 != Convert.ToInt32(reqBody["guest_score"])) {
+                        ((SingleGame) schedules[i].Item2[game_pos]).finalScore = Tuple.Create(Convert.ToInt32(reqBody["host_score"]), Convert.ToInt32(reqBody["guest_score"]));
+                    }
+                    break;
+                }
+            }
+
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
+            upsertInfo["PlayerFullSchedule"] = false;
+
+            Dictionary<string, object> updatedValues = new  Dictionary<string, object>();
+            updatedValues["PlayerFullSchedule"] = schedules;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
     }
 
     [HttpPost("{AssignmentsId}/SendPlayerSchedule")]

@@ -1046,4 +1046,30 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             return BadRequest();
         }
     }
+
+    [HttpPost("{AssignmentsId}/EndOfSeasonEmail")]
+    public async Task<ActionResult> SendEndOfSeasonEmail(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            string sender = "The season has ended. Thanks for playing!";
+
+            StringBuilder bodyBuilder = new StringBuilder();
+            bodyBuilder.AppendLine("Hello,");
+            bodyBuilder.AppendLine("As of today, you have ended the season with a record of " + Convert.ToInt32(reqBody["wins"]) + "-" + Convert.ToInt32(reqBody["losses"]) + "-" + Convert.ToInt32(reqBody["draws"]) + " and you are the " + Convert.ToInt32(reqBody["rank"]) + "th best team in the league.");
+            bodyBuilder.AppendLine("We hope that you had a good experience playing in this league and we wish you best for next season and beyond!");
+            bodyBuilder.AppendLine("Thanks for playing!");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine(reqBody["League"].ToString()!);
+
+            Email.SendEmail(reqBody["sender"].ToString()!, reqBody["recipient"].ToString()!, sender, bodyBuilder.ToString());
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
 }

@@ -2435,5 +2435,94 @@ public class LeaguePlayoffsController : ControllerBase {
        return allPlayoffRounds;
    }
 
+   [HttpPost("{LeaguePlayoffId}/EmailChampions")]
+   public async Task<ActionResult> SendEmailToChampions(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return NotFound();
+            }
+
+            string sender = "Congratulations! You are the Champions of " + reqBody["League"].ToString()! + " for Season " + playoffs.ArchievePlayoffBrackets!.Count + 1 + "!";
+
+
+
+            StringBuilder bodyBuilder = new StringBuilder();
+
+            bodyBuilder.AppendLine("Hello!");
+            bodyBuilder.AppendLine("Congratulations! You're champions of " + reqBody["League"].ToString()! + "! ");
+            int num_trophies = Convert.ToInt32(reqBody["num_trophies"]);
+            if (num_trophies == 0) {
+                bodyBuilder.AppendLine("This is your very first trophy in this league!");
+            }
+            else {
+                bodyBuilder.AppendLine("You have now won the league " + num_trophies + 1 + " times.");
+            }
+
+            bodyBuilder.AppendLine("You will soon recieve a certificate that marks your championship win in history!");
+
+            bodyBuilder.AppendLine();
+
+            bodyBuilder.AppendLine("Anyways, Congrats once again on the championship win and I hope that you look forward to next season!");
+
+            bodyBuilder.AppendLine();
+
+            bodyBuilder.AppendLine("From " + reqBody["League"].ToString()!);
+
+            Email.SendEmail(reqBody["sender"].ToString()!, reqBody["recipient"].ToString()!, sender, bodyBuilder.ToString());
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+   }
+
+   [HttpPost("{LeaguePlayoffId}/EliminationEmail")]
+   public async Task<ActionResult> SendEliminationEmail(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
+        try {
+            var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+            if (playoffs == null) {
+                return NotFound();
+            }
+
+            string round = "";
+
+            if (Convert.ToInt32(reqBody["num_rounds"]) - Convert.ToInt32(reqBody["round"]) == 1) {
+                round = "the semifinals";
+            }
+            else if (Convert.ToInt32(reqBody["num_rounds"]) == Convert.ToInt32(reqBody["round"])) {
+                round = "the championship matchup";
+            }
+            else {
+                round = "round " + Convert.ToInt32(reqBody["round"]);
+            }
+
+            string sender = "You were unfortunately eliminated in " + round;
+
+            string msg = "";
+
+            if (Convert.ToBoolean(reqBody["series"])) {
+                msg = " in a series where you lost " + Convert.ToInt32(reqBody["opponent_series_wins"]) + " games to " + Convert.ToInt32(reqBody["player_series_wins"]) + ".";
+            }
+            else {
+                msg = " by " + (Convert.ToInt32(reqBody["opponent_pts"]) - Convert.ToInt32(reqBody["player_pts"])) + " points.";
+            }
+
+            StringBuilder bodyBuilder = new StringBuilder();
+            bodyBuilder.AppendLine("I'm sorry to say that you were eliminated in " + round + " by player " + reqBody["opponent"].ToString()! + msg);
+            bodyBuilder.AppendLine("It's hard to get over, but I believe you will be more successful next season. Just keep going!");
+            bodyBuilder.AppendLine();
+            bodyBuilder.AppendLine("Thanks for playing!");
+            bodyBuilder.AppendLine(reqBody["League"].ToString()!);
+
+
+            Email.SendEmail(reqBody["sender"].ToString()!, reqBody["recipient"].ToString()!, sender, bodyBuilder.ToString());
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+   }
+
 
 }

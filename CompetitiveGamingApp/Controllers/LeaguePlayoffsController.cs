@@ -1757,9 +1757,9 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
 
-        var match = playoffs.FinalPlayoffBracket.FindFinalRoundMatchup(player1, player2);
+        var match = playoffs!.FinalPlayoffBracket!.FindFinalRoundMatchup(player1, player2);
 
-        OkObjectResult res = new OkObjectResult(match);
+        OkObjectResult res = new OkObjectResult(match.currentPlayoffMatchup);
         return Ok(res);
     }
 

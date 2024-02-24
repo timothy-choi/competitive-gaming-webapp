@@ -2424,4 +2424,16 @@ public class LeaguePlayoffsController : ControllerBase {
             return BadRequest();
         }
    }
+
+   private List<PlayoffGraphNode> GetPlayoffMatchupTrail(PlayoffBracket bracket, string player, bool single, string bracketName) {
+       List<PlayoffGraphNode> allPlayoffRounds = bracket.SubPlayoffBrackets.Find(t => t.PlayoffName == bracketName)!.FindPlayerInEachRound(player);
+       if (!single) {
+           List<PlayoffGraphNode> additionalRounds = bracket.FindPlayerFinalRoundMatchups(player);
+           allPlayoffRounds.AddRange(additionalRounds);
+       }
+
+       return allPlayoffRounds;
+   }
+
+
 }

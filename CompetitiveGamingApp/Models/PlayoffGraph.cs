@@ -44,11 +44,9 @@ public class PlayoffGraph {
         PlayoffGraphNode? node = null;
 
         foreach (var startNode in PlayoffHeadMatchups!) {
-            while (startNode != null) {
-                if ((startNode.currentPlayoffMatchup.player1 == player1 && startNode.currentPlayoffMatchup.player2 == player2) || (startNode.currentPlayoffMatchup.player1 == player2 && startNode.currentPlayoffMatchup.player2 == player1)) {
-                    node = startNode;
-                    break;
-                }
+            if ((startNode.currentPlayoffMatchup.player1 == player1 && startNode.currentPlayoffMatchup.player2 == player2) || (startNode.currentPlayoffMatchup.player1 == player2 && startNode.currentPlayoffMatchup.player2 == player1)) {
+                node = startNode;
+                break;
             }
         }
 
@@ -57,11 +55,9 @@ public class PlayoffGraph {
         }
 
         foreach (var otherNode in AllOtherMatchups) {
-            while (otherNode.Item2 != null) {
-                if ((otherNode.Item2.currentPlayoffMatchup.player1 == player1 && otherNode.Item2.currentPlayoffMatchup.player2 == player2) || (otherNode.Item2.currentPlayoffMatchup.player1 == player2 && otherNode.Item2.currentPlayoffMatchup.player2 == player1)) {
-                    node = otherNode.Item2;
-                    break;
-                }
+            if ((otherNode.Item2.currentPlayoffMatchup.player1 == player1 && otherNode.Item2.currentPlayoffMatchup.player2 == player2) || (otherNode.Item2.currentPlayoffMatchup.player1 == player2 && otherNode.Item2.currentPlayoffMatchup.player2 == player1)) {
+                node = otherNode.Item2;
+                break;
             }
         }
 
@@ -78,6 +74,28 @@ public class PlayoffGraph {
         }
         var round_matchups = AllOtherMatchups.GetRange(AllOtherMatchups.IndexOf(AllOtherMatchups.FirstOrDefault(t => t.Item1 == round)!), AllOtherMatchups.Count(tuple => tuple.Item1 == round));
         return round_matchups[matchup].Item2;
+    }
+
+    public List<PlayoffGraphNode> FindPlayerInEachRound(string player) {
+        List<PlayoffGraphNode> nodes = new List<PlayoffGraphNode>();
+        foreach (var startNode in PlayoffHeadMatchups!) {
+             if (startNode.currentPlayoffMatchup.player1 == player || startNode.currentPlayoffMatchup.player2 == player) {
+                nodes.Add(startNode);
+                break;
+            }
+        }
+
+        if (nodes.Count == 0) {
+            throw new Exception("Couldn't find playoff matchup");
+        }
+
+        foreach (var otherNode in AllOtherMatchups) {
+            if (otherNode.Item2.currentPlayoffMatchup.player1 == player || otherNode.Item2.currentPlayoffMatchup.player2 == player) {
+                nodes.Add(otherNode.Item2);
+            }
+        }
+
+        return nodes!;
     }
 
     private void ConnectHeadToNext(PlayoffGraphNode nextMatchup, PlayoffGraphNode prevMatchup) {
@@ -167,11 +185,13 @@ public class PlayoffBracket {
          PlayoffGraphNode? node = null;
 
         foreach (var startNode in FinalRoundMatchups!) {
-            while (startNode != null) {
-                if ((startNode.currentPlayoffMatchup.player1 == player1 && startNode.currentPlayoffMatchup.player2 == player2) || (startNode.currentPlayoffMatchup.player1 == player2 && startNode.currentPlayoffMatchup.player2 == player1)) {
+            var temp = startNode;
+            while (temp != null) {
+                if ((temp.currentPlayoffMatchup.player1 == player1 && temp.currentPlayoffMatchup.player2 == player2) || (temp.currentPlayoffMatchup.player1 == player2 && temp.currentPlayoffMatchup.player2 == player1)) {
                     node = startNode;
                     break;
                 }
+                temp = temp.NextPlayoffMatch;
             }
         }
 
@@ -181,6 +201,28 @@ public class PlayoffBracket {
 
         return node!;
     }
+
+    public List<PlayoffGraphNode> FindPlayerFinalRoundMatchups(string player) {
+         List<PlayoffGraphNode> node = new List<PlayoffGraphNode>();
+
+        foreach (var startNode in FinalRoundMatchups!) {
+            var temp = startNode;
+            while (temp != null) {
+                if (temp.currentPlayoffMatchup.player1 == player || temp.currentPlayoffMatchup.player2 == player)  {
+                    node.Add(temp);
+                }
+                temp = temp.NextPlayoffMatch;
+            }
+        }
+
+        if (node.Count == 0) {
+            throw new Exception("Couldn't find playoff matchup");
+        }
+
+        return node;
+    }
+
+
 
     public void SetChampion(string playerName) {
         Champion = playerName;

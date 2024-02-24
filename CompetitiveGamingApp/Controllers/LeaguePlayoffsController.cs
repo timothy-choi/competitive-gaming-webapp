@@ -1750,6 +1750,19 @@ public class LeaguePlayoffsController : ControllerBase {
         }
     }
 
+    [HttpGet("{LeaguePlayoffsId}/FinalRoundMatch/{player1}/{player2}")]
+    public async Task<ActionResult<PlayoffMatchup>> GetFinalRoundPlayoffMatchup(string LeaguePlayoffsId, string player1, string player2) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffsId);
+        if (playoffs == null) {
+            return BadRequest();
+        }
+
+        var match = playoffs.FinalPlayoffBracket.FindFinalRoundMatchup(player1, player2);
+
+        OkObjectResult res = new OkObjectResult(match);
+        return Ok(res);
+    }
+
     [HttpPost("{LeaguePlayoffsId}/FinalRoundEmail")]
     public async Task<ActionResult> SendEmailAboutFinalRounds(string LeaguePlayoffsId, Dictionary<string, object> reqBody) {
         try {

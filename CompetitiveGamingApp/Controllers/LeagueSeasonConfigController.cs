@@ -58,7 +58,6 @@ public class LeagueSeasonConfigController : ControllerBase {
                 SeriesLengthMax = Convert.ToInt32(reqBody["SeriesLengthMax"]),
                 sameSeriesLength = Convert.ToBoolean(reqBody["sameSeriesLength"]),
                 GamesPerRound = reqBody["GamesPerRound"] as List<int>, 
-                BreakTiesViaGame = Convert.ToBoolean(reqBody["BreakTiesViaGame"]),
                 otherMetrics = reqBody["otherMetrics"] as List<string>
             };
 

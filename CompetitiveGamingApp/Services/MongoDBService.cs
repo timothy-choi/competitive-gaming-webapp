@@ -109,7 +109,6 @@ public class MongoDBService {
                 { "SeriesLengthMax", leagueConfig.SeriesLengthMax },
                 { "sameSeriesLength", leagueConfig.sameSeriesLength },
                 { "GamesPerRound", new BsonArray(leagueConfig.GamesPerRound ?? new List<int>()) },
-                { "BreakTiesViaGame", leagueConfig.BreakTiesViaGame },
                 { "otherMetrics", new BsonArray(leagueConfig.otherMetrics ?? new List<string>()) }
             };
             break;

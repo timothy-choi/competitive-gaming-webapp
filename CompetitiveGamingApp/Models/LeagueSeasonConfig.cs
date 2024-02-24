@@ -36,6 +36,5 @@ public class LeagueSeasonConfig {
     public int SeriesLengthMax {get; set;} // # of games that a player needs to win the series
     public bool sameSeriesLength {get; set;} // true = all rounds need to a series where winner wins best of n games each, false = differeing series lengths or each round is 1 game only
     public List<int> GamesPerRound {get; set;}
-    public bool BreakTiesViaGame {get; set;} //true = add extra regular season game if ties are allowed to break ties, false = don't but rely on other statistics to break ties or rely on position in each partition
     public List<String>? otherMetrics {get; set;} // other metrics to compare other players if BreakTiesViaGame is false
 }

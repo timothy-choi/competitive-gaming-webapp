@@ -37,7 +37,6 @@ public class LeagueSeasonConfigController : ControllerBase {
                 NumberOfPlayersLimit = Convert.ToInt32(reqBody["NumberOfPlayersLimit"]),
                 OwnerAsPlayer = Convert.ToBoolean(reqBody["OwnerAsPlayer"]),
                 NumberOfPlayersMin = Convert.ToInt32(reqBody["NumberOfPlayersMin"]),
-                JoinDuringSeason = Convert.ToBoolean(reqBody["JoinDuringSeason"]),
                 convertToRegular = Convert.ToBoolean(reqBody["convertToRegular"]),
                 NumberOfGames = Convert.ToInt32(reqBody["NumberOfGames"]),
                 selfScheduleGames = Convert.ToBoolean(reqBody["selfScheduleGames"]),

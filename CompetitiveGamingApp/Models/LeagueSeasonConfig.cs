@@ -11,7 +11,6 @@ public class LeagueSeasonConfig {
     public int NumberOfPlayersLimit {get; set;}  //# of players allowed in this league. 
     public bool OwnerAsPlayer {get; set;}
     public int NumberOfPlayersMin {get; set;} //# of players that needs to be in a league for a season to start (if enabled)
-    public bool JoinDuringSeason {get; set;} // true = can accept new players to join league after season has started, false = deny new members (need to wait during offseason)
     public bool convertToRegular {get; set;} //true = automatically convert seasons mode to regular mode (no playoffs)
 
 

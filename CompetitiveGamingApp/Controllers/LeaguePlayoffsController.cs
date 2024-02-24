@@ -2435,6 +2435,20 @@ public class LeaguePlayoffsController : ControllerBase {
        return allPlayoffRounds;
    }
 
+   [HttpGet("{LeaguePlayoffId}/{player}/{single}/{bracketName}/PlayoffRunTrail")]
+   public async Task<ActionResult<List<PlayoffMatchup>>> GetPlayoffRunTrail(string LeaguePlayoffId, string player, bool single, string bracketName) {
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        if (playoffs == null) {
+            return NotFound();
+        }
+
+        var trail = GetPlayoffMatchupTrail(playoffs.FinalPlayoffBracket!, player, single, bracketName);
+
+        OkObjectResult res = new OkObjectResult(trail);
+
+        return Ok(res);
+   }
+
    [HttpPost("{LeaguePlayoffId}/EmailChampions")]
    public async Task<ActionResult> SendEmailToChampions(string LeaguePlayoffId, Dictionary<string, object> reqBody) {
         try {

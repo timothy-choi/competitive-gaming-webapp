@@ -15,7 +15,6 @@ public class LeagueSeasonConfig {
     public bool convertToRegular {get; set;} //true = automatically convert seasons mode to regular mode (no playoffs)
 
 
-    public bool seasons {get; set;} //true = seasons mode, false = continuous play (uncompetitive)
     public int NumberOfGames {get; set;} //Number of Games played in a season, will be 0 if seasons is marked false
     public bool selfScheduleGames {get; set;} //true = owner will organize matchs, false = automatic scheduling
     public int intervalBetweenGames {get; set;} //# of days off between matches if selfScheduleGames is set to false

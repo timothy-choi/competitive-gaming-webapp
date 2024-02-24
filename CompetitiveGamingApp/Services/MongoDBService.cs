@@ -90,7 +90,6 @@ public class MongoDBService {
                 { "NumberOfPlayersMin", leagueConfig.NumberOfPlayersMin },
                 { "JoinDuringSeason", leagueConfig.JoinDuringSeason },
                 { "convertToRegular", leagueConfig.convertToRegular },
-                { "seasons", leagueConfig.seasons },
                 { "NumberOfGames", leagueConfig.NumberOfGames },
                 { "selfScheduleGames", leagueConfig.selfScheduleGames },
                 { "intervalBetweenGames", leagueConfig.intervalBetweenGames },

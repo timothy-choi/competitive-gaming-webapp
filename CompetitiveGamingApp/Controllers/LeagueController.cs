@@ -877,6 +877,7 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    //Adding just-in-case endpoint
     [HttpPost("{LeagueId}/RandomizePartialSelection")]
     public async Task<ActionResult<List<Dictionary<string, object>>>> RandomizePartialSelection(string LeagueId, Dictionary<string, object> reqBody) {
         try {

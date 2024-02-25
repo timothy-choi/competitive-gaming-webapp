@@ -877,6 +877,28 @@ public class LeagueController : ControllerBase {
         }
     }
 
+    [HttpPost("{LeagueId}/RandomizePartialSelection")]
+    public async Task<ActionResult<List<Dictionary<string, object>>>> RandomizePartialSelection(string LeagueId, Dictionary<string, object> reqBody) {
+        try {
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            Random rm = new Random();
+
+            List<Dictionary<string, object>> randList = (List<Dictionary<string, object>>) reqBody["conflictingPlayers"];
+
+            randList = randList.OrderBy(_ => rm.Next()).ToList();
+
+            OkObjectResult res = new OkObjectResult(randList);
+
+            return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
+
 }
 
 

@@ -11,9 +11,10 @@ public class KafkaProducer {
             BootstrapServers = ""
         };
     }
-    
-    public async Task ProduceMessageAsync(string topic, string message)
+
+    public async Task ProduceMessageAsync(string topic, string message, string clientId)
     {
+        _config.ClientId = clientId;
         using (var producer = new ProducerBuilder<Null, string>(_config).Build())
         {
             await producer.ProduceAsync(topic, new Message<Null, string> { Value = message });

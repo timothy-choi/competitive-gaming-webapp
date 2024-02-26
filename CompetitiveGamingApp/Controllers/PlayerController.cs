@@ -5,14 +5,17 @@ using Microsoft.AspNetCore.Mvc;
 using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
+using KafkaHelper;
 
 [ApiController]
 [Route("api/Players")]
 public class PlayerController : ControllerBase {
 
     private readonly PlayerServices _playerService;
+    private readonly KafkaProducer _kafkaProducer;
     public PlayerController(PlayerServices playerServices) {
         _playerService = playerServices;
+        _kafkaProducer = new KafkaProducer();
     }
 
     [HttpGet]
@@ -103,6 +106,8 @@ public class PlayerController : ControllerBase {
             var singlePlayer = player[0];
             singlePlayer.playerFriends?.Add(userInfo["friendUsername"]);
             _playerService.SaveChanges();
+
+            await _kafkaProducer.ProduceMessageAsync("addPlayerFriend", userInfo["friendUsername"], singlePlayer.playerId!);
             return Ok();
         } catch {
             return BadRequest();
@@ -129,6 +134,8 @@ public class PlayerController : ControllerBase {
             }
             singlePlayer.playerFriends?.RemoveAt(index);
             _playerService.SaveChanges();
+
+            await _kafkaProducer.ProduceMessageAsync("RemoveFromFriendsList", index.ToString(), singlePlayer.playerId!);
             return Ok();
         } catch {
             return BadRequest();
@@ -145,6 +152,8 @@ public class PlayerController : ControllerBase {
             player[0].leagueJoined = true;
             player[0].playerLeagueJoined = leagueName;
             _playerService.SaveChanges();
+
+            await _kafkaProducer.ProduceMessageAsync("JoinedLeagueStatus", leagueName, player[0].playerId!);
             return Ok();
         }
         catch {
@@ -162,6 +171,8 @@ public class PlayerController : ControllerBase {
             player[0].leagueJoined = false;
             player[0].playerLeagueJoined = null;
             _playerService.SaveChanges();
+
+            await _kafkaProducer.ProduceMessageAsync("LeftLeagueStatus", "left", player[0].playerId!);
             return Ok();
         }
         catch {
@@ -178,6 +189,11 @@ public class PlayerController : ControllerBase {
             }
             player[0].playerAvailable = status;
             _playerService.SaveChanges();
+
+            string availableStatus = status ? "available" : "unavailable";
+
+            await _kafkaProducer.ProduceMessageAsync("ChangedAvailableStatus", availableStatus, player[0].playerId!);
+
             return Ok();
         } catch {
             return BadRequest();
@@ -193,6 +209,10 @@ public class PlayerController : ControllerBase {
             }
             player[0].playerInGame = status;
             _playerService.SaveChanges();
+
+            string gameStatus = status ? "Playing in game" : "open";
+
+            await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", gameStatus, player[0].playerId!);
             return Ok();
         } catch {
             return BadRequest();
@@ -209,6 +229,10 @@ public class PlayerController : ControllerBase {
             player[0].singlePlayerRecord[0] += wins;
             player[0].singlePlayerRecord[1] += losses;
             _playerService.SaveChanges();
+
+            var record = player[0].singlePlayerRecord;
+
+            await _kafkaProducer.ProduceMessageAsync("UpdatePlayerRecord", string.Join(",", record!), player[0].playerId!);
             return Ok();
         } catch {
             return BadRequest();

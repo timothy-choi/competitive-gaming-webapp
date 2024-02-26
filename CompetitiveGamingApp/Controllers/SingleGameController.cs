@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 using AWSHelper;
 using RabbitMQ;
+using KafkaHelper;
 
 [ApiController]
 [Route("api/singleGame")]
@@ -22,10 +23,12 @@ public class SingleGameController : ControllerBase {
     private readonly HttpClient client;
     private readonly SingleGameServices _singleGameService;
     private readonly Producer _producer;
+    private readonly KafkaProducer _kafkaProducer;
     public SingleGameController(SingleGameServices singleGameServices) {
         _singleGameService = singleGameServices;
         client = new HttpClient();
         _producer = new Producer();
+        _kafkaProducer = new KafkaProducer();
     }
 
     [HttpGet]
@@ -68,6 +71,8 @@ public class SingleGameController : ControllerBase {
 
             OkObjectResult res = new OkObjectResult(scheduledGame.SingleGameId);
 
+            await _kafkaProducer.ProduceMessageAsync("CreateNewGame", scheduledGame.SingleGameId, scheduledGame.SingleGameId);
+
             return Ok(res);
         }
         catch {
@@ -84,6 +89,8 @@ public class SingleGameController : ControllerBase {
             }
 
             await _singleGameService.DeleteGame(gameId);
+
+            await _kafkaProducer.ProduceMessageAsync("DeleteGame", "removed", game.SingleGameId!);
 
             return Ok();
         } catch {
@@ -107,6 +114,10 @@ public class SingleGameController : ControllerBase {
             Tuple<int, int> finalScore = Tuple.Create(Convert.ToInt32(finalScoreInfo["guestPoints"]), Convert.ToInt32(finalScoreInfo["hostPoints"]));
 
             await _singleGameService.UpdateFinalScore(finalScore, finalScoreInfo["gameId"]);
+
+            var stringScore = $"{finalScore.Item1},{finalScore.Item2}";
+
+            await _kafkaProducer.ProduceMessageAsync("UpdateSingleGameFinalScore", stringScore, finalScoreInfo["gameId"]);
 
             return Ok();
         } catch {
@@ -135,6 +146,10 @@ public class SingleGameController : ControllerBase {
             Tuple<String, Tuple<int, int>> gameScore = Tuple.Create(inGameScoreInfo["gameScoreType"], score);
 
             await _singleGameService.AddInGameScores(gameScore, inGameScoreInfo["gameId"]);
+
+            string info = $"{gameScore.Item1}, ({gameScore.Item2.Item1}, {gameScore.Item2.Item2})";
+
+            await _kafkaProducer.ProduceMessageAsync("AddInGameScore", info, inGameScoreInfo["gameId"]);
             return Ok();
         } catch {
             return BadRequest();
@@ -146,6 +161,10 @@ public class SingleGameController : ControllerBase {
         try {
             Dictionary<string, string> parsedGameInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(otherGameInfo["gameInfo"])!; 
             await _singleGameService.AddOtherGameInfo(parsedGameInfo!, otherGameInfo["gameId"]);
+
+            string jsonString = JsonConvert.SerializeObject(parsedGameInfo);
+
+            await _kafkaProducer.ProduceMessageAsync("AddOtherGameInfo", jsonString, otherGameInfo["gameId"]);
             return Ok();
         } catch {
             return BadRequest();
@@ -176,6 +195,8 @@ public class SingleGameController : ControllerBase {
                 return BadRequest();
             }
             string predData = await res.Content.ReadAsStringAsync();
+
+            await _kafkaProducer.ProduceMessageAsync("CreatePrediction", predData, predictionInfo["gameId"]);
             OkObjectResult newPred = new OkObjectResult(predData);
             return Ok(newPred);
         }
@@ -214,6 +235,8 @@ public class SingleGameController : ControllerBase {
                 return BadRequest();
             }
             var dataBody = await res.Content.ReadAsStringAsync();
+
+            await _kafkaProducer.ProduceMessageAsync("EndPrediction", "ended", endPredInfo["gameId"]);
             OkObjectResult resolvedPred = new OkObjectResult(dataBody);
             return Ok(resolvedPred);
         } catch {
@@ -303,6 +326,8 @@ public class SingleGameController : ControllerBase {
             recordingInfo["key"] = selectedVideo["title"] + ".mov";
             recordingInfo["filePath"] = Path.GetFullPath(selectedVideo["title"] + ".mov"); 
             OkObjectResult res2 = new OkObjectResult(recordingInfo);
+
+            await _kafkaProducer.ProduceMessageAsync("ProcessGameRecording", JsonConvert.SerializeObject(recordingInfo), recordingInfo["gameId"]);
 
             return Ok(res2);
         }

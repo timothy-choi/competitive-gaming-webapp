@@ -46,6 +46,10 @@
               "target": "Package",
               "version": "[3.7.205.17, )"
             },
+            "Confluent.Kafka": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
             "Dapper": {
               "target": "Package",
               "version": "[2.1.11, )"

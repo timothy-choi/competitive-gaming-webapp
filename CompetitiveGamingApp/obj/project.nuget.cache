@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "eUlR+xu8iybgSpaqyAulyCIuvyhPq3HL5EmCkl7X7+2MEYhXNr5JHDqvMseQsatQF5yGQaJGGqiafSAaebm+1w==",
+  "dgSpecHash": "kNkt+cFmfc+1HH0BtfsJGdsQ7H6lCCG57GIK4Rc6WEgFUMkzb88hmNLlneKzkPuaHFSnrAQvjlO1NABQTiiBWQ==",
   "success": true,
   "projectFilePath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
   "expectedPackageFiles": [
@@ -11,11 +11,13 @@
     "/Users/timchoi/.nuget/packages/azure.core/1.25.0/azure.core.1.25.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/azure.identity/1.7.0/azure.identity.1.7.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/bouncycastle.cryptography/2.2.1/bouncycastle.cryptography.2.2.1.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/confluent.kafka/2.3.0/confluent.kafka.2.3.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/dapper/2.1.11/dapper.2.1.11.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/dnsclient/1.6.1/dnsclient.1.6.1.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/elastic.clients.elasticsearch/8.12.0/elastic.clients.elasticsearch.8.12.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/elastic.transport/0.4.17/elastic.transport.0.4.17.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
+    "/Users/timchoi/.nuget/packages/librdkafka.redist/2.3.0/librdkafka.redist.2.3.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/mailkit/4.3.0/mailkit.4.3.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.aspnetcore.authentication.abstractions/2.2.0/microsoft.aspnetcore.authentication.abstractions.2.2.0.nupkg.sha512",
     "/Users/timchoi/.nuget/packages/microsoft.aspnetcore.authorization/2.2.0/microsoft.aspnetcore.authorization.2.2.0.nupkg.sha512",

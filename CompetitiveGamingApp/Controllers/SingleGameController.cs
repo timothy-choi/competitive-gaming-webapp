@@ -52,6 +52,21 @@ public class SingleGameController : ControllerBase {
         }
     }
 
+    [HttpGet("{player}")]
+    public async Task<ActionResult<List<SingleGame>>> GetAllGamesFromPlayer(string player) {
+        List<SingleGame>? allGames = await _singleGameService.GetAllGames();
+        List<SingleGame> playerGames = new List<SingleGame>();
+        foreach (var game in allGames!) {
+            if (game.guestPlayer == player || game.hostPlayer == player) {
+                playerGames.Add(game);
+            }
+        }
+
+        OkObjectResult res = new OkObjectResult(player);
+
+        return Ok(res);
+    }
+
     [HttpPost]
     public async Task<ActionResult<string>> createNewGame([FromBody] Dictionary<string, string> gameInfo) {
         try {

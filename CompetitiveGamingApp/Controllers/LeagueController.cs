@@ -9,13 +9,17 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Globalization;
 using static PlayerComparer;
+using KafkaHelper;
+using Newtonsoft.Json;
 
 [ApiController]
 [Route("api/League")]
 public class LeagueController : ControllerBase {
     private readonly MongoDBService _leagueService;
+    private readonly KafkaProducer _kafkaProducer;
     public LeagueController(MongoDBService leagueService) {
         _leagueService = leagueService;
+        _kafkaProducer = new KafkaProducer();
     }
 
     [HttpGet]
@@ -174,6 +178,8 @@ public class LeagueController : ControllerBase {
             body["Players"] = playerInfo;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, body);
+
+            await _kafkaProducer.ProduceMessageAsync("AddingNewPlayerInLeague", PlayerId, LeagueId);
             return Ok();
         }
         catch {
@@ -205,6 +211,8 @@ public class LeagueController : ControllerBase {
             playersVal["Players"] = players;
 
             await _leagueService.EditData("leagueId", upsertStatus, playersVal);
+
+            await _kafkaProducer.ProduceMessageAsync("RemovingPlayerInLeague", PlayerId, LeagueId);
             return Ok();
         }
         catch {
@@ -229,6 +237,8 @@ public class LeagueController : ControllerBase {
             champ["Champions"] = Tuple.Create(PlayerId, "Season " + champions_size + 1);
 
             await _leagueService.EditData("leagueId", upsertStatus, champ);
+
+            await _kafkaProducer.ProduceMessageAsync("AddNewChampion", PlayerId, LeagueId);
 
             return Ok();
         } catch {
@@ -264,6 +274,8 @@ public class LeagueController : ControllerBase {
 
 
             await _leagueService.EditData("leagueInfo", upsertStatus, leagueTable);
+
+            await _kafkaProducer.ProduceMessageAsync("ResetLeagueStandings", JsonConvert.SerializeObject(leagueTable), LeagueId);
             return Ok();
         }
         catch {
@@ -287,6 +299,8 @@ public class LeagueController : ControllerBase {
             playerStandings["LeagueStandings.Table"] = reqBody;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, playerStandings);
+
+            await _kafkaProducer.ProduceMessageAsync("AddPlayerToLeague", JsonConvert.SerializeObject(reqBody), LeagueId);
             return Ok();
         } catch {
             return BadRequest();
@@ -325,6 +339,7 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, playerStandings);
 
+            await _kafkaProducer.ProduceMessageAsync("RemovePlayerToLeague", playerId, LeagueId);
             return Ok();
         } catch {
             return BadRequest();
@@ -380,6 +395,8 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, divStandings);
 
+            await _kafkaProducer.ProduceMessageAsync("CreateDivisions", JsonConvert.SerializeObject(divs), LeagueId);
+
             return Ok();
         }
         catch {
@@ -411,6 +428,8 @@ public class LeagueController : ControllerBase {
             DivPlayer["DivisionStandings." + DivisionName + ".Table"] = entry;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
+
+            await _kafkaProducer.ProduceMessageAsync("AddPlayerToDivison", JsonConvert.SerializeObject(entry), LeagueId);
 
             return Ok();
         }
@@ -451,6 +470,7 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
 
+            await _kafkaProducer.ProduceMessageAsync("DeletePlayerFromDivisionStandings", JsonConvert.SerializeObject(divisions[found_division].Table), LeagueId);
             return Ok();
         } catch {
             return BadRequest();
@@ -512,6 +532,8 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, newDivisions);
 
+            await _kafkaProducer.ProduceMessageAsync("ResetDivisions", JsonConvert.SerializeObject(divisions), LeagueId);
+
             return Ok();
         } catch {
             return BadRequest();
@@ -546,6 +568,8 @@ public class LeagueController : ControllerBase {
             totalCombDivisions["CombinedDivisionStandings"] = allCombinedDivisions;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, totalCombDivisions);
+
+            await _kafkaProducer.ProduceMessageAsync("ResetDivisions", JsonConvert.SerializeObject(allCombinedDivisions), LeagueId);
 
             return Ok();
         }
@@ -582,6 +606,8 @@ public class LeagueController : ControllerBase {
             PlayerEntry["CombinedDivisionStandings." + DivisionName + ".Table"] = reqBody;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, PlayerEntry);
+
+            await _kafkaProducer.ProduceMessageAsync("ResetDivisions", JsonConvert.SerializeObject(reqBody), LeagueId);
 
             return Ok();
         } catch {
@@ -620,6 +646,8 @@ public class LeagueController : ControllerBase {
             DivPlayer["DivisionStandings." + found_combined_division + ".Table"] = combDivisions[found_combined_division].Table;
 
             await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
+
+            await _kafkaProducer.ProduceMessageAsync("ResetDivisions", JsonConvert.SerializeObject(combDivisions[found_combined_division].Table), LeagueId);
 
             return Ok();
         } catch {
@@ -685,6 +713,8 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, totalCombDivisions);
 
+            await _kafkaProducer.ProduceMessageAsync("ResetCombinedDivisions", JsonConvert.SerializeObject(combinedDivision), LeagueId);
+
             return Ok();
         } catch {
             return BadRequest();
@@ -706,6 +736,9 @@ public class LeagueController : ControllerBase {
             totalCombDivisions["CombinedDivisionStandings." + CombinedDivisionName + ".Table"] = reqBody;
 
             await _leagueService.EditData("leagueId", upsertStatus, totalCombDivisions);
+
+            await _kafkaProducer.ProduceMessageAsync("AddToCombinedDivisions", JsonConvert.SerializeObject(reqBody), LeagueId);
+
             return Ok();
         } catch {
             return BadRequest();
@@ -843,6 +876,10 @@ public class LeagueController : ControllerBase {
             updatedComb["DivisionStandings.Table"] = combinedDivision;
 
             await _leagueService.EditData("leagueInfo", upsertStatusComb, updatedComb);
+
+            var allStandings = new List<string> {JsonConvert.SerializeObject(leagueStandings), JsonConvert.SerializeObject(division), JsonConvert.SerializeObject(combinedDivision)};
+
+            await _kafkaProducer.ProduceMessageAsync("UpdateStandings", string.Join(",", allStandings), LeagueId);
 
             return Ok();
         }

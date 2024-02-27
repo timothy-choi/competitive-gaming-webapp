@@ -86,8 +86,6 @@ public class SingleGameController : ControllerBase {
 
             OkObjectResult res = new OkObjectResult(scheduledGame.SingleGameId);
 
-            await _kafkaProducer.ProduceMessageAsync("CreateNewGame", scheduledGame.SingleGameId, scheduledGame.SingleGameId);
-
             return Ok(res);
         }
         catch {
@@ -104,8 +102,6 @@ public class SingleGameController : ControllerBase {
             }
 
             await _singleGameService.DeleteGame(gameId);
-
-            await _kafkaProducer.ProduceMessageAsync("DeleteGame", "removed", game.SingleGameId!);
 
             return Ok();
         } catch {

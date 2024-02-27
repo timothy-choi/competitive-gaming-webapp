@@ -18,6 +18,7 @@ using Amazon.Lambda.Model;
 using CompetitiveGamingApp;
 using RabbitMQ;
 using Email;
+using KafkaHelper;
 
 [ApiController]
 [Route("api/LeagueSeasonAssignments")]
@@ -25,9 +26,11 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     private readonly MongoDBService _leagueService;
 
     private readonly Producer _producer;
+    private readonly KafkaProducer _kafkaProducer;
     public LeagueSeasonAssignmentsController(MongoDBService leagueService) {
         _leagueService = leagueService;
         _producer = new Producer();
+        _kafkaProducer = new KafkaProducer();
     }
 
     [HttpGet("{AssignmentId}")]
@@ -386,6 +389,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
 
+            await _kafkaProducer.ProduceMessageAsync("GenerateDivisions", JsonConvert.SerializeObject(partitions), AssignmentsId);
+
             return Ok();
         } catch {
             return BadRequest();
@@ -423,6 +428,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             }
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            await _kafkaProducer.ProduceMessageAsync("EditDivisions", JsonConvert.SerializeObject(updatedValues), AssignmentsId);
 
             OkObjectResult res = new OkObjectResult(resBody);
 
@@ -466,6 +473,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             updatedValues["AllCombinedDivisions"] = combinedDivisions;
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            await _kafkaProducer.ProduceMessageAsync("AddCombinedDivisionSelections", JsonConvert.SerializeObject(combinedDivisions), AssignmentsId);
 
             return Ok();
         } catch {
@@ -807,6 +816,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
 
+            await _kafkaProducer.ProduceMessageAsync("ProcessLeagueFinalSchedule", JsonConvert.SerializeObject(allGames), AssignmentsId);
+
             return Ok();
         }
         catch {
@@ -919,6 +930,8 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             updatedValues["PlayerFullSchedule"] = schedules;
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            await _kafkaProducer.ProduceMessageAsync("UpdatePlayerRecord", JsonConvert.SerializeObject(schedules), AssignmentsId);
 
             return Ok();
         } catch {

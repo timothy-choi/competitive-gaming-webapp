@@ -55,7 +55,7 @@ public class PlayerController : ControllerBase {
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreatePlayer([FromBody] Dictionary<string, string> playerInfo) {
+    public async Task<ActionResult<string>> CreatePlayer([FromBody] Dictionary<string, string> playerInfo) {
         try {
             Player createdPlayer = new Player {
                 playerId = Guid.NewGuid().ToString(),
@@ -73,7 +73,9 @@ public class PlayerController : ControllerBase {
 
             await _playerService.AddAsync(createdPlayer);
             await _playerService.SaveChangesAsync();
-            return Ok();
+
+            OkObjectResult res = new OkObjectResult(createdPlayer.playerId);
+            return Ok(res);
         }
         catch {
             return BadRequest();

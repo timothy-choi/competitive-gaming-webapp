@@ -1,9 +1,13 @@
 import { useRef, useState, useEffect } from "react";
 import axios from './api/axios';
+import { useHistory } from 'react-router-dom'; 
+
+const regex = /^[a-zA-Z0-9_.]+$/;
 
 const Register = () => {
     const userRef = useRef();
     const errRef = useRef();
+    const history = useHistory();
 
     const [name, setName] = useState('');
 
@@ -28,6 +32,10 @@ const Register = () => {
         userRef.current.focus();
     }, [])
 
+    useEffect(() => {
+        setValidUsername(regex.test(username));
+    }, [username])
+
 
     useEffect(() => {
         setErrMsg('');
@@ -37,6 +45,11 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const check = regex.test(username);
+        if (!check) {
+            setErrorMessage('Invalid Username');
+            return;
+        }
         try {
             const userAuthInfo = {
                 username: username,
@@ -59,6 +72,8 @@ const Register = () => {
             errRef.current.focus();
         }
 
+        var playerId = '';
+
         try {
             const userInfo = {
                 name: name,
@@ -68,9 +83,8 @@ const Register = () => {
 
             const response = await axios.post("Players/", userInfo);
 
-            setSuccess(true);
-            setUsername('');
-            setName('');
+            playerId = response?.data;
+
             setEmail('');
 
         } catch (e) {
@@ -83,7 +97,32 @@ const Register = () => {
             }
             errRef.current.focus();
         }
+
+        try {
+            const playerEntry = {
+                name: name,
+                username: username,
+                playerId: playerId
+            };
+
+            const response = await axios.post("Search/Players/", playerEntry);
+
+            setSuccess(true);
+            setUsername('');
+            setName('');
+
+            history.push('/Login');
+        } catch (e) {
+            if (!err?.response) {
+                setErrorMessage('No Server Response');
+            } else {
+                setErrorMessage('Registration Failed')
+            }
+            errRef.current.focus();
+        }
     }
 
     return ()
 }
+
+export default Register;

@@ -9,7 +9,7 @@ const Login = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [success, setSuccess] = useState(false);
 
-    const { setAuth } = useContext(AuthContext);
+    const { setAuth, login } = useContext(AuthContext);
     const userRef = useRef();
     const errRef = useRef();
     const history = useHistory(); 
@@ -31,6 +31,8 @@ const Login = () => {
             }
             const response = await axios.post("/login", loginInfo);
             setAuth({ username, password});
+
+            login(username, password);
 
             setUsername('');
             setPassword('');

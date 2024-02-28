@@ -711,7 +711,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         SingleGameId = Guid.NewGuid().ToString(),
                         hostPlayer = (string)((List<object>)gameInfo)[2] == "H" ? schedule.Item1 : (string)((List<object>)gameInfo)[0],
                         guestPlayer = (string)((List<object>)gameInfo)[2] == "A" ? schedule.Item1 : (string)((List<object>)gameInfo)[0],
-                        finalScore = new Tuple<int, int>(0, 0),
+                        finalScore = null,
                         inGameScores = new List<Tuple<String, Tuple<int, int>>>(),
                         timePlayed = (DateTime)((List<object>)gameInfo)[1],
                         videoObjName = "",

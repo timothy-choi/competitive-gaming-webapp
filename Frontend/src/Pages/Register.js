@@ -4,6 +4,8 @@ import { useHistory } from 'react-router-dom';
 
 const regex = /^[a-zA-Z0-9_.]+$/;
 
+const password_regex = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[!@#$%^&*()_+])[a-zA-Z0-9!@#$%^&*()_+]{8,}$/;
+
 const Register = () => {
     const userRef = useRef();
     const errRef = useRef();
@@ -36,6 +38,12 @@ const Register = () => {
         setValidUsername(regex.test(username));
     }, [username])
 
+    useEffect(() => {
+        setValidPassword(password_regex.test(password));
+        setValidMatch(password === matchPassword);
+    }, [password, matchPassword])
+
+
 
     useEffect(() => {
         setErrMsg('');
@@ -48,6 +56,11 @@ const Register = () => {
         const check = regex.test(username);
         if (!check) {
             setErrorMessage('Invalid Username');
+            return;
+        }
+        check = password_regex.test(password);
+        if (!check) {
+            setErrorMessage('Invalid Password');
             return;
         }
         try {

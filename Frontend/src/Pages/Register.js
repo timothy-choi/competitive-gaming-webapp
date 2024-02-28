@@ -43,7 +43,7 @@ const Register = () => {
                 password: password,
                 retype_password: matchPassword
             };
-            const response = await axios.post("/register", userInfo);
+            const response = await axios.post("/register", userAuthInfo);
 
             //clear state and controlled input
             setPassword('');

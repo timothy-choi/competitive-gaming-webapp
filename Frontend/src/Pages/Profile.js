@@ -57,15 +57,100 @@ const Profile = () => {
             setPlayerFriends(allFriends);
 
             var allGames = await axios.get(`singleGame/${username}`);
+            var regularGames = [];
+            var seasonGames = [];
+            var playoffGames = [];            
             for (let j = 0; j < allGames.length; ++j) {
-                const leagues = await axios.get("/Leagues");
+                if (leagueJoined) {
+                    const leagues = await axios.get("/Leagues");
 
-                for (var league in leagues) {
-                    if (league.Name == leagueName) {
-                        
+                    var added = false;
+                    var leagueId = "";
+                    for (var league in leagues) {
+                        if (league.Name == leagueName) {
+                            leagueId = league.LeagueId;
+                            break;
+                        }
                     }
+
+                    const leagueInfo = await axios.get(`/League/${leagueId}`);
+
+                    const user_games = await axios.get(`/LeagueSeasonAssignments/${leagueInfo.data.SeasonAssignments}/${username}`);
+
+                    const foundGame = user_games.find(game => game.SingleGameId === allGames[j].SingleGameId);
+
+                    if (foundGame) {
+                        added = true;
+                        var gameInfo = {
+                            gameId : allGames[j].SingleGameId,
+                            hostPlayer : allGames[j].hostPlayer,
+                            guestPlayer : allGames[j].guestPlayer,
+                            finalScore : allGames[j].finalScore,
+                            recentScore : allGames[j].recentScore.length > 0 ? allGames[j].recentScore[allGames[j].recentScore.length-1] : null,
+                            timePlayed : new Date().toLocaleString() > allGames[j].timePlayed ? null : allGames[j].timePlayed
+                        }
+                        seasonGames.push(gameInfo);
+                    }
+                    else {
+                        const playoffInfo = await axios.get(`/LeaguePlayoffs/${leagueinfo.PlayoffAssignments}`);
+
+                        var singleBracket = false;
+                        if (playoffInfo.WholeMode) {
+                            singleBracket = true;
+                        }
+
+                        var bracketName = playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets[0].playoffName;
+
+                        const playoffTrail = await axios.get(`${playoffInfo.LeaguePlayoffId}/${username}/${singleBracket}/${bracketName}/PlayoffRunTrail`);
+
+                        var rd = 1;
+                        for (var round in playoffTrail) {
+                            for (var game in round.GameId) {
+                                if (game == allGames[j].SingleGameId) {
+                                    const gameInfo = await axios.get(`/SingleGame/${allGames[j].SingleGameId}`);
+                                    var playoffGameInfo = {
+                                        round: rd,
+                                        gameId: allGames[j].SingleGameId,
+                                        hostPlayer : gameInfo.hostPlayer,
+                                        guestPlayer : gameInfo.guestPlayer,
+                                        finalScore : gameInfo.finalScore,
+                                        recentScore : gameInfo.recentScore.length > 0 ? gameInfo.recentScore[allGames[j].recentScore.length-1] : null,
+                                        timePlayed : new Date().toLocaleString() > gameInfo.timePlayed ? null : gameInfo.timePlayed
+                                    }
+                                    if (round.GameId.length > 1) {
+                                        playoffGameInfo.gameNumber = round.GameId.indexOf(game) + 1;
+                                        playoffGameInfo[gameInfo.hostPlayer + "_wins"] = round.player1 == gameInfo.hostPlayer ? round.series_player1_wins : round.series_player2_wins;
+                                        playoffGameInfo[gameInfo.guestPlayer + "_wins"] = round.player2 == gameInfo.hostPlayer ? round.series_player2_wins : round.series_player1_wins;
+                                    }
+                                    
+                                    playoffGames.push(playoffGameInfo);
+                                }
+                            }
+                            rd++;
+                        }
+
+                        added = true;
+
+                    }
+                }  
+
+                if (!added) {
+                    var gameInfo = {
+                        gameId : allGames[j].SingleGameId,
+                        hostPlayer : allGames[j].hostPlayer,
+                        guestPlayer : allGames[j].guestPlayer,
+                        finalScore : allGames[j].finalScore,
+                        recentScore : allGames[j].recentScore.length > 0 ? allGames[j].recentScore[allGames[j].recentScore.length-1] : null,
+                        timePlayed : new Date().toLocaleString() > allGames[j].timePlayed ? null : allGames[j].timePlayed
+                    }
+                    regularGames.push(gameInfo);
                 }
             }
+
+            setRegularGames(regularGames);
+            setSeasonLeagueGames(seasonGames);
+            setPlayoffLeagueGames(playoffGames);
+
         } catch (e) {
             setErrorMessage(`${username} doesn't exist`);
         }

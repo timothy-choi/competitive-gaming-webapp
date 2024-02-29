@@ -21,6 +21,7 @@ const Profile = () => {
 
     const [playerFriends, setPlayerFriends] = useState([]);
     const [playerFriendCount, setPlayerFriendCount] = useState(null);
+    const [playerFriendRemoved, setPlayerFriendRemoved] = useState(false);
 
     const [playerRecord, setPlayerRecord] = useState([]);
 
@@ -162,6 +163,53 @@ const Profile = () => {
     useEffect(() => {
         initUser();
     }, []);
+
+    useEffect(() => {
+        if (!playerFriendRemoved) {
+            const getNewFriend = async () => {
+                const player = await axios.get(`/Player/${username}`);
+    
+                const response = await axios.get(`/data/${topic}/${player.data.playerId}`);
+    
+                player = await axios.get(`/Player/${response.data}`);
+    
+                return player.data;
+            }
+    
+            var playerInfo = getNewFriend();
+    
+            var playerEntry = {
+                name: playerInfo.name,
+                username: playerInfo.username,
+                isAvailable: playerInfo.playerAvailable,
+                playingGame: playerInfo.playerInGame
+            }
+    
+            var friends = playerFriends;
+            friends.push(playerEntry);
+    
+            setPlayerFriends(friends);
+            setPlayerFriendCount(friends.length);
+        }
+        else {
+            const getFriendIndex = async () => {
+                const player = await axios.get(`/Player/${username}`);
+    
+                const response = await axios.get(`/data/${topic}/${player.data.playerId}`);
+    
+                player = await axios.get(`/Player/${response.data}`);
+    
+                return parseInt(player.data);
+            };
+    
+            var index = getFriendIndex();
+            var friends = playerFriends;
+            friends.splice(index, 1);
+    
+            setPlayerFriends(friends);
+            setPlayerFriendCount(friends.length);
+        }
+    }, [playerFriendChanged]);
 
 }
 

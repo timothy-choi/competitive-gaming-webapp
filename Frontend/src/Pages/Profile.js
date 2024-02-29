@@ -167,9 +167,9 @@ const Profile = () => {
     useEffect(() => {
         if (!playerFriendRemoved) {
             const getNewFriend = async () => {
-                const player = await axios.get(`/Player/${auth.username}`);
+                const player = await axios.get(`/Player/${username}`);
     
-                const response = await axios.get(`/data/${topic}/${player.data.playerId}`);
+                const response = await axios.get(`/data/addPlayerFriend/${player.data.playerId}`);
     
                 player = await axios.get(`/Player/${response.data}`);
     
@@ -190,12 +190,14 @@ const Profile = () => {
     
             setPlayerFriends(friends);
             setPlayerFriendCount(friends.length);
+
+            //impl notification that user was added as friend
         }
         else {
             const getFriendIndex = async () => {
                 const player = await axios.get(`/Player/${auth.username}`);
     
-                const response = await axios.get(`/data/${topic}/${player.data.playerId}`);
+                const response = await axios.get(`/data/RemoveFromFriendsList/${player.data.playerId}`);
     
                 player = await axios.get(`/Player/${response.data}`);
     
@@ -211,6 +213,101 @@ const Profile = () => {
         }
     }, [playerFriendChanged]);
 
+    useEffect(() => {
+        const getNewAvailability = async () => {
+            const player = await axios.get(`/Player/${auth.username}`);
+
+            const availability = await axios.get(`/data/ChangedAvailableStatus/${player.playerId}`);
+
+            return availability.data;
+        };
+
+        var newAvailability = getNewAvailability();
+        if (newAvailability) {
+            setIsAvailable(true);
+        }
+        else {
+            setIsAvailable(false);
+        }
+    }, [isAvailable]);
+
+    useEffect(() => {
+        const getNewGameStatus = async () => {
+            const player = await axios.get(`/Player/${auth.username}`);
+
+            const playingGameStatus = await axios.get(`/data/ChangedGameStatus/${player.playerId}`);
+
+            return playingGameStatus.data;
+        };
+
+        var newGameStatus = getNewGameStatus();
+        if (newGameStatus) {
+            setPlayingGame(true);
+            setIsAvailable(false);
+        }
+        else {
+            setPlayingGame(false);
+        }
+    }, [playingGame]);
+
+    useEffect(() => {
+        const getAnyFriendsAvailabilityStatus = async () => {
+            const playingAvailability = await axios.get(`/data/ChangedAvailabilityStatus/app`);
+
+            const user = playingAvailability.substring(0, playingAvailability.indexOf('_'));
+
+            var newFriendsList = playerFriends;
+
+            const found = newFriendsList.find(player => player.username == user);
+
+            if (!found) {
+                return [];
+            }
+
+            var availability = playingAvailability.substring(playingAvailability.indexOf('_') + 1);
+
+            found.isAvailable = availability == "available" ? true : false;
+
+            return newFriendsList;
+        }
+
+        var res = getAnyFriendsAvailabilityStatus();
+
+        if (res.length > 0) {
+            setPlayerFriends(res);
+        }
+
+    }, [playerFriends]);
+
+    useEffect(() => {
+        const getAnyFriendsGameStatus = async () => {
+            const playingGameFriends = await axios.get(`/data/ChangedAvailabilityStatus/app`);
+
+            const user = playingGameFriends.substring(0, playingGameFriends.indexOf('_'));
+
+            var newFriendsList = playerFriends;
+
+            const found = newFriendsList.find(player => player.username == user);
+
+            if (!found) {
+                return [];
+            }
+
+            var gameStatus = playingGameFriends.substring(playingGameFriends.indexOf('_') + 1);
+
+            found.playerInGame = gameStatus == "Playing in game" ? true : false;
+            found.isAvailable = gameStatus != "Playing in game" ? false : true;
+
+            return newFriendsList;
+        };
+
+        var res = getAnyFriendsGameStatus();
+
+        if (res.length > 0) {
+            setPlayerFriends(res);
+        }
+
+    }, [playerFriends]);
 }
 
 export default Profile;

@@ -128,6 +128,7 @@ public class SingleGameController : ControllerBase {
 
             var stringScore = $"{finalScore.Item1},{finalScore.Item2}";
 
+            await _kafkaProducer.ProduceMessageAsync("UpdateSingleGameFinalScore", finalScoreInfo["gameId"] + "_" + stringScore, "app");
             await _kafkaProducer.ProduceMessageAsync("UpdateSingleGameFinalScore", stringScore, finalScoreInfo["gameId"]);
 
             return Ok();
@@ -160,6 +161,7 @@ public class SingleGameController : ControllerBase {
 
             string info = $"{gameScore.Item1}, ({gameScore.Item2.Item1}, {gameScore.Item2.Item2})";
 
+            await _kafkaProducer.ProduceMessageAsync("AddInGameScore", inGameScoreInfo["gameId"] + "_" + info, "app");
             await _kafkaProducer.ProduceMessageAsync("AddInGameScore", info, inGameScoreInfo["gameId"]);
             return Ok();
         } catch {

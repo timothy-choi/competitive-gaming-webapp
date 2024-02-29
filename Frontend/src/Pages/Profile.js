@@ -24,6 +24,10 @@ const Profile = () => {
 
     const [playerRecord, setPlayerRecord] = useState([]);
 
+    const [regularGames, setRegularGames] = useState([]);
+    const [seasonLeagueGames, setSeasonLeagueGames] = useState([]);
+    const [playoffLeagueGames, setPlayoffLeagueGames] = useState([]);
+
     const [errorMessage, setErrorMessage] = useState('');
 
     const initUser = async () => {
@@ -52,7 +56,16 @@ const Profile = () => {
             }
             setPlayerFriends(allFriends);
 
-            
+            var allGames = await axios.get(`singleGame/${username}`);
+            for (let j = 0; j < allGames.length; ++j) {
+                const leagues = await axios.get("/Leagues");
+
+                for (var league in leagues) {
+                    if (league.Name == leagueName) {
+                        
+                    }
+                }
+            }
         } catch (e) {
             setErrorMessage(`${username} doesn't exist`);
         }

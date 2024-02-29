@@ -27,7 +27,9 @@ const Profile = () => {
 
     const [regularGames, setRegularGames] = useState([]);
     const [seasonLeagueGames, setSeasonLeagueGames] = useState([]);
+    const [archieveSeasonGames, setArchieveSeasonGames] = useState([]);
     const [playoffLeagueGames, setPlayoffLeagueGames] = useState([]);
+    const [archievePlayoffGames, setArchievePlayoffGames] = useState([]);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -441,6 +443,36 @@ const Profile = () => {
         }
 
     }, [regularGames, seasonLeagueGames, playoffLeagueGames]);
+
+    useEffect(() => {
+        const archieveGame = async () => {
+            try {
+                const response = await axios.get("/data/ArchievePlayerSchedules/app");
+
+                archieveSeasonGames.push(seasonLeagueGames);
+                setArchieveSeasonGames(archieveSeasonGames);
+            } catch {
+                setErrorMessage(`Couldn't archieve games.`);
+            }
+
+            archieveGame();
+        }
+    }, [archieveSeasonGames]);
+
+    useEffect(() => {
+        const archieveGame = async () => {
+            try {
+                const response = await axios.get("/data/ArchievePlayoffs/app");
+
+                archievePlayoffGames.push(playoffLeagueGames);
+                setArchievePlayoffGames(archievePlayoffGames);
+            } catch {
+                setErrorMessage(`Couldn't archieve games.`);
+            }
+
+            archieveGame();
+        }
+    }, [archievePlayoffGames]);
 }
 
 export default Profile;

@@ -1655,6 +1655,7 @@ public class LeaguePlayoffsController : ControllerBase {
             updatedData["ArchievePlayoffBrackets"] = Tuple.Create(playoffs.ArchievePlayoffBrackets?.Count + 1, playoffBracket);
 
             await _leagueService.EditData("leaguePlayoffConfig", upsertOpt, updatedData);
+            await _kafkaProducer.ProduceMessageAsync("ArchievePlayoffs", "archieve", "app");
 
             return Ok();
         } catch {

@@ -774,6 +774,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
             updatedValues["ArchievePlayerFullSchedule"] = playerSchedules;
 
             await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+            await _kafkaProducer.ProduceMessageAsync("ArchievePlayerScheules", "archieve", "app");
 
             return Ok();
         }

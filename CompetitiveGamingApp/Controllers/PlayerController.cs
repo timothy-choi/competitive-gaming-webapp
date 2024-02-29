@@ -196,6 +196,9 @@ public class PlayerController : ControllerBase {
 
             await _kafkaProducer.ProduceMessageAsync("ChangedAvailableStatus", availableStatus, player[0].playerId!);
 
+            //new call to kafka
+            await _kafkaProducer.ProduceMessageAsync("ChangedAvailableStatus", player[0].playerName + "_" + availableStatus, "app");
+
             return Ok();
         } catch {
             return BadRequest();
@@ -215,6 +218,7 @@ public class PlayerController : ControllerBase {
             string gameStatus = status ? "Playing in game" : "open";
 
             await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", gameStatus, player[0].playerId!);
+            await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", player[0].playerName + "_" + gameStatus, "app");
             return Ok();
         } catch {
             return BadRequest();

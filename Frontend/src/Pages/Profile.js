@@ -25,6 +25,7 @@ const Profile = () => {
 
     const [playerRecord, setPlayerRecord] = useState([]);
     const [playerSeasonRecord, setPlayerSeasonRecord] = useState([]);
+    const [playerLeagueChampionships, setPlayerLeagueChampionships] = useState([]);
 
     const [regularGames, setRegularGames] = useState([]);
     const [seasonLeagueGames, setSeasonLeagueGames] = useState([]);
@@ -60,6 +61,18 @@ const Profile = () => {
                 const seasonRecord = await axios.get(`/League/${leagueId}/${response.data.playerId}`);
                 var record = [seasonRecord.data["wins"], seasonRecord.data["losses"], seasonRecord.data["draws"]];
                 setPlayerSeasonRecord(record);
+
+                const league = await axios.get(`/League/${LeagueId}`);
+
+                var championTitles = [];
+
+                for (var champion in league.Champions) {
+                    if (champion[0] == username) {
+                        championTitles.push(champion[1]);
+                    }
+                }
+
+                setPlayerLeagueChampionships(championTitles);
             }
 
             var allFriends = [];
@@ -512,7 +525,7 @@ const Profile = () => {
         var updatedRecord = updateSeasonRecord();
 
         setPlayerSeasonRecord(updatedRecord);
-        
+
     }, [playerSeasonRecord]);
 }
 

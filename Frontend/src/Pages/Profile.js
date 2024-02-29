@@ -24,6 +24,7 @@ const Profile = () => {
     const [playerFriendRemoved, setPlayerFriendRemoved] = useState(false);
 
     const [playerRecord, setPlayerRecord] = useState([]);
+    const [playerSeasonRecord, setPlayerSeasonRecord] = useState([]);
 
     const [regularGames, setRegularGames] = useState([]);
     const [seasonLeagueGames, setSeasonLeagueGames] = useState([]);
@@ -46,6 +47,21 @@ const Profile = () => {
             setLeagueJoined(response.data.leagueJoined);
             setLeagueName(response.data.playerLeagueJoined);
             setPlayerRecord(response.data.singlePlayerRecord);
+
+            if (leagueJoined) {
+                var leagueId = '';
+                const leagues = await axios.get("/League/");
+                for (var league in leagues) {
+                    if (league.Name == leagueName) {
+                        leagueId = league.LeagueId;
+                        break;
+                    }
+                }
+                const seasonRecord = await axios.get(`/League/${leagueId}/${response.data.playerId}`);
+                var record = [seasonRecord.data["wins"], seasonRecord.data["losses"], seasonRecord.data["draws"]];
+                setPlayerSeasonRecord(record);
+            }
+
             var allFriends = [];
             for (let i = 0; i < response.data.playerFriends.length; ++i) {
                 var friend = await axios.get(`/Players/${response.data.playerFriends[i]}`);
@@ -473,6 +489,31 @@ const Profile = () => {
             archieveGame();
         }
     }, [archievePlayoffGames]);
+
+    useEffect(() => {
+        const updateSeasonRecord = async () => {
+            var LeagueId = "";
+            const leagues = await axios.get("/Leagues");
+            for (var league in leagues) {
+                if (league.Name == leagueName) {
+                    LeagueId = league.LeagueId;
+                    break;
+                }
+            }
+            const response = await axios.get(`/data/UpdateStandings/${LeagueId}`);
+
+            var leagueStandings = JSON.parse(response.data[0]);
+
+            var record = leagueStandings.find(player => player["name"] == username);
+
+            return [record["record"][0], record["record"][1], record["record"][2]];
+        };
+
+        var updatedRecord = updateSeasonRecord();
+
+        setPlayerSeasonRecord(updatedRecord);
+        
+    }, [playerSeasonRecord]);
 }
 
 export default Profile;

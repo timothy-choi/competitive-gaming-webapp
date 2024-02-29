@@ -114,13 +114,12 @@ const Profile = () => {
                                         hostPlayer : gameInfo.hostPlayer,
                                         guestPlayer : gameInfo.guestPlayer,
                                         finalScore : gameInfo.finalScore,
+                                        winner: gameInfo.finalScore[0] > gameInfo.finalScore[1] ? hostPlayer : guestPlayer,
                                         recentScore : gameInfo.recentScore.length > 0 ? gameInfo.recentScore[allGames[j].recentScore.length-1] : null,
                                         timePlayed : new Date().toLocaleString() > gameInfo.timePlayed ? null : gameInfo.timePlayed
                                     }
                                     if (round.GameId.length > 1) {
                                         playoffGameInfo.gameNumber = round.GameId.indexOf(game) + 1;
-                                        playoffGameInfo[gameInfo.hostPlayer + "_wins"] = round.player1 == gameInfo.hostPlayer ? round.series_player1_wins : round.series_player2_wins;
-                                        playoffGameInfo[gameInfo.guestPlayer + "_wins"] = round.player2 == gameInfo.hostPlayer ? round.series_player2_wins : round.series_player1_wins;
                                     }
                                     
                                     playoffGames.push(playoffGameInfo);
@@ -146,6 +145,10 @@ const Profile = () => {
                     regularGames.push(gameInfo);
                 }
             }
+
+            regularGames.sort(game => game.timePlayed);
+            seasonGames.sort(game => game.timePlayed);
+            playoffGames.sort(game => game.timePlayed);
 
             setRegularGames(regularGames);
             setSeasonLeagueGames(seasonGames);

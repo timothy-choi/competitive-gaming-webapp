@@ -167,7 +167,7 @@ const Profile = () => {
     useEffect(() => {
         if (!playerFriendRemoved) {
             const getNewFriend = async () => {
-                const player = await axios.get(`/Player/${username}`);
+                const player = await axios.get(`/Player/${auth.username}`);
     
                 const response = await axios.get(`/data/${topic}/${player.data.playerId}`);
     
@@ -193,7 +193,7 @@ const Profile = () => {
         }
         else {
             const getFriendIndex = async () => {
-                const player = await axios.get(`/Player/${username}`);
+                const player = await axios.get(`/Player/${auth.username}`);
     
                 const response = await axios.get(`/data/${topic}/${player.data.playerId}`);
     

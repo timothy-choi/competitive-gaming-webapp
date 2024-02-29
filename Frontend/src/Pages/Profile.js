@@ -308,6 +308,22 @@ const Profile = () => {
         }
 
     }, [playerFriends]);
+
+    useEffect(() => {
+        const getPlayerRecord = async () => {
+            const player = await axios.get(`/Player/${auth.username}`);
+    
+            const response = await axios.get(`/data/UpdatePlayerRecord/${player.data.playerId}`);
+
+            const record = response.data.split(",");
+
+            return record;
+        };
+
+        var playerRecord = getPlayerRecord();
+
+        setPlayerRecord(playerRecord);
+    }, [playerRecord]);
 }
 
 export default Profile;

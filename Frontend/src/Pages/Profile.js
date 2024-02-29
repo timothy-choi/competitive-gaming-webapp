@@ -311,7 +311,7 @@ const Profile = () => {
 
     useEffect(() => {
         const getPlayerRecord = async () => {
-            const player = await axios.get(`/Player/${auth.username}`);
+            const player = await axios.get(`/Player/${username}`);
     
             const response = await axios.get(`/data/UpdatePlayerRecord/${player.data.playerId}`);
 
@@ -370,6 +370,65 @@ const Profile = () => {
         };
 
         var updatedGames = updatePlayingScores();
+
+        if (changedRegular) {
+            setRegularGames(updatedGames);
+        }
+        else if (changedSeason) {
+            setSeasonLeagueGames(updatedGames);
+        }
+        else if (changedPlayoffs) {
+            setPlayoffLeagueGames(updatedGames);
+        }
+
+    }, [regularGames, seasonLeagueGames, playoffLeagueGames]);
+
+    useEffect(() => {
+        var changedRegular = false;
+        var changedSeason = false;
+        var changedPlayoffs = false;
+
+        const addFinalScore = async () => {
+            const response = await axios.get(`/data/UpdateSingleGameFinalScore/app`);
+
+            const game_id = response.data.substring(0, response.data.indexof('_'));
+
+            const final_score = response.data.substring(response.data.indexof('_')+1).split(',');
+
+            const final_score_processed = [parseInt(final_score[0]), parseInt(final_score[1])];
+
+            var regularGameCopy = regularGames;
+
+            var foundGame = regularGameCopy.find(game => game.gameId == game_id);
+
+            if (foundGame) {
+                foundGame.finalScore = final_score_processed;
+                changedRegular = true;
+                return regularGameCopy;
+            }
+
+            var seasonGameCopy = seasonLeagueGames;
+
+            foundGame = seasonGameCopy.find(game => game.gameId == game_id);
+
+            if (foundGame) {
+                foundGame.finalScore = final_score_processed;
+                changedSeason = true;
+                return seasonGameCopy;
+            }
+
+            var playoffGameCopy = playoffLeagueGames;
+
+            foundGame = playoffGameCopy.find(game => game.gameId == game_id);
+
+            if (foundGame) {
+                foundGame.finalScore = final_score_processed;
+                changedPlayoffs = true;
+                return playoffGameCopy;
+            }
+        };
+
+        var updatedGames = addFinalScore();
 
         if (changedRegular) {
             setRegularGames(updatedGames);

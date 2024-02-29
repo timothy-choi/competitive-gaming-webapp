@@ -324,6 +324,64 @@ const Profile = () => {
 
         setPlayerRecord(playerRecord);
     }, [playerRecord]);
+
+    useEffect(() => {
+        var changedRegular = false;
+        var changedSeason = false;
+        var changedPlayoffs = false;
+        const updatePlayingScores = async () => {
+            const response = await axios.get(`/data/AddInGameScore/app`);
+
+            const game_id = response.data.substring(0, response.data.indexof('_'));
+
+            const score = response.data.substring(response.data.indexof('_')+1).split(',');
+
+            var regularGameCopy = regularGames;
+
+            var foundGame = regularGameCopy.find(game => game.gameId == game_id);
+
+            if (foundGame) {
+                foundGame.recentScore.push(score);
+                changedRegular = true;
+                return regularGameCopy;
+            }
+
+            var seasonGameCopy = seasonLeagueGames;
+
+            foundGame = seasonGameCopy.find(game => game.gameId == game_id);
+
+            if (foundGame) {
+                foundGame.recentScore.push(score);
+                changedSeason = true;
+                return seasonGameCopy;
+            }
+
+            var playoffGameCopy = playoffLeagueGames;
+
+            foundGame = playoffGameCopy.find(game => game.gameId == game_id);
+
+            if (foundGame) {
+                foundGame.recentScore.push(score);
+                changedPlayoffs = true;
+                return playoffGameCopy;
+            }
+
+            return [];
+        };
+
+        var updatedGames = updatePlayingScores();
+
+        if (changedRegular) {
+            setRegularGames(updatedGames);
+        }
+        else if (changedSeason) {
+            setSeasonLeagueGames(updatedGames);
+        }
+        else if (changedPlayoffs) {
+            setPlayoffLeagueGames(updatedGames);
+        }
+
+    }, [regularGames, seasonLeagueGames, playoffLeagueGames]);
 }
 
 export default Profile;

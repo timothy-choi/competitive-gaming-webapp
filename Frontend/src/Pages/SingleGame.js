@@ -131,7 +131,7 @@ const SingleGame = () => {
                                 if (head.currentPlayoffMatchup.GameId.length > 1) {
                                     var index = head.currentPlayoffMatchup.GameId.findIndex(game => game == gameId);
                                     setPlayoffSeriesGame(index);
-                                    var rec = [];
+                                    var rec = [0,0];
                                     for (let i = 0; i < index + 1; ++i) {
                                         const g = await axios.get(`/SingleGame/${head.currentPlayoffMatchup.GameId[i]}`);
                                         if (g.finalScore != null) {
@@ -163,7 +163,7 @@ const SingleGame = () => {
                                 if (matchup[1].currentPlayoffMatchup.GameId.length > 1) {
                                     var index = matchup[1].currentPlayoffMatchup.GameId.findIndex(game => game == gameId);
                                     setPlayoffSeriesGame(index);
-                                    var rec = [];
+                                    var rec = [0,0];
                                     for (let i = 0; i < index + 1; ++i) {
                                         const g = await axios.get(`/SingleGame/${head.currentPlayoffMatchup.GameId[i]}`);
                                         if (g.finalScore != null) {
@@ -215,7 +215,7 @@ const SingleGame = () => {
                             if (finalMatch.currentPlayoffMatchup.GameId.length > 1) {
                                 var index = finalMatch.currentPlayoffMatchup.GameId.findIndex(game => game == gameId);
                                 setPlayoffSeriesGame(index);
-                                var rec = [];
+                                var rec = [0,0];
                                 for (let i = 0; i < index + 1; ++i) {
                                     const g = await axios.get(`/SingleGame/${head.currentPlayoffMatchup.GameId[i]}`);
                                     if (g.finalScore != null) {

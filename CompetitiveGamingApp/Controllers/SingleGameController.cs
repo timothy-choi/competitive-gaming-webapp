@@ -77,7 +77,6 @@ public class SingleGameController : ControllerBase {
                 finalScore = null,
                 inGameScores = new List<Tuple<string, Tuple<int, int>>>(),
                 timePlayed = DateTime.Parse(gameInfo["gametime"]),
-                videoObjName = gameInfo["hostPlayer"] + "_videos",
                 gameEditor = null,
                 twitchBroadcasterId = null
             };
@@ -208,6 +207,14 @@ public class SingleGameController : ControllerBase {
                 return BadRequest();
             }
             string predData = await res.Content.ReadAsStringAsync();
+
+            var predObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(predData)!;
+
+            var data = (List<object>)predObj["data"];
+            var firstDataElement = (Dictionary<string, object>)data[0];
+            var id = (string)firstDataElement["id"];
+
+            await _singleGameService.AddPredictionId(id, predictionInfo["gameId"]);
 
             await _kafkaProducer.ProduceMessageAsync("CreatePrediction", predData, predictionInfo["gameId"]);
             OkObjectResult newPred = new OkObjectResult(predData);

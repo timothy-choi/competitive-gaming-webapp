@@ -30,7 +30,7 @@ public class SingleGameServices {
 
     public async Task CreateGame(SingleGame currMatch) {
         try {
-            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, videoObjName, gameEditor, twitchBroadcasterId, otherGameInfo) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @videoObjName, @gameEditor, @twitchBroadcasterId, @otherGameInfo)";
+            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, gameEditor, twitchBroadcasterId, otherGameInfo, predictionId) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @gameEditor, @twitchBroadcasterId, @otherGameInfo, @predictionId)";
             await _dbServices.EditData<SingleGame>(cmd, currMatch);
         } catch {
             throw new Exception("Couldn't create game!");
@@ -90,6 +90,15 @@ public class SingleGameServices {
             await _dbServices.EditData<SingleGame>(cmd, new {twitchId, gameId});
         } catch {
             throw new Exception("Couldn't add twitch id");
+        }
+    }
+
+    public async Task AddPredictionId(string  predId, string gameId) {
+        try {
+            string cmd = "UPDATE public.singleGames SET predId = @predictionId WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {predId, gameId});
+        } catch {
+            throw new Exception("Couldn't add prediction id");
         }
     }
 }

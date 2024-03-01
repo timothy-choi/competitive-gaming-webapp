@@ -714,7 +714,6 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         finalScore = null,
                         inGameScores = new List<Tuple<String, Tuple<int, int>>>(),
                         timePlayed = (DateTime)((List<object>)gameInfo)[1],
-                        videoObjName = "",
                         gameEditor = "",
                         twitchBroadcasterId = "",
                         otherGameInfo = new Dictionary<String, String>()

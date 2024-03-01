@@ -33,6 +33,8 @@ const Profile = () => {
     const [playoffLeagueGames, setPlayoffLeagueGames] = useState([]);
     const [archievePlayoffGames, setArchievePlayoffGames] = useState([]);
 
+    const [forceUpdate, setForceUpdate] = useState(false);
+
     const [errorMessage, setErrorMessage] = useState('');
 
     const initUser = async () => {
@@ -527,6 +529,14 @@ const Profile = () => {
         setPlayerSeasonRecord(updatedRecord);
 
     }, [playerSeasonRecord]);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+          setForceUpdate(prevState => !prevState);
+        }, 70000); 
+    
+        return () => clearTimeout(timeout);
+    }, []);
 }
 
 export default Profile;

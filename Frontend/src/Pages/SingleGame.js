@@ -23,6 +23,7 @@ const SingleGame = () => {
     const [guestScore, setGuestScore] = useState(null);
     const [guestSeasonRecord, setGuestSeasonRecord] = useState([]);
 
+    const [forceUpdate, setForceUpdate] = useState(false);
 
     const [SeriesPlayoffRecord, setSeriesPlayoffRecord] = useState([]);
 
@@ -469,7 +470,13 @@ const SingleGame = () => {
 
     }, [finalScore]);
 
-
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+          setForceUpdate(prevState => !prevState);
+        }, 70000); 
+    
+        return () => clearTimeout(timeout);
+    }, []);
 
 };
 

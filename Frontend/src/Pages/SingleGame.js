@@ -66,6 +66,7 @@ const SingleGame = () => {
                 setFinalScore(gameInfo.data.finalScore);
                 setHostScore(finalScore[0]);
                 setGuestScore(finalScore[1]);
+                setVideoFilePath(gameInfo.data.videoFilePath);
             }
             else if (Date.now >= gameTime) {
                 if (inGameScores.length > 0) {

@@ -11,4 +11,5 @@ public class SingleGame {
     public String? twitchBroadcasterId {get; set;}
     public Dictionary<String, String>? otherGameInfo {get; set;}
     public String? predictionId {get; set;}
+    public String? videoFilePath {get; set;}
 }

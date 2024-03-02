@@ -78,7 +78,9 @@ public class SingleGameController : ControllerBase {
                 inGameScores = new List<Tuple<string, Tuple<int, int>>>(),
                 timePlayed = DateTime.Parse(gameInfo["gametime"]),
                 gameEditor = null,
-                twitchBroadcasterId = null
+                twitchBroadcasterId = null,
+                predictionId = "",
+                videoFilePath = ""
             };
 
             await _singleGameService.CreateGame(scheduledGame);
@@ -144,6 +146,7 @@ public class SingleGameController : ControllerBase {
                 return NotFound();
             }
             await _singleGameService.EditUserGameEditor(editor, gameId);
+            await _kafkaProducer.ProduceMessageAsync("AddInEditor", editor, gameId);
             return Ok();
         } catch {
             return BadRequest();
@@ -192,6 +195,7 @@ public class SingleGameController : ControllerBase {
             }
 
             await _singleGameService.AddTwitchBroadcasterId(broadcasterId, gameId);
+            await _kafkaProducer.ProduceMessageAsync("AddTwitchId", broadcasterId, gameId);
             return Ok();
         } catch {
             return BadRequest();
@@ -291,6 +295,16 @@ public class SingleGameController : ControllerBase {
         }
     }
 
+    [HttpPost("/twitchId/stream/{broadcasterId}/send")]
+    public async Task<ActionResult> SendStreamLink(string broadcasterId, Dictionary<string, string> reqBody) {
+        try {
+            await _kafkaProducer.ProduceMessageAsync("SendStream", JsonConvert.SerializeObject(reqBody), broadcasterId);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("/processRecording")]
     public async Task<ActionResult> ProcessGameRecording([FromBody] Dictionary<String, String> recordingInfo) {
         try {
@@ -373,6 +387,21 @@ public class SingleGameController : ControllerBase {
             if (!res) {
                 return BadRequest();
             }
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("/AddFilePath/{gameId}/{videoPath}")]
+    public async Task<ActionResult> AddVideoFilePath(string gameId, string videoPath) {
+        try {
+            var user = await client.GetAsync("/SingleGame/" + gameId);
+            if ((int) user.StatusCode != 200) {
+                return NotFound();
+            }
+
+            await _singleGameService.AddVideoFilePath(videoPath, gameId);
             return Ok();
         } catch {
             return BadRequest();

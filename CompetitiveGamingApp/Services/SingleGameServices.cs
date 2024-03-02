@@ -30,7 +30,7 @@ public class SingleGameServices {
 
     public async Task CreateGame(SingleGame currMatch) {
         try {
-            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, gameEditor, twitchBroadcasterId, otherGameInfo, predictionId) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @gameEditor, @twitchBroadcasterId, @otherGameInfo, @predictionId)";
+            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, gameEditor, twitchBroadcasterId, otherGameInfo, predictionId, videoFilePath) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @gameEditor, @twitchBroadcasterId, @otherGameInfo, @predictionId, @videoFilePath)";
             await _dbServices.EditData<SingleGame>(cmd, currMatch);
         } catch {
             throw new Exception("Couldn't create game!");
@@ -97,6 +97,15 @@ public class SingleGameServices {
         try {
             string cmd = "UPDATE public.singleGames SET predId = @predictionId WHERE SingleGameId = @gameId";
             await _dbServices.EditData<SingleGame>(cmd, new {predId, gameId});
+        } catch {
+            throw new Exception("Couldn't add prediction id");
+        }
+    }
+
+     public async Task AddVideoFilePath(string videoPath, string gameId) {
+        try {
+            string cmd = "UPDATE public.singleGames SET videoFilePath = @videoPath WHERE SingleGameId = @gameId";
+            await _dbServices.EditData<SingleGame>(cmd, new {videoPath, gameId});
         } catch {
             throw new Exception("Couldn't add prediction id");
         }

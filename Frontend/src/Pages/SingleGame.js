@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import axios from './api/axios';
 import { json, useParams } from 'react-router-dom';
+import SignalRService from './SignalRService';
 
 
 const SingleGame = () => {
@@ -34,6 +35,7 @@ const SingleGame = () => {
     const [gameTime, setGameTime] = useState(null);
 
     const [predictionId, setPredictionId] = useState('');
+    const [prediction, setPrediction] = useState(null);
     const [predictionOn, setPredictionOn] = useState(false);
 
     const [gameEditor, setGameEditor] = useState('');
@@ -55,6 +57,8 @@ const SingleGame = () => {
             var listStr = JSON.stringify(gameInfo.data.inGameScores);
 
             setInGameScores(JSON.parse(listStr));
+
+            setTwitchBroadcasterId(gameInfo.data.twitchBroadcasterId);
 
             setGameTime(gameInfo.data.timePlayed);
 
@@ -79,6 +83,12 @@ const SingleGame = () => {
             setInGameInfo(gameInfo.data.otherGameInfo);
 
             setPredictionId(gameInfo.data.predictionId);
+
+            const predObj = await axios.get(`SingleGame/twitch/prediction/${twitchBroadcasterId}/${predictionId}`);
+
+            var strForm = JSON.stringify(predObj);
+
+            setPrediction(JSON.parse(strForm));
 
             setPredictionOn(true);
 
@@ -364,6 +374,88 @@ const SingleGame = () => {
 
         addFinalScore();
     }, [HostScore, GuestScore, finalScore, hostSeasonRecord, guestSeasonRecord, SeriesPlayoffRecord]);
+
+    useEffect(() => {
+        const updateEditor = async () => {
+            const response = await axios.get(`/data/AddInEditor/${gameId}`);
+
+            setGameEditor(response.data);
+        };
+
+        updateEditor();
+    }, []);
+
+    useEffect(() => {
+        const AddStreamLink = async () => {
+            const response = await axios.get(`/data/SendStream/${twitchBroadcasterId}`);
+
+            const streamLink = JSON.parse(response.data);
+
+            setStreamLink(streamLink);
+        };
+
+        AddStreamLink();
+    }, []);
+
+    useEffect(() => {
+        const processVideo = async () => {
+            var title_name = `${guestPlayer} @ ${hostPlayer}`;
+            if (seasonMode) {
+                title_name += `${league} season game `;
+            }
+            if (playoffMode) {
+                title_name += `${league} playoff game - Round: ${playoffRound} Game ${playoffSeriesGame} `;
+            }
+            
+            const reqBody = {
+                user_id : twitchBroadcasterId,
+                title: title_name + timePlayed,
+                user_name: hostPlayer
+            };
+
+            const response = await axios.post("/ProcessRecordingMQ", reqBody);
+
+            SignalRService.startConnection();
+
+            var recording = null;
+
+            SignalRService.connection.on('ProcessRecord', (message) => {
+                recording = JSON.parse(message);
+            });
+
+            if (recording["user_name"] != hostPlayer) {
+                return () => {
+                    if (SignalRService.connection) {
+                      SignalRService.connection.stop();
+                    }
+                };
+            }
+
+            try {
+                await axios.post(`/SingleGame/processRecording`, recording);
+            } catch (e) {
+                setErrorMessage(`Couldn't process recording`);
+            }
+
+            const res = await axios.get(`/data/ProcessGameRecording/${gameId}`);
+
+            const recordInfo = JSON.parse(res.data);
+
+            setVideoFilePath(recordInfo["filePath"]);
+
+            await axios.put(`/SingleGame/AddFilePath/${gameId}/${videoFilePath}`);
+
+            return () => {
+                if (SignalRService.connection) {
+                  SignalRService.connection.stop();
+                }
+            };
+        };
+
+        processVideo();
+
+    }, [finalScore]);
+
 
 
 };

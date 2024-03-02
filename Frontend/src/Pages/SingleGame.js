@@ -12,6 +12,7 @@ const SingleGame = () => {
     const [playoffMode, setPlayoffMode] = useState(false);
     const [playoffRound, setPlayoffRound] = useState('');
     const [playoffSeriesGame, setPlayoffSeriesGame] = useState(null);
+    const [seriesWinner, setSeriesWinner] = useState(bool);
 
     const [hostPlayer, setHostPlayer] = useState('');
     const [hostScore, setHostScore] = useState(null);
@@ -72,6 +73,8 @@ const SingleGame = () => {
                     setGuestScore(0);
                 }
             }
+
+            setGameEditor(gameInfo.data.gameEditor);
 
             setInGameInfo(gameInfo.data.otherGameInfo);
 
@@ -242,11 +245,123 @@ const SingleGame = () => {
     }, []);
 
 
+    useEffect(() => {
+        const getNewGameInfo = async () => {
+            const res = await axios.get(`/data/AddOtherGameInfo/${gameId}`);
 
+            return res.data;
+        };
 
+        var gameInfo = getNewGameInfo();
 
+        var newGameInfo = inGameInfo;
 
+        newGameInfo.push(gameInfo);
 
+        setInGameInfo(newGameInfo);
+
+    }, [inGameInfo]);
+
+    useEffect(() => {
+        const endPrediction = async () => {
+            if (((TimeSpan) (gameTime - Date.Now)).TotalSeconds <= 60) {
+                try {
+                    const endPred = await axios.patch("/twitchId/prediction/end");
+                    setPredictionOn(false);
+                    setPredictionId('');
+                } catch (e) {
+                    setErrorMessage(`Couldn't end prediction`);
+                }
+            }
+        }
+
+        endPrediction();
+    }, [predictionId, predictionOn]);
+
+    useEffect(() => {
+        const getGameScore = async () => {
+            const newScore = await axios.get(`/data/AddInGameScore/${gameId}`);
+
+            var scoreInfo = newScore.data.substring(newScore.data.indexof("(") + 1, newScore.data.indexof(")")).split(",");
+
+            var scoreEntry = [newScore.data.substring(0, newScore.data.indexof(",")), scoreInfo];
+
+            setHostScore(scoreInfo[0]);
+            setGuestScore(scoreInfo[1]);
+
+            var newScores = inGameScores;
+
+            newScores.push(scoreEntry);
+
+            setInGameScores(newScores);
+        }
+
+        getGameScore();
+
+    }, [inGameScores, hostScore, guestScore]);
+
+    useEffect(() => {
+        const addFinalScore = async () => {
+            const res = await axios.get(`/data/UpdateSingleGameFinalScore/${gameId}`);
+
+            var finalScoreInfo = [res.data.substring(0, res.data.indexof(",")), res.data.substring(res.data.indexof(",")+1)];
+            setHostScore(finalScoreInfo[0]);
+            setGuestScore(finalScoreInfo[1]);
+
+            setFinalScore(finalScoreInfo);
+
+            if (playoffMode) {
+                var record = SeriesPlayoffRecord;
+                if (guestScore > hostScore) {
+                    record[1]++; 
+                }
+                else {
+                    record[0]++;
+                }
+                setSeriesPlayoffRecord(record);
+
+                var seasonConfig = "";
+
+                const leagues = await axios.get(`/League/`);
+                for (var league in leagues) {
+                    if (league.Name == league) {
+                        seasonConfig = league.LeagueConfig;
+                        break;
+                    }
+                }
+
+                const config = await axios.get(`/LeagueConfig/${seasonConfig}`);
+
+                if (config.data.PlayoffSeries) {
+                    var num_games = config.data.GamesPerRound[playoffRound-1];
+
+                    if (record[0] == num_games || record[1] == num_games) {
+                        setSeriesWinner(true);
+                    }
+                }
+            }
+            else if (seasonMode) {
+                var tempHost = hostSeasonRecord;
+                var tempGuest = guestSeasonRecord;
+                if (hostScore > guestScore) {
+                    tempHost[0]++;
+                    tempGuest[1]++;
+                }
+                else if (guestScore > hostScore) {
+                    tempHost[1]++;
+                    tempGuest[0]++;
+                }
+                else {
+                    tempHost[2]++;
+                    tempGuest[2]++;
+                }
+                setHostSeasonRecord(tempHost);
+                setGuestSeasonRecord(tempGuest);
+            }
+        }
+
+        addFinalScore();
+    }, [HostScore, GuestScore, finalScore, hostSeasonRecord, guestSeasonRecord, SeriesPlayoffRecord]);
 
 
 };

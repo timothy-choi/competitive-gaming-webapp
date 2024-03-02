@@ -716,7 +716,9 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                         timePlayed = (DateTime)((List<object>)gameInfo)[1],
                         gameEditor = "",
                         twitchBroadcasterId = "",
-                        otherGameInfo = new Dictionary<String, String>()
+                        otherGameInfo = new Dictionary<String, String>(),
+                        predictionId = "",
+                        videoFilePath = ""
                     };
                     int found_index = 0;
                     foreach (var player in schedules) {

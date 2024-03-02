@@ -322,9 +322,11 @@ const SingleGame = () => {
 
                 var seasonConfig = "";
 
+                var leagueName = league;
+
                 const leagues = await axios.get(`/League/`);
                 for (var league in leagues) {
-                    if (league.Name == league) {
+                    if (league.Name == leagueName) {
                         seasonConfig = league.LeagueConfig;
                         break;
                     }

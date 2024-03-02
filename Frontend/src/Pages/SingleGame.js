@@ -67,6 +67,18 @@ const SingleGame = () => {
                 setHostScore(finalScore[0]);
                 setGuestScore(finalScore[1]);
                 setVideoFilePath(gameInfo.data.videoFilePath);
+
+                const downloadInfo = {
+                    bucketName: hostPlayer,
+                    key: gameInfo.data.videoFilePath.substring(gameInfo.data.videoFilePath.lastIndexOf("/") + 1),
+                    filePath: gameInfo.data.videoFilePath
+                };
+
+                try {
+                    const downloadResponse = await axios.post("/SingleGame/DownloadVideo", downloadInfo, {responseType: 'blob'});
+                } catch (e) {
+                    setErrorMessage("Couldn't download video");
+                }
             }
             else if (Date.now >= gameTime) {
                 if (inGameScores.length > 0) {

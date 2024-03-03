@@ -115,7 +115,7 @@ const Home = () => {
                     if (playoffGames.length > 0) {
                         for (var rd in playoffGames) {
                             if (rd[1].find(gameEntry => gameEntry == game.gameId) != null) {
-                                playoffGames.push([rd[0], game]);
+                                playoffGames.push([rd[0], game, rd[1].indexOf(game)]);
                             }
                         }
                     }
@@ -126,6 +126,15 @@ const Home = () => {
 
             regGames.sort((a, b) => {return a.timePlayed - b.timePlayed});
             seasonGames.sort((a, b) => {return a.timePlayed - b.timePlayed});
+
+            const nowTime = Date.now();
+            seasonGames.filter(gameEntry => {
+                return nowTime > gameEntry.timePlayed; 
+            });
+
+            const gamesSixHoursAfterCurrentTime = seasonGames.filter(game => game.timePlayed > currentTime && game.timePlayed <= currentTime + (6 * 60 * 60 * 1000));
+
+            seasonGames = seasonGames.concat(gamesSixHoursAfterCurrentTime);
 
             playoffGames.sort((a, b) => {return a[1].timePlayed - b[1].timePlayed});
 
@@ -142,13 +151,21 @@ const Home = () => {
             setCurrentGame(res.regGames[regGames.length-1]);
 
             if (league) {
-                setCurrentSeasonUpcomingGame(seasonGames[seasonGames.length-1]);
+                setCurrentSeasonUpcomingGame(res.seasonGames[seasonGames.length-1]);
                 if (playoffGames.length > 0) {
-                    setPlayoffUpcomingGame(playoffGames[playoffGames.length-1]);
+                    setPlayoffUpcomingGame(res.playoffGames[playoffGames.length-1]);
                 }
             }
 
-            
+            var playerInfo = await axios.get(`/Player/${username}`);
+
+            var friends = playerInfo.playerFriends;
+
+            for (var friend in friends) {
+                var friendGames = processUserGames(friend);
+
+
+            }
 
         };
 

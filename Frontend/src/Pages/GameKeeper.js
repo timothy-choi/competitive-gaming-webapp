@@ -51,6 +51,10 @@ const GameKeeper = (streamInfo) => {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        setErrorMessage('');
+    }, [hostScore, guestScore]);
+
     const handleSubmitInGameScores = (event) => {
         event.preventDefault();
 

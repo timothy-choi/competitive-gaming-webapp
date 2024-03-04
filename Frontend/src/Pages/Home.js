@@ -25,6 +25,8 @@ const Home = () => {
 
     const [query, setQuery] = useState('');
 
+    const [errorMessage, setErrorMessage] = useState('');
+
     const history = useHistory();
 
     useEffect(() => {
@@ -149,6 +151,9 @@ const Home = () => {
         }
 
         const fetchData = async () => {
+            if (!loggedIn) {
+                return;
+            }
             var res = processUserGames(username);
 
             setCurrentGame(res.regGames[res.regGames.length-1]);
@@ -268,6 +273,80 @@ const Home = () => {
         };
 
         fetchData();
+    }, []);
+
+    useEffect(() => {
+        const updateInGameScore = async () => {
+            const res = await axios.get(`/data/AddInGameScore/app`);
+
+            const gameId = res.data.substring(0, res.data.indexof("_"));
+            var score = res.data.substring(res.data.indexof("_") + 1).split(",");
+            score = score.split(",");
+            try {
+                score[0] = parseInt(score[0].substring(0));
+                score[1] = parseInt(score[1].substring(0, score[1].indexof(")")));
+            } catch (e) {
+                setErrorMessage('Could not get in game score');
+            }
+
+            if (currentGame.gameId == gameId) {
+                var temp = currentGame;
+                temp.hostScore = score[0];
+                temp.guestScore = score[1];
+                setCurrentGame(temp);
+            }
+            else if (currentSeasonUpcomingGame.gameId == gameId) {
+                var temp = currentSeasonUpcomingGame;
+                temp.hostScore = score[0];
+                temp.guestScore = score[1];
+                setCurrentSeasonUpcomingGame(temp);
+            }
+            else if (currentPlayoffGame.gameId == gameId) {
+                var temp = currentPlayoffGame;
+                temp.hostScore = score[0];
+                temp.guestScore = score[1];
+                setPlayoffUpcomingGame(temp);
+            }
+            else if (friendsGames.find(game => game.gameId == gameId) != null) {
+                var temp = friendsGames;
+                var foundGame = temp.find(game => game.gameId == gameId);
+                foundGame.hostScore = score[0];
+                foundGame.guestScore = score[1];
+                setFriendsGames(temp);
+            }
+            else {
+                if (currentFriendSeasonGames.find(game => game[1].gameId == gameId) != null) {
+                    var temp = currentFriendSeasonGames;
+                    var foundGame = temp.find(game => game[1].gameId == gameId);
+                    foundGame.hostScore = score[0];
+                    foundGame.guestScore = score[1];
+                    setCurrentFriendSeasonGames(temp);
+                }
+                if (currentSeasonOtherGames.find(game => game.gameId == gameId) != null) {
+                    var temp = currentSeasonOtherGames;
+                    var foundGame = temp.find(game => game.gameId == gameId);
+                    foundGame.hostScore = score[0];
+                    foundGame.guestScore = score[1];
+                    setCurrentSeasonOtherGames(temp);
+                }
+                if (currentFriendPlayoffGames.find(game => game[1][2].gameId == gameId) != null) {
+                    var temp = currentFriendPlayoffGames;
+                    var foundGame = temp.find(game => game[1][2].gameId == gameId);
+                    foundGame.hostScore = score[0];
+                    foundGame.guestScore = score[1];
+                    setCurrentFriendSeasonGames(temp);
+                }
+                if (currentPlayoffOtherGames.find(game => game.gameId == gameId) != null) {
+                    var temp = currentPlayoffOtherGames;
+                    var foundGame = temp.find(game => game.gameId == gameId);
+                    foundGame.hostScore = score[0];
+                    foundGame.guestScore = score[1];
+                    setCurrentSeasonOtherGames(temp);
+                }
+            }
+        };
+
+        updateInGameScore();
     }, []);
 
 };

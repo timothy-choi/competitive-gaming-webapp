@@ -9,6 +9,7 @@ const SingleGame = () => {
 
     const [seasonMode, setSeasonMode] = useState(false);
     const [league, setLeague] = useState('');
+    const [leagueIdValue, setLeagueIdValue] = useState('');
 
     const [playoffMode, setPlayoffMode] = useState(false);
     const [playoffRound, setPlayoffRound] = useState('');
@@ -124,6 +125,8 @@ const SingleGame = () => {
                         break;
                     }
                 }
+
+                setLeagueIdValue(leagueId);
 
                 const seasonSchedule = await axios.get(`/LeagueSeasonAssignments/${seasonAssignments}/FinalFullSchedule`);
 

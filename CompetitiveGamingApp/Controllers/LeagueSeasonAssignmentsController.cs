@@ -482,7 +482,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
-    private bool verifySchedule(Dictionary<string, List<List<string>>> schedule, List<string> players) {
+    private bool verifySchedule(Dictionary<string, List<List<string>>> schedule, List<string> players, bool selfSchedule) {
         foreach (var player in schedule) {
             List<string> schedule_players = schedule[player.Key].Select(p => p.ElementAtOrDefault(0)).Distinct().ToList();
             var player_ref = players.Where(p => p != player.Key).Distinct().ToList();
@@ -502,6 +502,10 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                     return false;
                 }
             }
+        }
+
+        if (!selfSchedule) {
+            return true;
         }
 
         foreach (var player in schedule) {
@@ -571,12 +575,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             List<Tuple<string, List<List<object>>>> final_player_schedule = new List<Tuple<string, List<List<object>>>>();
 
+            var league = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+
+            var config = (LeagueSeasonConfig) await _leagueService.GetData("leagueConfig", league.ConfigId!);
+
             using (var streamReader = new StreamReader(schedule.OpenReadStream())) {
                 var fileContent = await streamReader.ReadToEndAsync();
 
                 player_schedules = ParseSchedule(fileContent);
 
-                var verified = verifySchedule(player_schedules, (List<String>) reqBody["players"]);
+                var verified = verifySchedule(player_schedules, (List<String>) reqBody["players"], config.selfScheduleGames);
 
                 if (!verified) {
                     return BadRequest();

@@ -94,7 +94,6 @@ public class MongoDBService {
                 { "intervalBetweenGames", leagueConfig.intervalBetweenGames },
                 { "intervalBetweenGamesHours", leagueConfig.intervalBetweenGamesHours },
                 { "firstSeasonMatch", new BsonArray(leagueConfig.firstSeasonMatch ?? new List<Tuple<string, DateTime>>()) },
-                { "tiesAllowed", leagueConfig.tiesAllowed },
                 { "playoffStartOffset", leagueConfig.playoffStartOffset },
                 { "intervalBetweenPlayoffRoundGames", leagueConfig.intervalBetweenPlayoffRoundGames },
                 { "intervalBetweenPlayoffRoundGamesHours", leagueConfig.intervalBetweenPlayoffRoundGamesHours },

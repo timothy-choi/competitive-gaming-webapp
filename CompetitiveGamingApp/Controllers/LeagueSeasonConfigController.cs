@@ -43,7 +43,6 @@ public class LeagueSeasonConfigController : ControllerBase {
                 intervalBetweenGames = Convert.ToInt32(reqBody["intervalBetweenGames"]),
                 intervalBetweenGamesHours = Convert.ToInt32(reqBody["intervalBetweenGames"]),
                 firstSeasonMatch = reqBody["firstSeasonMatch"] as List<Tuple<string, DateTime>>,
-                tiesAllowed = Convert.ToBoolean(reqBody["tiesAllowed"]),
                 playoffStartOffset = Convert.ToInt32(reqBody["playoffStartOffset"]),
                 intervalBetweenPlayoffRoundGames = Convert.ToInt32(reqBody["intervalBetweenPlayoffRoundGames"]),
                 intervalBetweenPlayoffRoundGamesHours = Convert.ToInt32(reqBody["intervalBetweenPlayoffRoundGamesHours"]),

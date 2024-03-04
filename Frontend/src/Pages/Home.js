@@ -27,6 +27,8 @@ const Home = () => {
 
     const [errorMessage, setErrorMessage] = useState('');
 
+    const [forceUpdate, setForceUpdate] = useState(false);
+
     const history = useHistory();
 
     useEffect(() => {
@@ -492,6 +494,14 @@ const Home = () => {
         }, []);
 
         updateInGameScore();
+    }, []);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+          setForceUpdate(prevState => !prevState);
+        }, 70000); 
+    
+        return () => clearTimeout(timeout);
     }, []);
 
 };

@@ -226,6 +226,19 @@ const Home = () => {
                 }
             }
 
+            var resultArray = [];
+
+            let uniqueObjects = new Set();
+            currentSeasonOtherGames.forEach(obj => {
+                if (!uniqueObjects.has(obj.gameId)) {
+                    uniqueObjects.add(obj.gameId);
+                    resultArray.push(obj);
+                }
+            });
+
+            setCurrentSeasonOtherGames(resultArray);
+
+
             for (var seasonGame in currentSeasonOtherGames) {
                 if (seasonGame.gameId == currentSeasonUpcomingGame.gameId) {
                     var temp = currentSeasonOtherGames;
@@ -234,6 +247,18 @@ const Home = () => {
                     break;
                 }
             }
+
+            resultArray = [];
+
+            uniqueObjects = new Set();
+            currentPlayoffOtherGames.forEach(obj => {
+                if (!uniqueObjects.has(obj[2].gameId)) {
+                    uniqueObjects.add(obj[2].gameId);
+                    resultArray.push(obj);
+                }
+            });
+
+            setCurrentPlayoffOtherGames(resultArray);
 
             for (var playoffGame in currentPlayoffOtherGames) {
                 if (playoffGame[2].gameId == currentPlayoffGame.gameId) {
@@ -244,6 +269,18 @@ const Home = () => {
                 }
             }
 
+            resultArray = [];
+
+            uniqueObjects = new Set();
+            currentFriendSeasonGames.forEach(obj => {
+                if (!uniqueObjects.has(obj[1].gameId)) {
+                    uniqueObjects.add(obj[1].gameId);
+                    resultArray.push(obj);
+                }
+            });
+
+            setCurrentSeasonOtherGames(resultArray);
+
             for (var seasonGame in currentFriendSeasonGames) {
                 if (seasonGame[1].gameId == currentSeasonUpcomingGame.gameId) {
                     var temp = currentFriendSeasonGames;
@@ -253,6 +290,19 @@ const Home = () => {
                 }
             }
 
+            resultArray = [];
+
+            uniqueObjects = new Set();
+            currentFriendPlayoffGames.forEach(obj => {
+                if (!uniqueObjects.has(obj[1][2].gameId)) {
+                    uniqueObjects.add(obj[1][2].gameId);
+                    resultArray.push(obj);
+                }
+            });
+
+            setCurrentPlayoffOtherGames(resultArray);
+
+
             for (var playoffGame in currentFriendPlayoffGames) {
                 if (playoffGame[1][2].gameId == currentPlayoffGame.gameId) {
                     var temp = currentFriendPlayoffGames;
@@ -261,6 +311,18 @@ const Home = () => {
                     break;
                 }
             }
+
+            resultArray = [];
+
+            uniqueObjects = new Set();
+            friendsGames.forEach(obj => {
+                if (!uniqueObjects.has(obj.gameId)) {
+                    uniqueObjects.add(obj.gameId);
+                    resultArray.push(obj);
+                }
+            });
+
+            setFriendsGames(resultArray);
             
             for (var regularGame in friendsGames) {
                 if (regularGame.gameId == currentGame.gameId) {

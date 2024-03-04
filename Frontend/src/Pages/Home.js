@@ -240,18 +240,18 @@ const Home = () => {
             }
 
             for (var seasonGame in currentFriendSeasonGames) {
-                if (seasonGame.gameId == currentSeasonUpcomingGame.gameId) {
+                if (seasonGame[1].gameId == currentSeasonUpcomingGame.gameId) {
                     var temp = currentFriendSeasonGames;
-                    temp = temp.filter(game => game.gameId == seasonGame.gameId);
+                    temp = temp.filter(game => game.gameId == seasonGame[1].gameId);
                     setCurrentSeasonOtherGames(temp);
                     break;
                 }
             }
 
             for (var playoffGame in currentFriendPlayoffGames) {
-                if (playoffGame[2].gameId == currentPlayoffGame.gameId) {
+                if (playoffGame[1][2].gameId == currentPlayoffGame.gameId) {
                     var temp = currentFriendPlayoffGames;
-                    temp = temp.filter(game => game.gameId == playoffGame[2].gameId);
+                    temp = temp.filter(game => game.gameId == playoffGame[1][2].gameId);
                     setCurrentPlayoffOtherGames(temp);
                     break;
                 }

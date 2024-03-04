@@ -949,6 +949,40 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
+    [HttpPut("{AssignmentsId}/UpdateFinalScheduleScores")]
+    public async Task<ActionResult> UpdateFinalScheduleScores(string AssignmentsId, Dictionary<string, object> reqBody) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            var schedules = assignment.FinalFullSchedule;
+            for (int i = 0; i < schedules!.Count; ++i) {
+                if (schedules[i].SingleGameId == reqBody["gameId"].ToString()) {
+                    if (schedules[i].finalScore!.Item1 != Convert.ToInt32(reqBody["host_score"]) || schedules[i].finalScore!.Item2 != Convert.ToInt32(reqBody["guest_score"])) {
+                        schedules[i].finalScore = Tuple.Create(Convert.ToInt32(reqBody["host_score"]), Convert.ToInt32(reqBody["guest_score"]));
+                    }
+                    break;
+                }
+            }
+
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
+            upsertInfo["FinalFullSchedule"] = false;
+
+            Dictionary<string, object> updatedValues = new  Dictionary<string, object>();
+            updatedValues["FinalFullSchedule"] = schedules;
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            await _kafkaProducer.ProduceMessageAsync("UpdateFinalScheduleRecord", JsonConvert.SerializeObject(schedules), AssignmentsId);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("{AssignmentsId}/SendPlayerSchedule")]
     public async Task<ActionResult> SendPlayerScheduleEmail(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {

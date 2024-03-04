@@ -154,6 +154,105 @@ const SearchResults = () => {
         }
     }, [location.search]);
 
+    useEffect(() => {
+        const updateScores = async () => {
+            const res = await axios.get(`/data/AddInGameScore/app`);
+
+            const gameId = res.data.substring(0, res.data.indexof("_"));
+ 
+            var parts = res.data.substring(res.data.indexof("_")+1).split(",");
+            var scores = parts.map(part => part.trim());
+
+            scores[0] = scores[0];
+            scores[1] = [scores[1].match(/\(([^,]+),\s*([^)]+)\)/).slice(1)];
+
+            var gameResultsCopy = gameResults;
+
+            var foundGame = gameResultsCopy.find(game => game.gameId == gameId);
+            if (foundGame) {
+                foundGame.hostScore = parseInt(scores[1][0]);
+                foundGame.guestScore = parseInt(score[1][1]);
+            }
+            setGameResults(gameResultsCopy);
+        };
+
+        updateScores();
+
+    }, []);
+
+    useEffect(() => {
+        const updateScores = async () => {
+            const res = await axios.get(`/data/UpdateSingleGameFinalScore/app`);
+
+            const gameId = res.data.substring(0, res.data.indexof("_"));
+ 
+            var scores = res.data.substring(res.data.indexof("_")+1).split(",");
+
+            scores[0] = parseInt(scores[0]);
+            scores[1] = parseInt(scores[1]);
+
+            var gameResultsCopy = gameResults;
+
+            var foundGame = gameResultsCopy.find(game => game.gameId == gameId);
+            if (foundGame) {
+                foundGame.hostScore = parseInt(scores[1][0]);
+                foundGame.guestScore = parseInt(score[1][1]);
+                foundGame.finalScore = scores;
+            }
+            setGameResults(gameResultsCopy);
+        };
+
+        updateScores();
+
+    }, []);
+
+    useEffect(() => {
+        const changePlayerAvailability = async () => {
+            const res = await axios.get(`/data/ChangedAvailableStatus/app`);
+
+            const playerId = res.data.substring(0, res.data.indexof("_"));
+
+            const availability = res.data.substring(res.data.indexof("_")+1);
+
+            var playerResultsCopy = playerResults;
+
+            var foundPlayer = playerResultsCopy.find(player => player.PlayerId == playerId);
+            if (foundPlayer) {
+                foundPlayer.IsAvailable = availability == "available" ? true : false;
+            }
+
+            setPlayerResults(playerResultsCopy);
+        };
+
+        changePlayerAvailability();
+
+    }, []);
+
+    useEffect(() => {
+        const changePlayerGameStatus = async () => {
+            const res = await axios.get(`/data/ChangedGameStatus/app`);
+
+            const playerId = res.data.substring(0, res.data.indexof("_"));
+
+            const gameStatus = res.data.substring(res.data.indexof("_")+1);
+
+            var playerResultsCopy = playerResults;
+
+            var foundPlayer = playerResultsCopy.find(player => player.PlayerId == playerId);
+            if (foundPlayer) {
+                foundPlayer.GameStatus = gameStatus == "Playing in game" ? true : false;
+                if (foundPlayer.GameStatus) {
+                    foundPlayer.IsAvailable = false;
+                }
+            }
+
+            setPlayerResults(playerResultsCopy);
+        };
+
+        changePlayerAvailability();
+
+    }, []);
+
     const handleSearchSubmit = (event) => {
         event.preventDefault();
 

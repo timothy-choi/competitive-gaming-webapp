@@ -13,11 +13,11 @@ const Home = () => {
 
     const [currentSeasonUpcomingGame, setCurrentSeasonUpcomingGame] = useState(null);
 
-    const [currentSeasonOtherGames, setCurrentSeasonGames] = useState([]);
+    const [currentSeasonOtherGames, setCurrentSeasonOtherGames] = useState([]);
 
     const [currentPlayoffGame, setPlayoffUpcomingGame] = useState(null);
 
-    const [currentPlayoffOtherGames, setCurrentPlayoffGames] = useState([]);
+    const [currentPlayoffOtherGames, setCurrentPlayoffOtherGames] = useState([]);
 
     const [currentFriendSeasonGames, setCurrentFriendSeasonGames] = useState([]);
 
@@ -112,8 +112,8 @@ const Home = () => {
                     if (seasonGameList.find(gameEntry => gameEntry.gameId == game.gameId) != null) {
                         seasonGames.push(game);
                     }
-                    if (playoffGames.length > 0) {
-                        for (var rd in playoffGames) {
+                    if (playoffGameList.length > 0) {
+                        for (var rd in playoffGameList) {
                             if (rd[1].find(gameEntry => gameEntry == game.gameId) != null) {
                                 playoffGames.push([rd[0], game, rd[1].indexOf(game)]);
                             }
@@ -128,13 +128,13 @@ const Home = () => {
             seasonGames.sort((a, b) => {return a.timePlayed - b.timePlayed});
 
             const nowTime = Date.now();
-            seasonGames.filter(gameEntry => {
+            const newSeasonList = seasonGames.filter(gameEntry => {
                 return nowTime > gameEntry.timePlayed; 
             });
 
             const gamesSixHoursAfterCurrentTime = seasonGames.filter(game => game.timePlayed > currentTime && game.timePlayed <= currentTime + (6 * 60 * 60 * 1000));
 
-            seasonGames = seasonGames.concat(gamesSixHoursAfterCurrentTime);
+            seasonGames = newSeasonList.concat(gamesSixHoursAfterCurrentTime);
 
             playoffGames.sort((a, b) => {return a[1].timePlayed - b[1].timePlayed});
 
@@ -148,12 +148,12 @@ const Home = () => {
         const fetchData = async () => {
             var res = processUserGames(username);
 
-            setCurrentGame(res.regGames[regGames.length-1]);
+            setCurrentGame(res.regGames[res.regGames.length-1]);
 
             if (league) {
-                setCurrentSeasonUpcomingGame(res.seasonGames[seasonGames.length-1]);
-                if (playoffGames.length > 0) {
-                    setPlayoffUpcomingGame(res.playoffGames[playoffGames.length-1]);
+                setCurrentSeasonUpcomingGame(res.seasonGames[res.seasonGames.length-1]);
+                if (res.playoffGames.length > 0) {
+                    setPlayoffUpcomingGame(res.playoffGames[res.playoffGames.length-1]);
                 }
             }
 
@@ -162,9 +162,76 @@ const Home = () => {
             var friends = playerInfo.playerFriends;
 
             for (var friend in friends) {
-                var friendGames = processUserGames(friend);
+                var friendGameList = processUserGames(friend);
 
+                var friends_matches = friendsGames;
 
+                friends_matches.push(friendGameList.regGames[friendGameList.regGames.length-1]);
+
+                setFriendsGames(friends_matches);
+
+                if (friendGameList.seasonGames.length > 0) {
+                    var currentFriendSeasonGamesCopy = currentFriendSeasonGames;
+                    currentFriendSeasonGamesCopy.push(friendGameList.seasonGames[friendGameList.seasonGames.length-1]);
+                    setCurrentFriendSeasonGames(currentFriendSeasonGamesCopy);
+                }
+                if (friendGameList.playoffGames.length > 0) {
+                    var currentFriendPlayoffGamesCopy = currentFriendPlayoffGames;
+                    currentFriendPlayoffGamesCopy.push(friendGameList.playoffGames[friendGameList.playoffGames.length-1]);
+                    setCurrentFriendPlayoffGames(currentFriendPlayoffGamesCopy);
+                }
+            }
+
+            var leagueInfo = await getPlayerLeague();
+
+            var leaguePlayers = leagueInfo.Players;
+
+            for (var player in leaguePlayers) {
+                const playerSchedule = await getSeasonGamesInLeague(player, leagueInfo.SeasonAssignments);
+
+                playerSchedule.sort((a, b) => {return a.timePlayed - b.timePlayed});
+                var pastGames = playerSchedule.filter(gameEntry => {
+                    return nowTime > gameEntry.timePlayed; 
+                });
+                var upcomingGames = playerSchedule.filter(game => game.timePlayed > currentTime && game.timePlayed <= currentTime + (6 * 60 * 60 * 1000));
+
+                var scheduleList = pastGames.concat(upcomingGames);
+
+                var currentSeasonOtherGamesCopy = currentSeasonOtherGames;
+
+                currentSeasonOtherGamesCopy.push(scheduleList[scheduleList.length-1]);
+
+                setCurrentSeasonOtherGames(currentSeasonOtherGamesCopy);
+
+                var userPlayoffRun = await getPlayoffGamesInLeague(player, leagueInfo.PlayoffAssignments);
+
+                if (userPlayoffRun.length > 0) {
+                    var lastPlayoffGame = await axios.get(`/SingleGame/${userPlayoffRun[userPlayoffRun.length-1][1][userPlayoffRun[userPlayoffRun.length-1][1].lenght-1]}`);
+                    var entry = [userPlayoffRun[userPlayoffRun.length-1][0], userPlayoffRun[userPlayoffRun.length-1][1].length, lastPlayoffGame.data];
+                    var currentPlayoffOtherGamesCopy = currentPlayoffOtherGames;
+
+                    currentPlayoffOtherGamesCopy.push(entry);
+
+                    setCurrentPlayoffOtherGames(currentPlayoffOtherGamesCopy);
+                }
+            }
+
+            for (var seasonGame in currentSeasonOtherGames) {
+                if (seasonGame.gameId == currentSeasonUpcomingGame.gameId) {
+                    var temp = currentSeasonOtherGames;
+                    temp = temp.filter(game => game.gameId == seasonGame.gameId);
+                    setCurrentSeasonOtherGames(temp);
+                    break;
+                }
+            }
+
+            for (var playoffGame in currentPlayoffOtherGames) {
+                if (playoffGame[2].gameId == currentPlayoffGame.gameId) {
+                    var temp = currentPlayoffOtherGames;
+                    temp = temp.filter(game => game.gameId == playoffGame[2].gameId);
+                    setCurrentPlayoffOtherGames(temp);
+                    break;
+                }
             }
 
         };

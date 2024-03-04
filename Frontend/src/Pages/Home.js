@@ -346,6 +346,89 @@ const Home = () => {
             }
         };
 
+        useEffect(() => {
+            const updateFinalScore = async () => {
+                const res = await axios.get(`/data/UpdateSingleGameFinalScore/app`);
+
+                const gameId = res.data.substring(0, res.data.indexof("_"));
+
+                const scores = res.data.substring(res.data.indexof("_")+1).split(",");
+
+                try {
+                    scores[0] = parseInt(scores[0]);
+                    scores[1] = parseInt(scores[1]);
+                } catch (e) {
+                    setErrorMessage('Could not get final score');
+                }
+
+                if (currentGame.gameId == gameId) {
+                    var temp = currentGame;
+                    temp.hostScore = scores[0];
+                    temp.guestScore = scores[1];
+                    temp.finalScore = scores;
+                    setCurrentGame(temp);
+                }
+                else if (currentSeasonUpcomingGame.gameId == gameId) {
+                    var temp = currentSeasonUpcomingGame;
+                    temp.hostScore = scores[0];
+                    temp.guestScore = scores[1];
+                    temp.finalScore = scores;
+                    setCurrentSeasonUpcomingGame(temp);
+                }
+                else if (currentPlayoffGame.gameId == gameId) {
+                    var temp = currentPlayoffGame;
+                    temp.hostScore = scores[0];
+                    temp.guestScore = scores[1];
+                    temp.finalScore = scores;
+                    setPlayoffUpcomingGame(temp);
+                }
+                else if (friendsGames.find(game => game.gameId == gameId) != null) {
+                    var temp = friendsGames;
+                    var foundGame = temp.find(game => game.gameId == gameId);
+                    foundGame.hostScore = scores[0];
+                    foundGame.guestScore = scores[1];
+                    temp.finalScore = scores;
+                    setFriendsGames(temp);
+                }
+                else {
+                    if (currentFriendSeasonGames.find(game => game[1].gameId == gameId) != null) {
+                        var temp = currentFriendSeasonGames;
+                        var foundGame = temp.find(game => game[1].gameId == gameId);
+                        foundGame.hostScore = scores[0];
+                        foundGame.guestScore = scores[1];
+                        temp.finalScore = scores;
+                        setCurrentFriendSeasonGames(temp);
+                    }
+                    if (currentSeasonOtherGames.find(game => game.gameId == gameId) != null) {
+                        var temp = currentSeasonOtherGames;
+                        var foundGame = temp.find(game => game.gameId == gameId);
+                        foundGame.hostScore = scores[0];
+                        foundGame.guestScore = scores[1];
+                        temp.finalScore = scores;
+                        setCurrentSeasonOtherGames(temp);
+                    }
+                    if (currentFriendPlayoffGames.find(game => game[1][2].gameId == gameId) != null) {
+                        var temp = currentFriendPlayoffGames;
+                        var foundGame = temp.find(game => game[1][2].gameId == gameId);
+                        foundGame.hostScore = scores[0];
+                        foundGame.guestScore = scores[1];
+                        temp.finalScore = scores;
+                        setCurrentFriendSeasonGames(temp);
+                    }
+                    if (currentPlayoffOtherGames.find(game => game.gameId == gameId) != null) {
+                        var temp = currentPlayoffOtherGames;
+                        var foundGame = temp.find(game => game.gameId == gameId);
+                        foundGame.hostScore = scores[0];
+                        foundGame.guestScore = scores[1];
+                        temp.finalScore = scores;
+                        setCurrentSeasonOtherGames(temp);
+                    }
+                }
+            };
+
+            updateFinalScore();
+        }, []);
+
         updateInGameScore();
     }, []);
 

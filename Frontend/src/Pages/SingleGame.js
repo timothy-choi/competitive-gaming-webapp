@@ -183,13 +183,34 @@ const SingleGame = () => {
                             break;
                         }
 
+                        const groupByFirstElement = (arr) => {
+                            return arr.reduce((result, currentArray) => {
+                                const key = currentArray[0]; // Get the first element as the key
+                                if (!result[key]) {
+                                    result[key] = []; // If the key doesn't exist in the result, create a new array for it
+                                }
+                                result[key].push(currentArray); // Push the current array into the corresponding group
+                                return result;
+                            }, {});
+                        };
+
                         for (var matchup in bracket.AllOtherMatchups) {
                             if (matchup[0] != rd) {
                                 rd++;
                             }
                             if (matchup[1].currentPlayoffMatchup.GameId.find(game => game == gameId) != null) {
                                 setPlayoffMode(true);
-                                setPlayoffRound(rd.toString());
+                                var extra = " ";
+                                var temp = groupByFirstElement(bracket.AllOtherMatchups);
+                                if (allBrackets.length == 1) {
+                                    if ((temp.length - rd) == 1) {
+                                        extra += "(Semifinals)";
+                                    }
+                                    if (temp.length == rd) {
+                                        extra += "(Championship)";
+                                    }
+                                }
+                                setPlayoffRound(rd.toString() + extra);
                                 if (matchup[1].currentPlayoffMatchup.GameId.length > 1) {
                                     var index = matchup[1].currentPlayoffMatchup.GameId.findIndex(game => game == gameId);
                                     setPlayoffSeriesGame(index);

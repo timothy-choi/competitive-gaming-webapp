@@ -129,21 +129,70 @@ const Profile = () => {
                         const playoffInfo = await axios.get(`/LeaguePlayoffs/${leagueinfo.PlayoffAssignments}`);
 
                         var singleBracket = false;
+                        var bracketName = "";
                         if (playoffInfo.WholeMode) {
                             singleBracket = true;
+                            bracketName = playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets[0].playoffName;
                         }
 
-                        var bracketName = playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets[0].playoffName;
+                        var bracket_index = -1;
+
+                        for (var bracket in playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets) {
+                            if (bracket.PlayoffHeadMatchups.find(matchup =>{ return matchup.currentPlayoffMatchup.player1 == username || matchup.currentPlayoffMatchup.player2 == username; }) != null) {
+                                bracketName = bracket.playoffName;
+                                break;
+                            }
+                            bracket_index++;
+                        }
 
                         const playoffTrail = await axios.get(`${playoffInfo.LeaguePlayoffId}/${username}/${singleBracket}/${bracketName}/PlayoffRunTrail`);
+
+                        const groupByFirstElement = (arr) => {
+                            return arr.reduce((result, currentArray) => {
+                                const key = currentArray[0]; // Get the first element as the key
+                                if (!result[key]) {
+                                    result[key] = []; // If the key doesn't exist in the result, create a new array for it
+                                }
+                                result[key].push(currentArray); // Push the current array into the corresponding group
+                                return result;
+                            }, {});
+                        };
+    
 
                         var rd = 1;
                         for (var round in playoffTrail) {
                             for (var game in round.GameId) {
                                 if (game == allGames[j].SingleGameId) {
                                     const gameInfo = await axios.get(`/SingleGame/${allGames[j].SingleGameId}`);
+                                    var temp = groupByFirstElement(playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets[bracket_index].AllOtherMatchups);
+                                    var strRound = "Round " + rd.toString();
+                                    if ((temp.length + 1) - rd == 1) {
+                                        strRound = "Round " + rd.toString() + " (Semifinals)";
+                                    }
+                                    else if ((temp.length + 1) == rd) {
+                                        strRound = "Round " + rd.toString() + " (Championship)";
+                                    }
+                                    else if (playoffTrail.length > (temp.length + 1)) {
+                                        var ct = 0;
+                                        var num_brackets = playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets.length;
+                                        while (num_brackets != 1) {
+                                            num_brackets /= 2;
+                                            ct++;
+                                        }
+                                        ct++;
+
+                                        if ((ct + temp.length + 1) - rd == 1) {
+                                            strRound = "Semifinals";
+                                        }
+                                        if ((ct + temp.length + 1) == rd) {
+                                            strRound = "Championship";
+                                        }
+                                        else {
+                                            strRound = `Final Round ${ct}`;
+                                        }
+                                    }
                                     var playoffGameInfo = {
-                                        round: rd,
+                                        round: strRound,
                                         gameId: allGames[j].SingleGameId,
                                         hostPlayer : gameInfo.hostPlayer,
                                         guestPlayer : gameInfo.guestPlayer,

@@ -142,8 +142,22 @@ const LeaguePortal = (leagueId) => {
 
             if (leagueInfo.data.PlayoffAssignments) {
                 setPlayoffsMode(true);
-                var playoffsInfo = await axios.get(`/LeaguePlayoffs/${}`);
-                setWholeMode();
+                var playoffsInfo = await axios.get(`/LeaguePlayoffs/${leagueInfo.data.PlayoffAssignments}`);
+                setWholeMode(playoffsInfo.data.wholeMode);
+                if (wholeMode) {
+                    setWholeModeOrdering(playoffsInfo.data.wholeModeOrdering);
+                }
+                if (seasonInfo.data.partitionsEnabled) {
+                    setDivisionModeOrdering(playoffsInfo.data.DivisionBasedPlayoffPairings);
+                    if (Object.keys(seasonInfo.data.AllCombinedDivisions).length > 0) {
+                        setCombinedDivisionModeOrdering(playoffsInfo.data.CombinedDivisionGroups);
+                    }
+                    if (playoffsInfo.data.UserDefinedPlayoffMatchups.length > 0) {
+                        setUserDefinedOrdering(playoffsInfo.data.UserDefinedPlayoffMatchups);
+                    }
+                }
+                setFinalPlayoffBracket(playoffsInfo.data.FinalPlayoffBracket);
+                setArchievePlayoffBrackets(playoffsInfo.data.ArchievePlayoffBrackets);
             }
 
         };

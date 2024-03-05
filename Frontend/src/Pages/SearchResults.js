@@ -67,7 +67,7 @@ const SearchResults = () => {
                     }
                 }
 
-                var round = 0;
+                var round = "";
                 var series = false;
                 var gameNo = 0;
                 var playoffMode = false;
@@ -80,23 +80,48 @@ const SearchResults = () => {
                         } catch (e) {
                             break;
                         }
-                        round = matchup.data.round;
+                        round = `${matchup.data.round}`;
                         if (matchup.data.GameId > 1) {
                             series = true;
                             gameNo = matchup.data.GameId.indexof(game.gameId) + 1;
                         } 
                         playoffMode = true;
+                        leagueGame = true;
+                        leagueName = league.leagueName;
                         break;
                     }
+
+                    const groupByFirstElement = (arr) => {
+                        return arr.reduce((result, currentArray) => {
+                            const key = currentArray[0]; // Get the first element as the key
+                            if (!result[key]) {
+                                result[key] = []; // If the key doesn't exist in the result, create a new array for it
+                            }
+                            result[key].push(currentArray); // Push the current array into the corresponding group
+                            return result;
+                        }, {});
+                    };
+
+
                     for (var bracket in playoffBrackets.FinalPlayoffBracket.SubPlayoffBrackets) {
                         if (bracket.PlayoffHeadMatchups.find(matchup => {return matchup.currentPlayoffMatchup.player1 && (matchup.currentPlayoffMatchup.player1 == game.hostPlayer || matchup.currentPlayoffMatchup.player1 == game.guestPlayer)}) != null) {
                             var matchup = await axios.get(`/LeaguePlayoffs/${league.PlayoffAssignments}/${game.hostPlayer}/${game.guestPlayer}/${bracket.playoffName}`);
-                            round = matchup.data.round;
+                            var extra = "";
+                            var temp = groupByFirstElement(bracket.AllOtherMatchups);
+                            if ((temp.length + 1) - matchup.data.round == 1) {
+                                extra += " (Semifinals)";
+                            }
+                            if ((temp.length + 1) == matchup.data.round) {
+                                extra += " (Championship)";
+                            }
+                            round = `${matchup.data.round}${extra}`;
                             if (matchup.data.GameId > 1) {
                                 series = true;
                                 gameNo = matchup.data.GameId.indexof(game.gameId) + 1;
                             } 
                             playoffMode = true;
+                            leagueGame = true;
+                            leagueName = league.leagueName;
                         }
                     }
                 }
@@ -249,7 +274,7 @@ const SearchResults = () => {
             setPlayerResults(playerResultsCopy);
         };
 
-        changePlayerAvailability();
+        changePlayerGameStatus();
 
     }, []);
 

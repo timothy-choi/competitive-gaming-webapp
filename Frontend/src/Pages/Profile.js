@@ -74,10 +74,10 @@ const Profile = () => {
                 var i = 0;
                 while (matchup.GameId[i] != gameId) {
                     var gameEntry = await axios.get(`/SingleGame/${matchup.GameId[i]}`);
-                    if (gameEntry.hostScore > gameEntry.guestScore) {
+                    if (gameEntry[0] > gameEntry[1]) {
                         temp.hostWins++;
                     } 
-                    if (gameEntry.hostScore < gameEntry.guestScore) {
+                    if (gameEntry[0] < gameEntry[1]) {
                         temp.guestWins++;
                     }
                     i++;

@@ -64,6 +64,10 @@ const LeaguePortal = (leagueId) => {
 
     const [archievePlayoffBrackets, setArchievePlayoffBrackets] = useState([]);
 
+    const [seasonGamesByDate, setSeasonGamesByDate] = useState([]);
+
+    const [currentUserSeasonGame, setCurrentUserSeasonGame] = useState(null);
+
     useEffect(() => {
         const fetchData = async () => {
             const leagueInfo = await axios.get(`/League/${LeagueId}`);
@@ -160,6 +164,78 @@ const LeaguePortal = (leagueId) => {
                 setArchievePlayoffBrackets(playoffsInfo.data.ArchievePlayoffBrackets);
             }
 
+            const getPrevGames = async (url) => {
+                try {
+                    const response = await axios.get(url);
+                    if (response.status === 200) {
+                        return response.data;
+                    } else {
+                        return;
+                    }
+                } catch (error) {
+                    if (error.response && error.response.status === 404) {
+                        return; 
+                    }
+                }
+            };
+
+            const getGameInfo = async (gameId, leagueId) => {
+                const res = await axios.get(`/SingleGame/${gameId}`);
+
+                const hostInfo = await axios.get(`/Player/${res.data.hostPlayer}`);
+
+                const hostRecord = await axios.get(`/League/${leagueId}/${hostInfo.data.playerId}`);
+
+                const guestInfo = await axios.get(`/Player/${res.data.guestPlayer}`);
+
+                const guestRecord = await axios.get(`/League/${leagueId}/${guestInfo.data.playerId}`);
+
+                var gameInfo = {
+                    gameId : gameId,
+                    hostPlayer : res.data.hostPlayer,
+                    guestPlayer : res.data.guestPlayer,
+                    hostScore : res.data.hostScore,
+                    guestScore : res.data.guestScore,
+                    final : res.data.finalScore != null ? true : false,
+                    timePlayed : res.data.timePlayed <= Date.now() ? null : res.data.timePlayed,
+                    hostRecord : [hostRecord.data["wins"], hostRecord.data["losses"], hostRecord.data["draws"]],
+                    guestRecord : [guestRecord.data["wins"], guestRecord.data["losses"], guestRecord.data["draws"]]
+                };
+
+                return gameInfo;
+            };
+
+            try {
+                var date = new Date();
+                const games = await axios.get(`/LeagueSeasonAssignments/${leagueInfo.data.SeasonAssignments}/GamesByDate/${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`);
+                var allGames = [];
+                for (var game in games.data) {
+                    var curr = getGameInfo(game, leagueInfo.data.LeagueId);
+                    if (curr.hostPlayer == username || curr.guestPlayer == username) {
+                        setCurrentUserSeasonGame(curr);
+                        continue;
+                    }
+                    allGames.push(curr);
+                }
+                setSeasonGamesByDate(allGames);
+            } catch (e) {
+                date.setDate(date.getDate()-1);
+                const lastSet = null; 
+                while (lastSet == null) {
+                    date.setDate(date.getDate()-1);
+                    lastSet = getPrevGames(`/LeagueSeasonAssignments/${leagueInfo.data.SeasonAssignments}/GamesByDate/${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`);
+                }
+                var allGames = [];
+                for (var game in lastSet) {
+                    var curr = getGameInfo(game, leagueInfo.data.LeagueId);
+                    if (curr.hostPlayer == username || curr.guestPlayer == username) {
+                        setCurrentUserSeasonGame(curr);
+                        continue;
+                    }
+                    allGames.push(curr);
+                }
+                setSeasonGamesByDate(allGames);
+            }
         };
 
         fetchData();

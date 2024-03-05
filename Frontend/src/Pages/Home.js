@@ -70,23 +70,74 @@ const Home = () => {
             const playoffs = await axios.get(`/LeaguePlayoffs/${playoffsId}`);
 
             var single = true;
+            var index = 0;
+            var f = false;
             var bracketName = playoffs.FinalFullBracket.SubPlayoffBrackets[0].playoffName;
             if (playoffs.FinalFullBracket.SubPlayoffBrackets.length > 1) {
                 single = false;
                 var res = isInBracket(player, playoffsId);
                 if (res) {
                     bracketName = res;
+                    f = true;
                 }
-                else {
-                    return [];
-                }
+                index++;
+            }
+
+            if (!f) {
+                return [];
             }
 
             var trail = await axios.get(`/LeaguePlayoffs/${playoffsId}/${player}/${single}/${bracketName}/PlayoffRunTrail`);
 
+            var bracketLength = playoffs.FinalFullBracket.SubPlayoffBrackets[index].ALlOtherMatchups.length + 1;
+
+            const groupByFirstElement = (arr) => {
+                return arr.reduce((result, currentArray) => {
+                    const key = currentArray[0]; // Get the first element as the key
+                    if (!result[key]) {
+                        result[key] = []; // If the key doesn't exist in the result, create a new array for it
+                    }
+                    result[key].push(currentArray); // Push the current array into the corresponding group
+                    return result;
+                }, {});
+            };
+
+            var temp = groupByFirstElement(playoffs.FinalFullBracket.SubPlayoffBrackets[index].ALlOtherMatchups);
+
             var playoffGames = [];
             for (var round in trail) {
-                playoffGames.push([round.round, round.GameId]);
+                if (playoffs.FinalFullBracket.SubPlayoffBrackets.length == 1) {
+                    if (temp.length - round.round + 1 == 1) {
+                        playoffGames.push([`Round ${round.round} (Semifinals)`, round.gameId]);
+                    }
+                    else if (temp.length + 1 == round.round) {
+                        playoffGames.push([`Round ${round.round} (Championship)`, round.gameId]);
+                    }
+                    else {
+                        playoffGames.push([`Round ${round.round}`, round.GameId]);
+                    }
+                }
+                else {
+                    if (round.round <= temp.length + 1) {
+                        playoffGames.push([`Round ${round.round}`, round.gameId]);
+                        continue;
+                    }
+                    var num_brackets = playoffs.FinalFullBracket.SubPlayoffBrackets.length;
+                    var c = 0;
+                    while (num_brackets != 1) {
+                        num_brackets /= 2;
+                        c++;
+                    }
+                    if ((temp.length + c + 1) - round.round == 1)  {
+                        playoffGames.push([`Semifinals`, round.GameId]);
+                    }
+                    else if ((temp.length + c + 1) == round.round)  {
+                        playoffGames.push([`Championship`, round.GameId]);
+                    }
+                    else {
+                        playoffGames.push([`Final Round ${round.round - temp.length + 1}`, round.GameId]);
+                    }
+                }
             }
 
             return playoffGames;

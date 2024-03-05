@@ -204,6 +204,72 @@ const Home = () => {
         }
 
         const fetchData = async () => {
+            const playoffScores = async (player) => {
+                var leagueInfo = await getPlayerLeague(player);
+                const playoffs = await axios.get(`/LeaguePlayoffs/${leagueInfo.playoffAssignments}`);
+
+                var single = true;
+                var index = 0;
+                var f = false;
+                var bracketName = playoffs.FinalFullBracket.SubPlayoffBrackets[0].playoffName;
+                if (playoffs.FinalFullBracket.SubPlayoffBrackets.length > 1) {
+                    single = false;
+                    var res = isInBracket(player, playoffsId);
+                    if (res) {
+                        bracketName = res;
+                        f = true;
+                    }
+                    index++;
+                }
+
+                if (!f) {
+                    return [];
+                }
+
+                var trail = await axios.get(`/LeaguePlayoffs/${playoffsId}/${player}/${single}/${bracketName}/PlayoffRunTrail`);
+
+                return trail.data;
+            };
+
+            const findSeriesWinner = async (temp, gameId) => {
+                var gameInfo = await axios.get(`/SingleGame/${gameId}`);
+
+                var matchups = await playoffScores(gameInfo.hostPlayer);
+
+                for (var matchup in matchups) {
+                    if (matchup.GameId.find(game => game == gameId) != null) {
+                        var i = 0;
+                        while (matchup.GameId[i] != gameId) {
+                            var gameEntry = await axios.get(`/SingleGame/${matchup.GameId[i]}`);
+                            if (gameEntry.hostScore > gameEntry.guestScore) {
+                                temp.hostWins++;
+                            } 
+                            if (gameEntry.hostScore < gameEntry.guestScore) {
+                                temp.guestWins++;
+                            }
+                            i++;
+                        }
+                        if (temp.hostScore > temp.guestScore) {
+                            temp.hostWins++;
+                        }
+                        if (temp.hostScore < temp.guestScore) {
+                            temp.guestWins++;
+                        }
+                        break;
+                    }
+                }
+
+                var leagueInfo = await getPlayerLeague(player);
+
+                const configInfo = await axios.get(`/LeagueConfig/${leagueInfo.LeagueConfig}`);
+
+                var game_ct = configInfo.data.gamesByRound[matchup.round-1];
+
+                if (game_ct == temp.hostWins || game_ct == temp.guestWins) {
+                    temp.seriesWinner = true;
+                }
+            };
+
             if (!loggedIn) {
                 return;
             }
@@ -214,6 +280,8 @@ const Home = () => {
             if (league) {
                 setCurrentSeasonUpcomingGame(res.seasonGames[res.seasonGames.length-1]);
                 if (res.playoffGames.length > 0) {
+                    findSeriesWinner(res.playoffGames[res.playoffGames.length-1][1], res.playoffGames[res.playoffGames.length-1][1].gameId);
+
                     setPlayoffUpcomingGame(res.playoffGames[res.playoffGames.length-1]);
                 }
             }
@@ -240,6 +308,7 @@ const Home = () => {
                 }
                 if (friendGameList.playoffGames.length > 0) {
                     var currentFriendPlayoffGamesCopy = currentFriendPlayoffGames;
+                    findSeriesWinner(res.playoffGames[friendGameList.playoffGames[friendGameList.playoffGames.length-1]][1], friendGameList.playoffGames[friendGameList.playoffGames.length-1][1].gameId);
                     currentFriendPlayoffGamesCopy.push([leagueName, friendGameList.playoffGames[friendGameList.playoffGames.length-1]]);
                     setCurrentFriendPlayoffGames(currentFriendPlayoffGamesCopy);
                 }
@@ -270,6 +339,7 @@ const Home = () => {
 
                 if (userPlayoffRun.length > 0) {
                     var lastPlayoffGame = await axios.get(`/SingleGame/${userPlayoffRun[userPlayoffRun.length-1][1][userPlayoffRun[userPlayoffRun.length-1][1].length-1].gameId}`);
+                    findSeriesWinner(lastPlayoffGame.data, lastPlayoffGame.data.gameId);
                     var entry = [userPlayoffRun[userPlayoffRun.length-1][0], userPlayoffRun[userPlayoffRun.length-1][1].length, lastPlayoffGame.data];
                     var currentPlayoffOtherGamesCopy = currentPlayoffOtherGames;
 
@@ -495,6 +565,9 @@ const Home = () => {
                     temp.hostScore = scores[0];
                     temp.guestScore = scores[1];
                     temp.finalScore = scores;
+
+                    findSeriesWinner(temp, gameId);
+
                     setPlayoffUpcomingGame(temp);
                 }
                 else if (friendsGames.find(game => game.gameId == gameId) != null) {
@@ -528,6 +601,9 @@ const Home = () => {
                         foundGame.hostScore = scores[0];
                         foundGame.guestScore = scores[1];
                         temp.finalScore = scores;
+
+                        findSeriesWinner(temp, gameId);
+
                         setCurrentFriendSeasonGames(temp);
                     }
                     if (currentPlayoffOtherGames.find(game => game.gameId == gameId) != null) {
@@ -536,6 +612,9 @@ const Home = () => {
                         foundGame.hostScore = scores[0];
                         foundGame.guestScore = scores[1];
                         temp.finalScore = scores;
+
+                        findSeriesWinner(temp, gameId);
+
                         setCurrentSeasonOtherGames(temp);
                     }
                 }

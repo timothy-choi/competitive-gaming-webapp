@@ -172,7 +172,7 @@ const Profile = () => {
                                     else if ((temp.length + 1) == rd) {
                                         strRound = "Round " + rd.toString() + " (Championship)";
                                     }
-                                    else if (playoffTrail.length > (temp.length + 1)) {
+                                    else if (playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets.length > 1 && playoffTrail.length > (temp.length + 1)) {
                                         var ct = 0;
                                         var num_brackets = playoffInfo.FinalPlayoffBracket.SubPlayoffBrackets.length;
                                         while (num_brackets != 1) {
@@ -188,7 +188,7 @@ const Profile = () => {
                                             strRound = "Championship";
                                         }
                                         else {
-                                            strRound = `Final Round ${ct}`;
+                                            strRound = `Final Round ${rd - temp.length+1}`;
                                         }
                                     }
                                     var playoffGameInfo = {

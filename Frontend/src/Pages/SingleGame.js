@@ -13,6 +13,7 @@ const SingleGame = () => {
 
     const [playoffMode, setPlayoffMode] = useState(false);
     const [playoffRound, setPlayoffRound] = useState('');
+    var round = 0;
     const [playoffSeriesGame, setPlayoffSeriesGame] = useState(null);
     const [seriesWinner, setSeriesWinner] = useState(bool);
 
@@ -50,6 +51,28 @@ const SingleGame = () => {
 
 
     useEffect(() => {
+        const checkForPlayoffWinners = async (leagueName, record) => {
+            var seasonConfig = "";
+
+            const leagues = await axios.get(`/League/`);
+            for (var league in leagues) {
+                if (league.Name == leagueName) {
+                    seasonConfig = league.LeagueConfig;
+                    break;
+                }
+            }
+
+            const config = await axios.get(`/LeagueConfig/${seasonConfig}`);
+
+            if (config.data.PlayoffSeries) {
+                var num_games = config.data.GamesPerRound[round-1];
+
+                if (record[0] == num_games || record[1] == num_games) {
+                    setSeriesWinner(true);
+                }
+            }
+        };
+
         const fetchGame = async () => {
             const gameInfo = await axios.get(`/SingleGame/${gameId}`);
 
@@ -158,6 +181,7 @@ const SingleGame = () => {
                             if (head.currentPlayoffMatchup.GameId.find(game => game == gameId) != null) {
                                 setPlayoffMode(true);
                                 setPlayoffRound("1");
+                                round = 1;
                                 if (head.currentPlayoffMatchup.GameId.length > 1) {
                                     var index = head.currentPlayoffMatchup.GameId.findIndex(game => game == gameId);
                                     setPlayoffSeriesGame(index);
@@ -174,6 +198,8 @@ const SingleGame = () => {
                                         }
                                     }
                                     setSeriesPlayoffRecord(rec);
+
+                                    checkForPlayoffWinners(league, rec);
                                 }
                                 found = true;
                                 break;
@@ -211,6 +237,7 @@ const SingleGame = () => {
                                     }
                                 }
                                 setPlayoffRound(rd.toString() + extra);
+                                round = rd;
                                 if (matchup[1].currentPlayoffMatchup.GameId.length > 1) {
                                     var index = matchup[1].currentPlayoffMatchup.GameId.findIndex(game => game == gameId);
                                     setPlayoffSeriesGame(index);
@@ -227,6 +254,8 @@ const SingleGame = () => {
                                         }
                                     }
                                     setSeriesPlayoffRecord(rec);
+
+                                    checkForPlayoffWinners(league, rec);
                                 }
                                 found = true;
                                 break;
@@ -253,6 +282,7 @@ const SingleGame = () => {
                             finalRound++;
                         }
                         if (finalMatch.currentPlayoffMatchup.GameId.find(game => game == gameId) != null) {
+                            round = playoffBracket.AllOtherMatchups.length + finalRound;
                             setPlayoffMode(true);
                             if (ct == 2) {
                                 setPlayoffRound("Semifinals");
@@ -279,6 +309,8 @@ const SingleGame = () => {
                                     }
                                 }
                                 setSeriesPlayoffRecord(rec);
+
+                                checkForPlayoffWinners(league, rec);
                             }
                             break;
                         }
@@ -383,7 +415,8 @@ const SingleGame = () => {
                 const config = await axios.get(`/LeagueConfig/${seasonConfig}`);
 
                 if (config.data.PlayoffSeries) {
-                    var num_games = config.data.GamesPerRound[playoffRound-1];
+
+                    var num_games = config.data.GamesPerRound[round-1];
 
                     if (record[0] == num_games || record[1] == num_games) {
                         setSeriesWinner(true);
@@ -442,7 +475,7 @@ const SingleGame = () => {
                 title_name += `${league} season game `;
             }
             if (playoffMode) {
-                title_name += `${league} playoff game - Round: ${playoffRound} Game ${playoffSeriesGame} `;
+                title_name += `${league} playoff game - ${playoffRound} Game ${playoffSeriesGame} `;
             }
             
             const reqBody = {

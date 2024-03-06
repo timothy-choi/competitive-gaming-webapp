@@ -40,7 +40,7 @@ public class LeagueController : ControllerBase {
     }
 
     [HttpPost]
-    public async Task<ActionResult<string>> CreateLeague(Dictionary<string, object> leagueInput) {
+    public async Task<ActionResult<League>> CreateLeague(Dictionary<string, object> leagueInput) {
         try {
             League curr = new League {
                 LeagueId = Guid.NewGuid().ToString(),
@@ -62,7 +62,7 @@ public class LeagueController : ControllerBase {
             };
 
             await _leagueService.PostData("leagueInfo", curr);
-            OkObjectResult res = new OkObjectResult(curr.LeagueId);
+            OkObjectResult res = new OkObjectResult(curr);
             return Ok(res);
         }
         catch {

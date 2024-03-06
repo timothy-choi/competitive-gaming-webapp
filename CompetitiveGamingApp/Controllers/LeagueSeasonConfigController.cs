@@ -41,7 +41,7 @@ public class LeagueSeasonConfigController : ControllerBase {
                 selfScheduleGames = Convert.ToBoolean(reqBody["selfScheduleGames"]),
                 intervalBetweenGames = Convert.ToInt32(reqBody["intervalBetweenGames"]),
                 intervalBetweenGamesHours = Convert.ToInt32(reqBody["intervalBetweenGames"]),
-                firstSeasonMatch = reqBody["firstSeasonMatch"] as List<Tuple<string, DateTime>>,
+                firstSeasonMatch = new List<Tuple<string, DateTime>>(),
                 playoffStartOffset = Convert.ToInt32(reqBody["playoffStartOffset"]),
                 intervalBetweenPlayoffRoundGames = Convert.ToInt32(reqBody["intervalBetweenPlayoffRoundGames"]),
                 intervalBetweenPlayoffRoundGamesHours = Convert.ToInt32(reqBody["intervalBetweenPlayoffRoundGamesHours"]),
@@ -61,6 +61,28 @@ public class LeagueSeasonConfigController : ControllerBase {
             OkObjectResult res = new OkObjectResult(createConfig.ConfigId);
 
             return Ok(res);
+        }
+        catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{ConfigId}/{player}")]
+    public async Task<ActionResult> AddPlayerStartDate(string ConfigId, string player, Dictionary<string, DateTime> reqBody) {
+        try {
+            var config = _leagueService.GetData("leagueConfig", ConfigId);
+            if (config == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["firstSeasonMatch"] = true;
+            Dictionary<string, object> updatedValues = new Dictionary<string, object>();
+            updatedValues["firstSeasonMatch"] = Tuple.Create(player, reqBody["date"]);
+
+            await _leagueService.EditData("leagueConfig", upsertOpt, updatedValues);
+
+            return Ok();
         }
         catch {
             return BadRequest();

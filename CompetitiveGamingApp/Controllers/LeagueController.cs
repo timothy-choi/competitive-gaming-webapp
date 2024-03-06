@@ -308,7 +308,7 @@ public class LeagueController : ControllerBase {
     }
 
     [HttpDelete("{LeagueId}/{playerId}/LeagueStandings")]
-    public async Task<ActionResult> DeletePlayerFromLeagueStandings(string LeagueId, string playerId) {
+    public async Task<ActionResult> DeletePlayerFromLeagueStandings(string LeagueId, string playerName) {
         try {
             var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
@@ -322,7 +322,7 @@ public class LeagueController : ControllerBase {
 
             int index = -1;
             for (int i = 0; i < leagueStandings.Count; ++i) {
-                if (leagueStandings[index]["playerId"] == playerId) {
+                if (leagueStandings[index]["player"] == playerName) {
                     index = i;
                     break;
                 }
@@ -339,7 +339,7 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, playerStandings);
 
-            await _kafkaProducer.ProduceMessageAsync("RemovePlayerToLeague", playerId, LeagueId);
+            await _kafkaProducer.ProduceMessageAsync("RemovePlayerToLeague", playerName, LeagueId);
             return Ok();
         } catch {
             return BadRequest();

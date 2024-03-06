@@ -506,6 +506,48 @@ const LeaguePortal = (leagueId) => {
     }, []);
 
     useEffect(() => {
+        const AddPlayerToLeagueStandings = async () => {
+            const res = await axios.get(`/data/AddPlayerToLeague/${leagueId}`);
+
+            var leagueStandingsCopy = leagueStandings;
+
+            leagueStandingsCopy.Table.push(JSON.parse(res.data));
+
+            setLeagueStandings(leagueStandingsCopy);
+        };
+
+        AddPlayerToLeagueStandings();
+    }, []);
+
+    useEffect(() => {
+        const RemovePlayerFromLeagueStandings = async () => {
+            const res = await axios.get(`/data/RemovePlayerToLeague/${leagueId}`);
+
+            var leagueStandingsCopy = leagueStandings;
+
+            leagueStandingsCopy.Table.splice(leagueStandingsCopy.Table.indexof(leagueStandingsCopy.Table.find(player => player["player"] == res.data)), 1);
+
+            setLeagueStandings(leagueStandingsCopy);
+        };
+
+        RemovePlayerFromLeagueStandings();
+    }, []);
+
+    useEffect(() => {
+        const ResetLeagueStandings = async () => {
+            const res = await axios.get(`/data/ResetLeagueStandings/${leagueId}`);
+
+            var leagueStandingsCopy = leagueStandings;
+
+            leagueStandingsCopy = res.data["LeagueStandings"];
+
+            setLeagueStandings(leagueStandingsCopy);
+        };
+
+        ResetLeagueStandings();
+    }, []);
+
+    useEffect(() => {
         var updateStandings = async () => {
             const res = await axios.get(`/data/UpdateStandings/${leagueId}`);
 

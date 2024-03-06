@@ -76,6 +76,8 @@ const LeaguePortal = (leagueId) => {
 
     const [currentUserPlayoffGame, setCurrentUserPlayoffGame] = useState(null);
 
+    const [roundMatchups, setRoundMatchups] = useState([]);
+ 
     useEffect(() => {
         const fetchData = async () => {
             const leagueInfo = await axios.get(`/League/${LeagueId}`);
@@ -362,13 +364,78 @@ const LeaguePortal = (leagueId) => {
             }
 
 
-            const getGamesByRound = async () => {
+            const getGamesByRound = async (round, division, playoffsId) => {
+                const res = await axios.get(`/LeaguePlayoffs/${playoffsId}/${division}/GamesPerRound/${round}`);
 
+                const allMatches = [];
+
+                for (var matchup in res.data["roundGames"]) {
+                    if (matchup.player1 == "" || matchup.player2 == "") {
+                        return [];
+                    }
+                    allMatches.push(matchup);
+                }
+
+                return allMatches;
             };
 
-            for (var bracket in playoffInfo.data.FinalPlayoffBracket.SubPlayoffBrackets) {
-
+            var single = true;
+            if (playoffInfo.data.FinalPlayoffBracket.SubPlayoffBrackets.length > 1) {
+                single = false;
             }
+
+            var recentRoundMatchups = [];
+
+            for (var bracket in playoffInfo.data.FinalPlayoffBracket.SubPlayoffBrackets) {
+                var temp = groupByFirstElement(leagueInfo.FinalPlayoffBracket.SubPlayoffBrackets.find(b => b.playoffName == bracket).AllOtherMatchups);
+
+                var bracket_len = temp.length + 1;
+
+                var error = false;
+
+                for (var i = 0; i < bracket_len; ++i) {
+                    var matches = getGamesByRound(i+1, bracket.playoffName, playoffAssignemnts);
+                    if (matches.length == 0) {
+                        error = true;
+                        break;
+                    }
+
+                    var rd = "";
+
+                    if (single) {
+                        if (i == bracket_len) {
+                            rd = `Round ${i} (Championship)`;
+                        }
+                        else if (bracket_len - i == 1) {
+                            rd = `Round ${i} (Semifinals)`;
+                        }
+                        else {
+                            rd = `Round ${i}`;
+                        }
+                    } else {
+                        var num_brackets = leagueInfo.FinalPlayoffBracket.SubPlayoffBrackets.length;
+                        var add_rds = sqrt(num_brackets);
+                        if (bracket_len + add_rds == i) {
+                            rd = `Championship`;
+                        }
+                        if (bracket_len + add_rds - i == 1) {
+                            rd = `Semifinal`;
+                        }
+                        else {
+                            rd = `Final Round ${i - bracket_len}`;
+                        }
+                    }
+
+                    recentRoundMatchups.push([bracket.playoffName, rd, matches]); 
+                }
+
+                if (error) {
+                    break;
+                }
+            }
+
+            setRoundMatchups(recentRoundMatchups);
+
         };
 
         fetchData();

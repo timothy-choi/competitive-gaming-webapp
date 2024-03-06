@@ -2351,7 +2351,7 @@ public class LeaguePlayoffsController : ControllerBase {
 
         if (round == 1) {
             foreach (var match in bracket.PlayoffHeadMatchups) {
-                allRoundGames.Add(match.currentPlayoffMatchup.PlayoffMatchupId);
+                allRoundGames.Add(match.currentPlayoffMatchup);
             }
         }
         else if (round > 1) {
@@ -2376,7 +2376,7 @@ public class LeaguePlayoffsController : ControllerBase {
                 while (round <= curr_round) {
                     if (round == curr_round - 1) {
                         foreach (var match in currMatch?.PrevPlayoffRoundMatch!) {
-                            allRoundGames.Add(match.currentPlayoffMatchup.PlayoffMatchupId);
+                            allRoundGames.Add(match.currentPlayoffMatchup);
                         }
                         break;
                     }
@@ -2390,7 +2390,7 @@ public class LeaguePlayoffsController : ControllerBase {
                         matches = firstNode.PrevPlayoffRoundMatch;
                         if (round == num_rounds - 1) {
                             foreach (var match in matches!) {
-                                allRoundGames.Add(match.currentPlayoffMatchup.PlayoffMatchupId);
+                                allRoundGames.Add(match.currentPlayoffMatchup);
                             }
                             break;
                         }

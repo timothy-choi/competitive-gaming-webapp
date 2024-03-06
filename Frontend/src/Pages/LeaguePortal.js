@@ -16,6 +16,8 @@ const LeaguePortal = (leagueId) => {
 
     const [owner, setOwner] = useState([]);
 
+    const [leagueHoldStatus, setLeagueHoldStatus] = useState(false);
+
     const [playoffsStart, setPlayoffsStart] = useState(false);
 
     const [leagueStandings, setLeagueStandings] = useState(null);
@@ -104,6 +106,10 @@ const LeaguePortal = (leagueId) => {
             setPlayers(players);
 
             setLeagueConfig(leagueInfo.data.LeagueConfig);
+
+            var configData = await axios.get(`/LeagueConfig/${leagueInfo.data.LeagueConfig}`);
+
+            setLeagueHoldStatus(players.length < configData.data.NumberOfPlayersMin);
 
             setPlayoffAssignments(leagueInfo.data.PlayoffAssignments);
 

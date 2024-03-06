@@ -133,6 +133,20 @@ const LeagueSetup = (username) => {
             }
         }
 
+        if (event.target.ExcludeOutsideGames.value && event.target.InterDvisionGameLimit.value > 0) {
+            setErrorMessage('Invalid number of outside games');
+            return;
+        }
+
+        if (!event.target.RepeatMatchups.value && event.target.MaxRepeatMatchups.value > 0) {
+            setErrorMessage('Invalid number of repeat matchup games');
+            return;
+        }
+
+        if (event.target.repeatAllMatchups.value && event.target.minRepeatMatchups.value < 1) {
+            setErrorMessage('Invalid number of repeat matchup games');
+            return;
+        }
 
 
         const seasonAssignmentInfo = {
@@ -205,6 +219,8 @@ const LeagueSetup = (username) => {
                 return;
             }
         }
+
+        addIds(configId, seasonAssignmentsId, playoffId);
 
         history.push(`/League/${league.LeagueId}`);
     };

@@ -802,7 +802,13 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, updatedTable);
 
-            var division = league.DivisionStandings["divisionName"].Table;
+            var division = league.DivisionStandings?["divisionName"].Table;
+
+            if (division!.Count == 0) {
+                await _kafkaProducer.ProduceMessageAsync("UpdateStandings", JsonConvert.SerializeObject(leagueStandings), LeagueId);
+
+                return Ok();
+            }
 
             for (int i = 0; i < division.Count; ++i) {
                 if (division[i]["playerId"] == reqBody["PlayerId"]) {
@@ -840,7 +846,15 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatusDivisions, updatedDivisions);
 
-            var combinedDivision = league.CombinedDivisionStandings["combinedDivisionName"].Table;
+            var combinedDivision = league.CombinedDivisionStandings?["combinedDivisionName"].Table;
+
+            if (combinedDivision!.Count == 0) {
+                var Standing = new List<string> {JsonConvert.SerializeObject(leagueStandings), JsonConvert.SerializeObject(division)};
+
+                await _kafkaProducer.ProduceMessageAsync("UpdateStandings", string.Join(",", Standing), LeagueId);
+
+                return Ok();
+            }
 
             for (int i = 0; i < combinedDivision.Count; ++i) {
                 if (combinedDivision[i]["playerId"] == reqBody["PlayerId"]) {

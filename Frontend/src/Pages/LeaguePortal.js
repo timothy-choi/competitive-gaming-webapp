@@ -504,6 +504,52 @@ const LeaguePortal = (leagueId) => {
 
         AddChampion();
     }, []);
+
+    useEffect(() => {
+        var updateStandings = async () => {
+            const res = await axios.get(`/data/UpdateStandings/${leagueId}`);
+
+            var leagueStandingsCopy = leagueStandings;
+
+            var divisionStandingsCopy = divisionStandings;
+
+            var combinedCopy = combinedDivisionsStandings;
+
+            if (res.data.contains(",")) {
+                var allStandings = res.data.split(",");
+
+                var leagueTable = JSON.parse(allStandings[0]);
+
+                leagueStandingsCopy.Table = leagueTable;
+
+                setLeagueStandings(leagueStandingsCopy);
+
+                var divisionTable = JSON.parse(allStandings[1]);
+
+                divisionStandingsCopy.Table = divisionTable;
+
+                setDivisionStandings(divsionStandingsCopy);
+
+                if (allStandings.length == 3) {
+                    var combinedTable = JSON.parse(allStandings[2]);
+
+                    combinedCopy.Table = combinedTable;
+
+                    setCombinedDivisionsStandings(combinedCopy);
+                }
+            }
+            else {
+                var table = JSON.parse(res.data);
+
+                leagueStandingsCopy.Table = table;
+
+                setLeagueStandings(leagueStandingsCopy);
+            }
+        };
+
+        updateStandings();
+
+    }, []);
 };
 
 export default LeaguePortal;

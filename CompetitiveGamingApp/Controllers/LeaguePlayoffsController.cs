@@ -2347,7 +2347,7 @@ public class LeaguePlayoffsController : ControllerBase {
 
         var bracket = playoffs.FinalPlayoffBracket!.SubPlayoffBrackets.Find(t => t.PlayoffName == division)!;
 
-        List<string?> allRoundGames = new List<string?>();
+        List<PlayoffMatchup?> allRoundGames = new List<PlayoffMatchup?>();
 
         if (round == 1) {
             foreach (var match in bracket.PlayoffHeadMatchups) {

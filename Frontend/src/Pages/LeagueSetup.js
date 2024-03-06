@@ -221,9 +221,13 @@ const LeagueSetup = (username) => {
         }
 
         addIds(configId, seasonAssignmentsId, playoffId);
+    };
+
+    const handleFinishSubmit = (event) => {
+        event.preventDefault();
 
         history.push(`/League/${league.LeagueId}`);
-    };
+    }
 };
 
 export default LeagueSetup;

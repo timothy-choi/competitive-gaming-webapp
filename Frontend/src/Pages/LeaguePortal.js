@@ -15,8 +15,6 @@ const LeaguePortal = (leagueId) => {
     const [players, setPlayers] = useState([]);
 
     const [owner, setOwner] = useState([]);
-    
-    const [regularMode, setRegularMode] = useState(false);
 
     const [playoffsStart, setPlayoffsStart] = useState(false);
 
@@ -106,8 +104,6 @@ const LeaguePortal = (leagueId) => {
             setPlayers(players);
 
             setLeagueConfig(leagueInfo.data.LeagueConfig);
-
-            //Add fetch rendering for league in regular mode (not season mode)
 
             setPlayoffAssignments(leagueInfo.data.PlayoffAssignments);
 

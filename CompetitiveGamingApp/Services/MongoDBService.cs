@@ -88,7 +88,6 @@ public class MongoDBService {
                 { "NumberOfPlayersLimit", leagueConfig.NumberOfPlayersLimit },
                 { "OwnerAsPlayer", leagueConfig.OwnerAsPlayer },
                 { "NumberOfPlayersMin", leagueConfig.NumberOfPlayersMin },
-                { "convertToRegular", leagueConfig.convertToRegular },
                 { "NumberOfGames", leagueConfig.NumberOfGames },
                 { "selfScheduleGames", leagueConfig.selfScheduleGames },
                 { "intervalBetweenGames", leagueConfig.intervalBetweenGames },

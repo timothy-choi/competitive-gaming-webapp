@@ -11,8 +11,6 @@ public class LeagueSeasonConfig {
     public int NumberOfPlayersLimit {get; set;}  //# of players allowed in this league. 
     public bool OwnerAsPlayer {get; set;}
     public int NumberOfPlayersMin {get; set;} //# of players that needs to be in a league for a season to start (if enabled)
-    public bool convertToRegular {get; set;} //true = automatically convert seasons mode to regular mode (no playoffs)
-
 
     public int NumberOfGames {get; set;} //Number of Games played in a season, will be 0 if seasons is marked false
     public bool selfScheduleGames {get; set;} //true = owner will organize matchs, false = automatic scheduling

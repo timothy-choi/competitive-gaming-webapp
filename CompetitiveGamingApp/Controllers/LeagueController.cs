@@ -220,8 +220,8 @@ public class LeagueController : ControllerBase {
         }
     }
 
-    [HttpPut("{LeagueId}/Champion/{PlayerId}")]
-    public async Task<ActionResult> AddNewChampion(string LeagueId, string PlayerId) {
+    [HttpPut("{LeagueId}/Champion/{PlayerName}")]
+    public async Task<ActionResult> AddNewChampion(string LeagueId, string PlayerName) {
         try {
             var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
             if (league == null) {
@@ -234,11 +234,11 @@ public class LeagueController : ControllerBase {
             upsertStatus["Champions"] = true;
 
             Dictionary<string, object> champ = new Dictionary<string, object>();
-            champ["Champions"] = Tuple.Create(PlayerId, "Season " + champions_size + 1);
+            champ["Champions"] = Tuple.Create(PlayerName, "Season " + champions_size + 1);
 
             await _leagueService.EditData("leagueId", upsertStatus, champ);
 
-            await _kafkaProducer.ProduceMessageAsync("AddNewChampion", PlayerId, LeagueId);
+            await _kafkaProducer.ProduceMessageAsync("AddNewChampion", PlayerName, LeagueId);
 
             return Ok();
         } catch {

@@ -469,6 +469,41 @@ const LeaguePortal = (leagueId) => {
         AddNewPlayer();
     }, []);
 
+    useEffect(() => {
+        const RemovePlayer = async () => {
+            const res = await axios.get(`/data/RemovingPlayerInLeague/${leagueId}`);
+
+            var playerCopy = players;
+
+            playerCopy.splice(playerCopy.indexof(playerCopy.find(player => player.playerId == res.data)), 1);
+
+            setPlayers(playerCopy);
+        };
+
+        RemovePlayer();
+    }, []);
+
+    useEffect(() => {
+        const AddChampion = async () => {
+            const res = await axios.get(`/data/AddNewChampion/${leagueId}`);
+
+            const playerInfo = await axios.get(`/Player/${res.data}`);
+
+            const newChamp = {
+                username : res.data,
+                playerId : playerInfo.data.playerId,
+                season : champions.length + 1
+            };
+
+            var championsCopy = champions;
+
+            championsCopy.push(newChamp);
+
+            setChampions(championsCopy);
+        }
+
+        AddChampion();
+    }, []);
 };
 
 export default LeaguePortal;

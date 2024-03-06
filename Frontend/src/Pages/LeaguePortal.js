@@ -95,9 +95,9 @@ const LeaguePortal = (leagueId) => {
             for (var player in leagueInfo.data.Players) {
                 var res = await axios.get(`/Player/${player[0]}`);
                 var playerInfo = {
-                    username : player[0],
+                    username : player["playerName"],
                     playerId : res.data.playerId,
-                    dateJoined : player[1]
+                    dateJoined : player["dateJoined"]
                 };
 
                 players.push(playerInfo);
@@ -441,6 +441,32 @@ const LeaguePortal = (leagueId) => {
         };
 
         fetchData();
+    }, []);
+
+    useEffect(() => {
+        const AddNewPlayer = async () => {
+            const res = await axios.get(`/data/AddingNewPlayerInLeague/${leagueId}`);
+
+            const uname = res.data.substring(0, res.data.indexof("_"));
+
+            const date = res.data.substring(res.data.indexof("_")+1);
+
+            const playerInfo = await axios.get(`/Player/${uname}`);
+
+            const newPlayer = {
+                username : uname,
+                playerId : playerInfo.data.playerId,
+                dateJoined : new Date(date)
+            };
+
+            var playerCopy = players;
+
+            playerCopy.push(newPlayer);
+
+            setPlayers(playerCopy);
+        };
+
+        AddNewPlayer();
     }, []);
 
 };

@@ -539,7 +539,7 @@ const LeaguePortal = (leagueId) => {
 
             var leagueStandingsCopy = leagueStandings;
 
-            leagueStandingsCopy = res.data["LeagueStandings"];
+            leagueStandingsCopy = JSON.parse(res.data)["LeagueStandings"];
 
             setLeagueStandings(leagueStandingsCopy);
         };
@@ -587,6 +587,48 @@ const LeaguePortal = (leagueId) => {
         };
 
         ResetLeagueStandings();
+    }, []);
+
+    useEffect(() => {
+        const AddPlayerToCombinedDivisionStandings = async () => {
+            const res = await axios.get(`/data/AddPlayerToCombinedStandings/${leagueId}`);
+
+            var combinedDivisionStandingsCopy = combinedDivisionsStandings;
+
+            combinedDivisionStandingsCopy.Table.push(JSON.parse(res.data));
+
+            setCombinedDivisionsStandings(combinedDivisionStandingsCopy);
+        };
+
+        AddPlayerToCombinedDivisionStandings();
+    }, []);
+
+    useEffect(() => {
+        const RemovePlayerFromCombinedDivisionStandings = async () => {
+            const res = await axios.get(`/data/RemovePlayerFromCombinedDivision/${leagueId}`);
+
+            var divisionStandingsCopy = combinedDivisionStandings;
+
+            divisionStandingsCopy.Table = JSON.parse(res.data);
+
+            setCombinedDivisionsStandings(divisionStandingsCopy);
+        };
+
+        RemovePlayerFromCombinedDivisionStandings();
+    }, []);
+
+    useEffect(() => {
+        const ResetLeagueCombinedStandings = async () => {
+            const res = await axios.get(`/data/ResetCombinedDivisions/${leagueId}`);
+
+            var combinedDivisionStandingsCopy = combinedDivisionStandings;
+
+            combinedDivisionStandingsCopy = JSON.parse(res.data);
+
+            setCombinedDivisionsStandings(divisionStandingsCopy);
+        };
+
+        ResetLeagueCombinedStandings();
     }, []);
 
     useEffect(() => {

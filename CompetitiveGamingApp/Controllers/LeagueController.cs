@@ -607,7 +607,7 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, PlayerEntry);
 
-            await _kafkaProducer.ProduceMessageAsync("ResetDivisions", JsonConvert.SerializeObject(reqBody), LeagueId);
+            await _kafkaProducer.ProduceMessageAsync("AddPlayerToCombinedStandings", JsonConvert.SerializeObject(reqBody), LeagueId);
 
             return Ok();
         } catch {
@@ -647,7 +647,7 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
 
-            await _kafkaProducer.ProduceMessageAsync("ResetDivisions", JsonConvert.SerializeObject(combDivisions[found_combined_division].Table), LeagueId);
+            await _kafkaProducer.ProduceMessageAsync("RemovePlayerFromCombinedDivision", JsonConvert.SerializeObject(combDivisions[found_combined_division].Table), LeagueId);
 
             return Ok();
         } catch {

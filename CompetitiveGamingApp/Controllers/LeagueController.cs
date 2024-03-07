@@ -488,7 +488,7 @@ public class LeagueController : ControllerBase {
             var divisions = league.DivisionStandings;
 
             Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["DivisionStandings"] = true;
+            upsertStatus["DivisionStandings"] = false;
 
             if ((bool) reqBody["ReassignEverySeason"]) {
                 foreach (var k in reqBody) {

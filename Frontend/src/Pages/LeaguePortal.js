@@ -765,6 +765,148 @@ const LeaguePortal = (leagueId) => {
         updateSeasonFinalScores();
 
     }, []);
+
+    useEffect(() => {
+        var updatePlayoffInGameScores = async () => {
+            const res = await axios.get(`/data/AddInGameScore/app`);
+
+            var scoreInfo = res.data.substring(0, res.data.indexof("_")).split(", ");
+
+            var scores = scoreInfo[1].slice(1, -1).split(", ").map(Number);
+
+            var gameId = res.data.substring(res.data.indexof("_")+1);
+
+            var playoffGamesCopy = currentPlayoffGames;
+
+            var foundGame = playoffGamesCopy.find(game => game.gameId == gameId);
+
+            if (foundGame != null) {
+                foundGame.hostScore  = scores[0];
+                foundGame.guestScore = scores[1];
+                setCurrentPlayoffGames(playoffGamesCopy);
+            }
+
+            var userGame = currentUserPlayoffGame;
+
+            if (userGame.gameId == gameId) {
+                userGame.hostScore = scores[0];
+                userGame.guestScore = scores[1];
+                setCurrentUserPlayoffGame(userGame);
+            }
+        };
+
+        updatePlayoffInGameScores();
+    }, []);
+
+    useEffect(() => {
+        var updatePlayoffFinalScores = async () => {
+            var res = await axios.get(`/data/UpdateSingleGameFinalScore/app`);
+
+            var scores = res.data.substring(0, res.data.indexof("_")).split(",");
+
+            var gameId = res.data.substring(res.data.indexof("_")+1);
+
+            var playoffGamesCopy = currentPlayoffGames;
+
+            var foundGame = playoffGamesCopy.find(game => game.gameId == gameId);
+
+            const leagueInfo = await axios.get(`/League/${LeagueId}`);
+
+            if (foundGame != null) {
+                foundGame.hostScore  = scores[0];
+                foundGame.guestScore = scores[1];
+                foundGame.final = true;
+                if (scores[0] < scores[1]) {
+                    foundGame.hostRecord[1]++;
+                    foundGame.guestRecord[0]++;
+                }
+                else if (scores[0] > scores[1]) {
+                    foundGame.hostRecord[0]++;
+                    foundGame.guestRecord[1]++;
+                }
+                else {
+                    foundGame.hostRecord[2]++;
+                    foundGame.guestRecord[2]++;
+                }
+                if (foundGame.PlayoffSeries) {
+                    if (scores[0] > scores[1]) {
+                        foundGame.host_wins++;
+                    }
+                    else {
+                        foundGame.guest_wins++;
+                    }
+                    var roundNo = 0;
+                    if (foundGame.round == "Championship" || foundGame.round.contains("Championship")) {
+                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length-1];
+                    }
+                    else if (foundGame.round == "Semifinals" || foundGame.round.contains("Semifinals")) {
+                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length-2];
+                    }
+                    else if (foundGame.round.contains("Final Round")) {
+                        var finalMatchRound = parseInt(foundGame.round.match(/\d+/)[0]);
+
+                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length - (leagueInfo.GamesPerRound.length-(finalMatchRound))];
+                    }
+                    else {
+                        roundNo = parseInt(foundGame.round.match(/\d+/)[0]);
+                    }
+                    if (foundGame.host_wins == leagueInfo.GamesPerRound[roundNo-1] || foundGame.guest_wins == leagueInfo.GamesPerRound[roundNo-1]) {
+                        foundGame.winner = true;
+                    }
+                }
+                setCurrentPlayoffGames(playoffGamesCopy);
+            }
+
+            var userGame = currentUserSeasonGame;
+
+            if (userGame.gameId == gameId) {
+                userGame.hostScore = scores[0];
+                userGame.guestScore = scores[1];
+                userGame.final = true;
+                if (scores[0] < scores[1]) {
+                    userGame.hostRecord[1]++;
+                    userGame.guestRecord[0]++;
+                }
+                else if (scores[0] > scores[1]) {
+                    userGame.hostRecord[0]++;
+                    userGame.guestRecord[1]++;
+                }
+                else {
+                    userGame.hostRecord[2]++;
+                    userGame.guestRecord[2]++;
+                }
+                if (userGame.PlayoffSeries) {
+                    if (scores[0] > scores[1]) {
+                        userGame.host_wins++;
+                    }
+                    else {
+                        userGame.guest_wins++;
+                    }
+                    var roundNo = 0;
+                    if (foundGame.round == "Championship" || foundGame.round.contains("Championship")) {
+                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length-1];
+                    }
+                    else if (foundGame.round == "Semifinals" || foundGame.round.contains("Semifinals")) {
+                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length-2];
+                    }
+                    else if (foundGame.round.contains("Final Round")) {
+                        var finalMatchRound = parseInt(foundGame.round.match(/\d+/)[0]);
+
+                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length - (leagueInfo.GamesPerRound.length-(finalMatchRound))];
+                    }
+                    else {
+                        roundNo = parseInt(foundGame.round.match(/\d+/)[0]);
+                    }
+                    if (userGame.host_wins == leagueInfo.GamesPerRound[f] || userGame.guest_wins == leagueInfo.GamesPerRound[f]) {
+                        userGame.winner = true;
+                    }
+                }
+                setCurrentUserPlayoffGame(userGame);
+            }
+        };
+
+        updatePlayoffFinalScores();
+    }, []);
 };
 
 export default LeaguePortal;

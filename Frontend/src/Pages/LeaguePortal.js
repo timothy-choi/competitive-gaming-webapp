@@ -12,6 +12,8 @@ const LeaguePortal = (leagueId) => {
 
     const [description, setDescription] = useState('');
 
+    const [season, setSeason] = useState(null);
+
     const [players, setPlayers] = useState([]);
 
     const [owner, setOwner] = useState([]);
@@ -44,7 +46,7 @@ const LeaguePortal = (leagueId) => {
 
     const [champions, setChampions] = useState([]);
 
-    const [champion, setCurrentChampion] = useState([]);
+    const [champion, setCurrentChampion] = useState(null);
 
     const [playerSchedules, setPlayerSchedules] = useState([]);
 
@@ -134,6 +136,26 @@ const LeaguePortal = (leagueId) => {
             }
 
             setChampions(champs);
+
+            var startDates = configData.data.firstSeasonMatch;
+
+            startDates.sort((a, b) => {
+                return a[1] - b[1];
+            });
+
+            if (Date.getMonth() == startDates[0][1].getMonth() && (startDates[0][1].getDate() - Date.getDate() <= 1)) {
+                var s = await axios.post(`/League/${leagueId}/SeasonChange`);
+                setSeason(s.data);
+            } else {
+                setSeason(leagueInfo.data.Season);
+            }
+
+            if (season == champions.length+1) {
+                setCurrentChampion(null);
+            }
+            else {
+                setCurrentChampion(champions[champions.length-1]);
+            }
 
             setLeagueStandings(leagueInfo.data.LeagueStandings);
 

@@ -45,4 +45,5 @@ public class League {
     public List<Dictionary<String, CombinedDivisionTable>>? ArchieveCombinedDivisionStandings {get; set;}
     public List<Tuple<String, String>>? Champions {get; set;} 
     public String? PlayoffAssignments {get; set;}
+    public int? Season {get; set;}
 }

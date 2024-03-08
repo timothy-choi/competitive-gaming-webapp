@@ -58,7 +58,8 @@ public class LeagueController : ControllerBase {
                 CombinedDivisionStandings = new Dictionary<string, CombinedDivisionTable>(),
                 ArchieveCombinedDivisionStandings = new List<Dictionary<string, CombinedDivisionTable>>(),
                 Champions = new List<Tuple<String, String>>(),
-                PlayoffAssignments = ""
+                PlayoffAssignments = "",
+                Season = 1
             };
 
             await _leagueService.PostData("leagueInfo", curr);
@@ -137,6 +138,26 @@ public class LeagueController : ControllerBase {
             upsertStatus["PlayoffAssignmentId"] = false;
             await _leagueService.EditData("leagueInfo", upsertStatus, body);
             return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeagueId}/SeasonChange")]
+    public async Task<ActionResult<int>> SetNewSeason(string LeagueId) {
+        try {
+            var league = await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+            Dictionary<String, object> body = new Dictionary<String, object>();
+            body["Season"] = Convert.ToInt32(((League) league).Season) + 1;
+
+            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
+            upsertStatus["PlayoffAssignmentId"] = false;
+            await _leagueService.EditData("leagueInfo", upsertStatus, body);
+            OkObjectResult res = new OkObjectResult(Convert.ToInt32(((League) league).Season) + 1);
+            return Ok(res);
         } catch {
             return BadRequest();
         }

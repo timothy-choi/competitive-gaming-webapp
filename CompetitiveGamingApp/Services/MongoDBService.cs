@@ -74,7 +74,8 @@ public class MongoDBService {
                 { "CombinedDivisionStandings", new BsonDocument(leagueInfo.CombinedDivisionStandings ?? new Dictionary<string, CombinedDivisionTable>()) },
                 { "ArchieveCombinedDivisionStandings", new BsonArray(leagueInfo.ArchieveCombinedDivisionStandings ?? new List<Dictionary<string, CombinedDivisionTable>>()) },
                 { "Champions", new BsonArray(leagueInfo.Champions ?? new List<Tuple<string, string>>()) },
-                { "PlayoffAssignments", leagueInfo.PlayoffAssignments }
+                { "PlayoffAssignments", leagueInfo.PlayoffAssignments },
+                { "Season", leagueInfo.Season }
             };
             break;
 

@@ -708,6 +708,63 @@ const LeaguePortal = (leagueId) => {
 
         updateSeasonInGameScores();
     }, []);
+
+    useEffect(() => {
+        const updateSeasonFinalScores = async () => {
+            var res = await axios.get(`/data/UpdateSingleGameFinalScore/app`);
+
+            var scores = res.data.substring(0, res.data.indexof("_")).split(",");
+
+            var gameId = res.data.substring(res.data.indexof("_")+1);
+
+            var seasonGamesCopy = seasonGamesByDate;
+
+            var foundGame = seasonGamesCopy.find(game => game.gameId == gameId);
+
+            if (foundGame != null) {
+                foundGame.hostScore  = scores[0];
+                foundGame.guestScore = scores[1];
+                foundGame.final = true;
+                if (scores[0] < scores[1]) {
+                    foundGame.hostRecord[1]++;
+                    foundGame.guestRecord[0]++;
+                }
+                else if (scores[0] > scores[1]) {
+                    foundGame.hostRecord[0]++;
+                    foundGame.guestRecord[1]++;
+                }
+                else {
+                    foundGame.hostRecord[2]++;
+                    foundGame.guestRecord[2]++;
+                }
+                setSeasonGamesByDate(seasonGamesCopy);
+            }
+
+            var userGame = currentUserSeasonGame;
+
+            if (userGame.gameId == gameId) {
+                userGame.hostScore = scores[0];
+                userGame.guestScore = scores[1];
+                userGame.final = true;
+                if (scores[0] < scores[1]) {
+                    userGame.hostRecord[1]++;
+                    userGame.guestRecord[0]++;
+                }
+                else if (scores[0] > scores[1]) {
+                    userGame.hostRecord[0]++;
+                    userGame.guestRecord[1]++;
+                }
+                else {
+                    userGame.hostRecord[2]++;
+                    userGame.guestRecord[2]++;
+                }
+                setCurrentUserSeasonGame(userGame);
+            }
+        };
+
+        updateSeasonFinalScores();
+
+    }, []);
 };
 
 export default LeaguePortal;

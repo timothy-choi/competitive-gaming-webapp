@@ -676,6 +676,38 @@ const LeaguePortal = (leagueId) => {
         updateStandings();
 
     }, []);
+
+    useEffect(() => {
+        const updateSeasonInGameScores = async () => {
+            var res = await axios.get(`/data/AddInGameScore/app`);
+
+            var scoreInfo = res.data.substring(0, res.data.indexof("_")).split(", ");
+
+            var scores = scoreInfo[1].slice(1, -1).split(", ").map(Number);
+
+            var gameId = res.data.substring(res.data.indexof("_")+1);
+
+            var seasonGamesCopy = seasonGamesByDate;
+
+            var foundGame = seasonGamesCopy.find(game => game.gameId == gameId);
+
+            if (foundGame != null) {
+                foundGame.hostScore  = scores[0];
+                foundGame.guestScore = scores[1];
+                setSeasonGamesByDate(seasonGamesCopy);
+            }
+
+            var userGame = currentUserSeasonGame;
+
+            if (userGame.gameId == gameId) {
+                userGame.hostScore = scores[0];
+                userGame.guestScore = scores[1];
+                setCurrentUserSeasonGame(userGame);
+            }
+        };
+
+        updateSeasonInGameScores();
+    }, []);
 };
 
 export default LeaguePortal;

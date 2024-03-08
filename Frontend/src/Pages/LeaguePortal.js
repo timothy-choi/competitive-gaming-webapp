@@ -44,6 +44,8 @@ const LeaguePortal = (leagueId) => {
 
     const [champions, setChampions] = useState([]);
 
+    const [champion, setCurrentChampion] = useState([]);
+
     const [playerSchedules, setPlayerSchedules] = useState([]);
 
     const [archievePlayerSchedules, setArchievePlayerSchedules] = useState([]);
@@ -800,6 +802,8 @@ const LeaguePortal = (leagueId) => {
 
     useEffect(() => {
         var updatePlayoffFinalScores = async () => {
+            var champs = false;
+
             var res = await axios.get(`/data/UpdateSingleGameFinalScore/app`);
 
             var scores = res.data.substring(0, res.data.indexof("_")).split(",");
@@ -852,7 +856,35 @@ const LeaguePortal = (leagueId) => {
                     }
                     if (foundGame.host_wins == leagueInfo.GamesPerRound[roundNo-1] || foundGame.guest_wins == leagueInfo.GamesPerRound[roundNo-1]) {
                         foundGame.winner = true;
+                        if (foundGame.round.contains("Championship")) {
+                            setCurrentChampion(foundGame.host_wins > foundGame.guest_wins ? foundGame.hostPlayer : foundGame.guestPlayer);
+                            champs = true;
+                        }
                     }
+                }
+                else {
+                    if (foundGame.round.contains("Championship")) {
+                        setCurrentChampion(foundGame.hostScore > foundGame.guestScore ? foundGame.hostPlayer : foundGame.guestPlayer);
+                        champs = true;
+                    }
+                }
+
+                if (champs) {
+                    await axios.post(`/League/${LeagueId}/Champion/${champion}`);
+
+                    const winner = await axios.get(`/Player/${champion}`);
+
+                    var newChampInfo = {
+                        username: champion,
+                        playerId: winner.data.playerId,
+                        season: champions.length + 1
+                    };
+
+                    var championsCopy = champions;
+
+                    championsCopy.push(newChampInfo);
+
+                    setChampions(championsCopy);
                 }
                 setCurrentPlayoffGames(playoffGamesCopy);
             }

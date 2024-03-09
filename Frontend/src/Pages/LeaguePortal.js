@@ -1037,6 +1037,8 @@ const LeaguePortal = (leagueId) => {
             await axios.put(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}/Archieve/PlayerFullSchedules`);
 
             await axios.put(`/LeaguePlayoffs/${leagueData.data.playoffAssignemnts}/ArchievePlayoffs`);
+
+            await axios.put(`/League/${leagueId}/ArchieveStandings`);
         };
 
         updateEndOfSeason();
@@ -1072,6 +1074,24 @@ const LeaguePortal = (leagueId) => {
                var archievePlayoffBracketsCopy = archievePlayoffBrackets;
                archievePlayoffBracketsCopy.push(playoffs.data.FinalPlayoffBracket);
                setArchievePlayoffBrackets(archievePlayoffBracketsCopy);
+            }
+
+            res = await axios.get(`/data/UpdateArchieveStandings/${leagueId}`);
+
+            if (res.data) {
+                var archieveLeague = archieveLeagueStandings;
+                archieveLeague.push(league.data.leagueStandings);
+                setArchieveLeagueStandings(archieveLeague);
+                var division = archieveDivisionStandings;
+                if (seasonData.data.partitionsEnabled) {
+                    division.push(league.data.divisionStandings);
+                    setArchieveDivisionStandings(division);
+                }
+                if (league.data.combinedDivisionStandings) {
+                    var combinedDiv = archieveCombinedDivisionsStandings;
+                    combinedDiv.push(league.data.combinedDivisionStandings);
+                    setArchieveCombinedDivisionsStandings(combinedDiv);
+                }
             }
         };
 

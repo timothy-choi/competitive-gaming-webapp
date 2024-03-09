@@ -944,6 +944,8 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertOpt, archievedTables);
 
+            await _kafkaProducer.ProduceMessageAsync("UpdateArchieveStandings", "archieve", LeagueId);
+
             return Ok();
         } catch {
             return BadRequest();

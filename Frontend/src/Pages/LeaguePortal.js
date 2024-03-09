@@ -820,7 +820,7 @@ const LeaguePortal = (leagueId) => {
         updateSeasonFinalScores();
 
         if (checkIfSeasonCompleted()) {
-            playoffsStart(true);
+            setPlayoffsStart(true);
         }
 
     }, []);
@@ -1040,6 +1040,42 @@ const LeaguePortal = (leagueId) => {
         };
 
         updateEndOfSeason();
+    }, [champion]);
+
+    useEffect(() => {
+        var addArchieves = async () => {
+            var res = await axios.get(`/data/ArchievePlayerSchedules/app`);
+
+            var league = await axios.get(`/League/${leagueId}`);
+
+            var seasonData = await axios.get(`/LeagueSeasonAssignments/${league.data.seasonAssignments}`);
+
+            if (res.data) {
+               var archievePlayerSchedulesCopy = archievePlayerSchedules;
+               archievePlayerSchedulesCopy.push(seasonData.data.PlayerFullSchedule);
+               setArchievePlayerSchedules(archievePlayerSchedulesCopy);
+            }
+
+            res = await axios.get(`/data/ArchieveFullScheules/app`);
+
+            if (res.data) {
+               var archieveFullSchedulesCopy = archieveFullSchedule;
+               archieveFullSchedulesCopy.push(seasonData.data.FinalFullSchedule);
+               setArchieveFullSchedule(archieveFullSchedulesCopy);
+            }
+
+            res = await axios.get("/data/ArchievePlayoffs/app");
+
+            var playoffs = await axios.get(`/LeaguePlayoffs/${league.PlayoffAssignments}`);
+
+            if (res.data) {
+               var archievePlayoffBracketsCopy = archievePlayoffBrackets;
+               archievePlayoffBracketsCopy.push(playoffs.data.FinalPlayoffBracket);
+               setArchievePlayoffBrackets(archievePlayoffBracketsCopy);
+            }
+        };
+
+        addArchieves();
     }, [champion]);
 };
 

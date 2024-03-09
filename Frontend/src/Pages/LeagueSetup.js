@@ -186,27 +186,32 @@ const LeagueSetup = (username) => {
 
         var seasonAssignmentsId = processSeasonAssignments(seasonAssignmentInfo);
 
-        const playoffInfo = {
-            LeagueId : league.LeagueId,
-            RandomInitialMode : event.target.RandomInitialMode.value,
-            RandomRoundMode : event.target.RandomRoundMode.value,
-            WholeMode : event.target.WholeMode.value,
-            DefaultMode : event.target.DefaultMode.value,
-            CombinedDivisionMode : event.target.CombinedDivisionModeMode.value
-        };
+        var playoffId = "";
 
-        const processPlayoffs = async (playoffInfo) => {
-            try {
-                const res = await axios.post(`/LeaguePlayoffs`, playoffInfo);
 
-                return res.data;
-            } catch (e) {
-                setErrorMessage(`Failed to process playoffs info`);
-                return;
+        if (configInput.playoffContention) {
+            const playoffInfo = {
+                LeagueId : league.LeagueId,
+                RandomInitialMode : event.target.RandomInitialMode.value,
+                RandomRoundMode : event.target.RandomRoundMode.value,
+                WholeMode : event.target.WholeMode.value,
+                DefaultMode : event.target.DefaultMode.value,
+                CombinedDivisionMode : event.target.CombinedDivisionModeMode.value
+            };
+    
+            const processPlayoffs = async (playoffInfo) => {
+                try {
+                    const res = await axios.post(`/LeaguePlayoffs`, playoffInfo);
+    
+                    return res.data;
+                } catch (e) {
+                    setErrorMessage(`Failed to process playoffs info`);
+                    return;
+                }
             }
-        }
 
-        var playoffId = processPlayoffs(playoffInfo);
+            playoffId = processPlayoffs(playoffInfo);
+        }
 
         var addIds = async (configId, seasonAssignmentsId, playoffsId) => {
             try {
@@ -214,7 +219,9 @@ const LeagueSetup = (username) => {
 
                 res = await axios.put(`/League/${league.LeagueId}/${seasonAssignmentsId}`);
 
-                res = await axios.put(`/League/${league.LeagueId}/${playoffsId}`);
+                if (playoffId != "") {
+                    res = await axios.put(`/League/${league.LeagueId}/${playoffsId}`);
+                }
             } catch (e) {
                 setErrorMessage(`Failed to process ids`);
                 return;

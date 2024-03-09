@@ -370,6 +370,10 @@ const LeaguePortal = (leagueId) => {
 
             var latestPlayoffGames = [];
 
+            if (leagueConfig.playoffAssignemnts) {
+                return;
+            }
+
             for (var player in players) {
                 if (seen[player.username]) {
                     continue;

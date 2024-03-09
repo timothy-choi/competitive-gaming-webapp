@@ -161,7 +161,7 @@ const LeaguePortal = (leagueId) => {
 
             if (leagueInfo.data.playerSchedules.length == 0 && leagueInfo.data.finalSchedules.length == 0) {
                 setLeagueHoldStatus(true);
-                if (Date.getMonth() == leagueInfo.data.StartDate.getMonth() && (leagueInfo.data.StartDate.getDate() - Date.getDateTime() <= 1)) {
+                if (Date.getMonth() == leagueInfo.data.StartDate.getMonth() && (leagueInfo.data.StartDate.getDate() - Date.getDate() <= 1)) {
                     setRequireSchedule(true);
                 }
             }
@@ -799,7 +799,29 @@ const LeaguePortal = (leagueId) => {
             }
         };
 
+        var checkIfSeasonCompleted = async () => {
+            var leagueData = await axios.get(`/League/${leagueId}`);
+
+            var seasonData = await axios.get(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}`);
+
+            var allGames = seasonData.data.fullSchedule;
+
+
+
+            for (var game in allGames) {
+                if (game.finalScore == null) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
         updateSeasonFinalScores();
+
+        if (checkIfSeasonCompleted()) {
+            playoffsStart(true);
+        }
 
     }, []);
 
@@ -974,6 +996,51 @@ const LeaguePortal = (leagueId) => {
 
         updatePlayoffFinalScores();
     }, []);
+
+    useEffect(() => {
+        if (champion == "") {
+            return;
+        }
+
+        const updateEndOfSeason = async () => {
+            await axios.put(`/League/${leagueId}/ResetSeasonSchedules`);
+
+            const leagueData = await axios.get(`/League/${leagueId}`);
+
+            const ownerData = await axios.get(`/Player/${owner}`);
+
+            const championData = await axios.get(`/Player/${champion}`);
+
+            var championList = leagueData.data.Champions;
+
+            var ct = 0;
+
+            for (var champ in championList) {
+                if (champ[0] == champion) {
+                    ct++;
+                }
+            }
+
+            const emailBody = {
+                league : leagueData.data.Name,
+                sender : ownerData.data.email,
+                recipient : championData.data.email,
+                num_trophies : ct-1
+            };
+
+            await axios.post(`/LeaguePlayoffs/${leagueId}/EmailChampions`, emailBody);
+
+            setPlayoffsStart(false);
+
+            await axios.put(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}/Archieve/FinalFullSchedules`);
+
+            await axios.put(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}/Archieve/PlayerFullSchedules`);
+
+            await axios.put(`/LeaguePlayoffs/${leagueData.data.playoffAssignemnts}/ArchievePlayoffs`);
+        };
+
+        updateEndOfSeason();
+    }, [champion]);
 };
 
 export default LeaguePortal;

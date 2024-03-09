@@ -81,6 +81,8 @@ const LeaguePortal = (leagueId) => {
     const [currentUserPlayoffGame, setCurrentUserPlayoffGame] = useState(null);
 
     const [roundMatchups, setRoundMatchups] = useState([]);
+
+    const [requireSchedule, setRequireSchedule] = useState(false);
  
     useEffect(() => {
         const fetchData = async () => {
@@ -143,7 +145,7 @@ const LeaguePortal = (leagueId) => {
                 return a[1] - b[1];
             });
 
-            if (Date.getMonth() == startDates[0][1].getMonth() && (startDates[0][1].getDate() - Date.getDate() <= 1)) {
+            if (Date.getMonth() == leagueInfo.data.StartDate.getMonth() && (leagueInfo.data.StartDate.getDate() - Date.getDateTime() <= 1)) {
                 var s = await axios.post(`/League/${leagueId}/SeasonChange`);
                 setSeason(s.data);
             } else {
@@ -155,6 +157,13 @@ const LeaguePortal = (leagueId) => {
             }
             else {
                 setCurrentChampion(champions[champions.length-1]);
+            }
+
+            if (leagueInfo.data.playerSchedules.length == 0 && leagueInfo.data.finalSchedules.length == 0) {
+                setLeagueHoldStatus(true);
+                if (Date.getMonth() == leagueInfo.data.StartDate.getMonth() && (leagueInfo.data.StartDate.getDate() - Date.getDateTime() <= 1)) {
+                    setRequireSchedule(true);
+                }
             }
 
             setLeagueStandings(leagueInfo.data.LeagueStandings);

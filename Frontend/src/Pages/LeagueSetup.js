@@ -16,7 +16,8 @@ const LeagueSetup = (username) => {
         var LeagueCreationInput = {
             Name: event.target.name.value,
             Description: event.target.name.value,
-            Owner: username
+            Owner: username,
+            StartDate: event.target.startDate.value
         };
 
         const processLeagueCreationInput = async (input) => {

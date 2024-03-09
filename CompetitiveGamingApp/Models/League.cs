@@ -46,4 +46,5 @@ public class League {
     public List<Tuple<String, String>>? Champions {get; set;} 
     public String? PlayoffAssignments {get; set;}
     public int? Season {get; set;}
+    public DateTime StartDate {get; set;}
 }

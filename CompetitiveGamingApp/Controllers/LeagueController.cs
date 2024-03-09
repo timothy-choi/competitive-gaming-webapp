@@ -59,7 +59,8 @@ public class LeagueController : ControllerBase {
                 ArchieveCombinedDivisionStandings = new List<Dictionary<string, CombinedDivisionTable>>(),
                 Champions = new List<Tuple<String, String>>(),
                 PlayoffAssignments = "",
-                Season = 1
+                Season = 1,
+                StartDate = Convert.ToDateTime(leagueInput["StartDate"])
             };
 
             await _leagueService.PostData("leagueInfo", curr);
@@ -967,6 +968,52 @@ public class LeagueController : ControllerBase {
             OkObjectResult res = new OkObjectResult(randList);
 
             return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeagueId}/ResetSeasonSchedules")] 
+    public async Task<ActionResult> ResetSchedules(string LeagueId) {
+         try {
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["PlayerFullSchedule"] = false;
+            upsertOpt["FinalFullSchedule"] = false;
+            
+            Dictionary<string, object> archievedTables = new Dictionary<string, object>();
+            archievedTables["PlayerFullSchedule"] = new List<Tuple<string, List<object>>>();
+            archievedTables["FinalFullSchedule"] = new List<SingleGame>();
+
+            await _leagueService.EditData("leagueInfo", upsertOpt, archievedTables);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{LeagueId}/EditStartDate")] 
+    public async Task<ActionResult> EditStartDate(string LeagueId, Dictionary<string, DateTime> reqBody) {
+         try {
+            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
+            if (league == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+            upsertOpt["StartDate"] = false;
+            
+            Dictionary<string, object> archievedTables = new Dictionary<string, object>();
+            archievedTables["StartDate"] = Convert.ToDateTime(reqBody["StartDate"]);
+
+            await _leagueService.EditData("leagueInfo", upsertOpt, archievedTables);
+
+            return Ok();
         } catch {
             return BadRequest();
         }

@@ -797,6 +797,12 @@ const LeaguePortal = (leagueId) => {
                 }
                 setCurrentUserSeasonGame(userGame);
             }
+
+            var leagueData = await axios.get(`/League/${leagueId}`);
+
+            await axios.put(`/LeagueSeasonAssignments/${leagueData.data.SeasonAssignments}/UpdatePlayerScores`);
+
+            await axios.put(`/LeagueSeasonAssignments/${leagueData.data.SeasonAssignments}/UpdateFinalScheduleScores`);
         };
 
         var checkIfSeasonCompleted = async () => {
@@ -995,6 +1001,21 @@ const LeaguePortal = (leagueId) => {
         };
 
         updatePlayoffFinalScores();
+    }, []);
+
+    useEffect(() => {
+        const updateFinalScore = async () => {
+            const league = await axios.get(`/League/${leagueId}`);
+            const res = await axios.get(`/data/UpdatePlayerRecord/${league.data.seasonAssignments}`);
+
+            setPlayerSchedules(JSON.parse(res.data));
+
+            res = await axios.get(`/data/UpdateFinalScheduleRecord/${league.data.seasonAssignments}`);
+
+            setFullSchedule(JSON.parse(res.data));
+        };
+
+        updateFinalScore();
     }, []);
 
     useEffect(() => {

@@ -356,7 +356,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             Dictionary<string, object> updatedValues = new Dictionary<string, object>();
 
-            var partitions = assignment.AllPartitions;
+            var partitions = new Dictionary<string, List<string>>();
 
             var players = (List<String>) reqBody["players"];
 

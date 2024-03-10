@@ -551,6 +551,16 @@ const LeaguePortal = (leagueId) => {
             leagueStandingsCopy.Table.push(JSON.parse(res.data));
 
             setLeagueStandings(leagueStandingsCopy);
+
+            var configInfo = await axios.get(`/LeagueConfig/${leagueId}`);
+
+            var curr_num = configInfo.data.NumberOfPlayersMin;
+
+            var seasons = await axios.get(`/LeagueSeasonAssignments/${leagueId}`);
+
+            if (!seasons.data.partitionsEnabled && leagueStandingsCopy.Table.length >= curr_num && leagueHoldStatus) {
+                setLeagueHoldStatus(false);
+            }
         };
 
         AddPlayerToLeagueStandings();
@@ -565,6 +575,16 @@ const LeaguePortal = (leagueId) => {
             leagueStandingsCopy.Table.splice(leagueStandingsCopy.Table.indexof(leagueStandingsCopy.Table.find(player => player["player"] == res.data)), 1);
 
             setLeagueStandings(leagueStandingsCopy);
+
+            var configInfo = await axios.get(`/LeagueConfig/${leagueId}`);
+
+            var curr_num = configInfo.data.NumberOfPlayersMin;
+
+            var seasons = await axios.get(`/LeagueSeasonAssignments/${leagueId}`);
+
+            if (!seasons.data.partitionsEnabled && leagueStandingsCopy.Table.length < curr_num) {
+                setLeagueHoldStatus(true);
+            }
         };
 
         RemovePlayerFromLeagueStandings();
@@ -590,9 +610,21 @@ const LeaguePortal = (leagueId) => {
 
             var divisionStandingsCopy = divisionStandings;
 
-            divisionStandingsCopy.Table.push(JSON.parse(res.data));
+            var divName = res.data.substring(0, res.data.indexof("_"));
+
+            var divObj = JSON.parse(res.data.substring(res.data.indexof("_")+1));
+
+            divisionStandingsCopy[divName].Table.push(divObj);
 
             setDivisionStandings(divisionStandingsCopy);
+
+            var configInfo = await axios.get(`/LeagueConfig/${leagueId}`);
+
+            var curr_num = configInfo.data.NumberOfPlayersPerPartition;
+
+            if (divObj.Table.length >= curr_num && leagueHoldStatus) {
+                setLeagueHoldStatus(false);
+            }
         };
 
         AddPlayerToDivisionStandings();
@@ -604,9 +636,19 @@ const LeaguePortal = (leagueId) => {
 
             var divisionStandingsCopy = divisionStandings;
 
-            divisionStandingsCopy.Table = JSON.parse(res.data);
+            var divObj = JSON.parse(res.data);
+
+            divisionStandingsCopy[divObj.DivisionName].Table = divObj.Table;
 
             setDivisionStandings(divisionStandingsCopy);
+
+            var configInfo = await axios.get(`/LeagueConfig/${leagueId}`);
+
+            var curr_num = configInfo.data.NumberOfPlayersPerPartition;
+
+            if (divObj.Table.length < curr_num) {
+                setLeagueHoldStatus(true);
+            }
         };
 
         RemovePlayerFromDivisionStandings();

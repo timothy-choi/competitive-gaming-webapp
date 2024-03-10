@@ -451,7 +451,7 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
 
-            await _kafkaProducer.ProduceMessageAsync("AddPlayerToDivison", JsonConvert.SerializeObject(entry), LeagueId);
+            await _kafkaProducer.ProduceMessageAsync("AddPlayerToDivison", DivisionName + "_" + JsonConvert.SerializeObject(entry), LeagueId);
 
             return Ok();
         }
@@ -492,7 +492,7 @@ public class LeagueController : ControllerBase {
 
             await _leagueService.EditData("leagueInfo", upsertStatus, DivPlayer);
 
-            await _kafkaProducer.ProduceMessageAsync("DeletePlayerFromDivisionStandings", JsonConvert.SerializeObject(divisions[found_division].Table), LeagueId);
+            await _kafkaProducer.ProduceMessageAsync("DeletePlayerFromDivisionStandings", JsonConvert.SerializeObject(divisions[found_division]), LeagueId);
             return Ok();
         } catch {
             return BadRequest();

@@ -1060,6 +1060,46 @@ const LeaguePortal = (leagueId) => {
             await axios.put(`/LeaguePlayoffs/${leagueData.data.playoffAssignemnts}/ArchievePlayoffs`);
 
             await axios.put(`/League/${leagueId}/ArchieveStandings`);
+
+            await axios.put(`/League/${leagueId}`);
+
+            const seasons = await axios.get(`/LeagueSeasonAssignments/${leagueData.data.SeasonAssignments}`);
+
+            if (!seasons.data.partitionsEnabled) {
+                return;
+            }
+
+            const reqBody = {
+                ReassignEverySeason : seasons.data.ReassignEverySeason
+            };
+
+            if (seasons.data.ReassignEverySeason) {
+                var players = leagueData.data.Players;
+
+                var divisions = seasons.data.AllPartitions;
+
+                for (var division in Object.keys(divisions)) {
+                    players.sort(() => Math.random() - 0.5);
+
+                    reqBody[division] = players.splice(0, seasons.data.NumberOfPlayersPerPartition);
+                }
+            }
+            
+            await axios.put(`/League/${leagueId}/ResetDivisions`, reqBody);
+
+            if (Object.keys(seasons.data.AllCombinedDivisions).length > 0) {
+                var combinedDivisions = Object.keys(seasons.data.AllCombinedDivisions);
+
+                var divisions = seasons.data.AllPartitions;
+
+                for (var comb in combinedDivisions) {
+                    divisions.sort(() => Math.random() - 0.5);
+
+                    reqBody[comb] = divisions.splice(0, seasons.data.AllCombinedDivisions[comb].length);
+                }
+
+                await axios.put(`/League/${leagueId}/CombinedDivision/Reset`, reqBody);
+            }
         };
 
         updateEndOfSeason();

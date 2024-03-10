@@ -55,7 +55,6 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
                 AutomaticInduction = Convert.ToBoolean(reqBody["AutomaticInduction"]),
                 NumberOfPlayersPerPartition = Convert.ToInt32(reqBody["NumberOfPlayersPerPartition"]),
                 NumberOfPartitions = Convert.ToInt32(reqBody["NumberOfPartitions"]),
-                SamePartitionSize = Convert.ToBoolean(reqBody["SamePartitionSize"]),
                 AutomaticScheduling = Convert.ToBoolean(reqBody["AutomaticScheduling"]),
                 ExcludeOutsideGames = Convert.ToBoolean(reqBody["ExcludeOutsideGames"]),
                 InterDvisionGameLimit = Convert.ToInt32(reqBody["InterDivisionGameLimit"]),

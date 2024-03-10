@@ -122,7 +122,6 @@ public class MongoDBService {
                 { "AutomaticInduction", assignments.AutomaticInduction },
                 { "NumberOfPlayersPerPartition", assignments.NumberOfPlayersPerPartition },
                 { "NumberOfPartitions", assignments.NumberOfPartitions },
-                { "SamePartitionSize", assignments.SamePartitionSize },
                 { "AutomaticScheduling", assignments.AutomaticScheduling },
                 { "ExcludeOutsideGames", assignments.ExcludeOutsideGames },
                 { "InterDvisionGameLimit", assignments.InterDvisionGameLimit },

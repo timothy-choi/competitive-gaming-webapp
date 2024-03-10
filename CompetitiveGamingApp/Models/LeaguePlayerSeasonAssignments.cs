@@ -17,8 +17,6 @@ public class LeaguePlayerSeasonAssignments {
     public bool AutomaticInduction {get; set;} //true = enable algorithm to automatically assign a new player / or exisiting player into a new partition, false = owner manually adds player into a division
     public int NumberOfPlayersPerPartition {get; set;} //min # of players in each partition
     public int NumberOfPartitions {get; set;} //# of partitions in the league 
-    public bool SamePartitionSize {get; set;} //true = all partitions need to have same # of players (Note: for this to be true, # of players in league needs to be divisible by # of partitions)
-
     //season matchups
     public bool AutomaticScheduling {get; set;} //true = algorithm determines schedule, false = owner manually enters a schedule via json for verification
     public bool ExcludeOutsideGames {get; set;} //true = players can only play games in their partition, false = players can play games with players in other parititons or partitions are not enabled

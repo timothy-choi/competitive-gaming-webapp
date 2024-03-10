@@ -344,7 +344,7 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
     }
 
     [HttpPost("{AssignmentsId}/GenerateDivision")]
-    public async Task<ActionResult> GenerateDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
+    public async Task<ActionResult<Dictionary<string, List<string>>>> GenerateDivisions(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {
             var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
             if (assignment == null) {
@@ -390,7 +390,9 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
             await _kafkaProducer.ProduceMessageAsync("GenerateDivisions", JsonConvert.SerializeObject(partitions), AssignmentsId);
 
-            return Ok();
+            OkObjectResult res = new OkObjectResult(partitions);
+
+            return Ok(res);
         } catch {
             return BadRequest();
         }

@@ -1069,29 +1069,35 @@ const LeaguePortal = (leagueId) => {
                 return;
             }
 
-            const reqBody = {
+            var reqBody = {
                 ReassignEverySeason : seasons.data.ReassignEverySeason
             };
 
             if (seasons.data.ReassignEverySeason) {
-                var players = leagueData.data.Players;
+              const divBody = {
+                players : leagueData.data.Players,
+                num_num_players_per_group : seasons.data.NumberOfPlayersPerPartition,
+                divisions : seasons.data.AllPartitions
+              };
 
-                var divisions = seasons.data.AllPartitions;
+              var newPartitions = await axios.post(`/LeagueSeasonAssignments/${leagueData.data.SeasonAssignments}/GenerateDivision`, divBody);
 
-                for (var division in Object.keys(divisions)) {
-                    players.sort(() => Math.random() - 0.5);
-
-                    reqBody[division] = players.splice(0, seasons.data.NumberOfPlayersPerPartition);
-                }
+              for (var partition in Object.keys(seasons.data.AllPartitions)) {
+                reqBody[partition] = newPartitions[partition];
+              }
             }
             
             await axios.put(`/League/${leagueId}/ResetDivisions`, reqBody);
+
+            reqBody = {
+                ReassignEverySeason : seasons.data.ReassignEverySeason
+            };
 
             if (Object.keys(seasons.data.AllCombinedDivisions).length > 0) {
                 if (seasons.data.ReassignEverySeason) {
                     var combinedDivisions = Object.keys(seasons.data.AllCombinedDivisions);
 
-                    var divisions = seasons.data.AllPartitions;
+                    var divisions = Object.keys(seasons.data.AllPartitions);
 
                     for (var comb in combinedDivisions) {
                         divisions.sort(() => Math.random() - 0.5);

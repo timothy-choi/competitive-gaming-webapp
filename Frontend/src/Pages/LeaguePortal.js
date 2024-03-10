@@ -1088,14 +1088,16 @@ const LeaguePortal = (leagueId) => {
             await axios.put(`/League/${leagueId}/ResetDivisions`, reqBody);
 
             if (Object.keys(seasons.data.AllCombinedDivisions).length > 0) {
-                var combinedDivisions = Object.keys(seasons.data.AllCombinedDivisions);
+                if (seasons.data.ReassignEverySeason) {
+                    var combinedDivisions = Object.keys(seasons.data.AllCombinedDivisions);
 
-                var divisions = seasons.data.AllPartitions;
+                    var divisions = seasons.data.AllPartitions;
 
-                for (var comb in combinedDivisions) {
-                    divisions.sort(() => Math.random() - 0.5);
+                    for (var comb in combinedDivisions) {
+                        divisions.sort(() => Math.random() - 0.5);
 
-                    reqBody[comb] = divisions.splice(0, seasons.data.AllCombinedDivisions[comb].length);
+                        reqBody[comb] = divisions.splice(0, seasons.data.AllCombinedDivisions[comb].length);
+                    }
                 }
 
                 await axios.put(`/League/${leagueId}/CombinedDivision/Reset`, reqBody);

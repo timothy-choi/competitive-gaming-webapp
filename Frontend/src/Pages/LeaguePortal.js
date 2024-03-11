@@ -925,18 +925,6 @@ const LeaguePortal = (leagueId) => {
                 foundGame.hostScore  = scores[0];
                 foundGame.guestScore = scores[1];
                 foundGame.final = true;
-                if (scores[0] < scores[1]) {
-                    foundGame.hostRecord[1]++;
-                    foundGame.guestRecord[0]++;
-                }
-                else if (scores[0] > scores[1]) {
-                    foundGame.hostRecord[0]++;
-                    foundGame.guestRecord[1]++;
-                }
-                else {
-                    foundGame.hostRecord[2]++;
-                    foundGame.guestRecord[2]++;
-                }
                 if (foundGame.PlayoffSeries) {
                     if (scores[0] > scores[1]) {
                         foundGame.host_wins++;
@@ -992,53 +980,6 @@ const LeaguePortal = (leagueId) => {
                     setChampions(championsCopy);
                 }
                 setCurrentPlayoffGames(playoffGamesCopy);
-            }
-
-            var userGame = currentUserSeasonGame;
-
-            if (userGame.gameId == gameId) {
-                userGame.hostScore = scores[0];
-                userGame.guestScore = scores[1];
-                userGame.final = true;
-                if (scores[0] < scores[1]) {
-                    userGame.hostRecord[1]++;
-                    userGame.guestRecord[0]++;
-                }
-                else if (scores[0] > scores[1]) {
-                    userGame.hostRecord[0]++;
-                    userGame.guestRecord[1]++;
-                }
-                else {
-                    userGame.hostRecord[2]++;
-                    userGame.guestRecord[2]++;
-                }
-                if (userGame.PlayoffSeries) {
-                    if (scores[0] > scores[1]) {
-                        userGame.host_wins++;
-                    }
-                    else {
-                        userGame.guest_wins++;
-                    }
-                    var roundNo = 0;
-                    if (foundGame.round == "Championship" || foundGame.round.contains("Championship")) {
-                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length-1];
-                    }
-                    else if (foundGame.round == "Semifinals" || foundGame.round.contains("Semifinals")) {
-                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length-2];
-                    }
-                    else if (foundGame.round.contains("Final Round")) {
-                        var finalMatchRound = parseInt(foundGame.round.match(/\d+/)[0]);
-
-                        roundNo = leagueInfo.GamesPerRound[leagueInfo.GamesPerRound.length - (leagueInfo.GamesPerRound.length-(finalMatchRound))];
-                    }
-                    else {
-                        roundNo = parseInt(foundGame.round.match(/\d+/)[0]);
-                    }
-                    if (userGame.host_wins == leagueInfo.GamesPerRound[f] || userGame.guest_wins == leagueInfo.GamesPerRound[f]) {
-                        userGame.winner = true;
-                    }
-                }
-                setCurrentUserPlayoffGame(userGame);
             }
         };
 

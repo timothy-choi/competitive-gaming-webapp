@@ -149,6 +149,11 @@ const LeagueSetup = (username) => {
             return;
         }
 
+        if (event.target.PartitionsEnabled.value && (event.target.NumberOfPlayersPerPartition.value * event.target.NumberOfPartitions.value) != configInput.NumberOfPlayersMin) {
+            setErrorMessage(`Invalid input for either Number of Players per partition and/or number of partitions. The number of partitions times the number of players per partition must be equal to the number of required players in a league.`);
+            return;
+        }
+
 
         const seasonAssignmentInfo = {
             ConfigId : configId,

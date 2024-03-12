@@ -878,9 +878,10 @@ const LeaguePortal = (leagueId) => {
         var emailPlayers = async () => {
             var leagueData = await axios.get(`/League/${leagueId}`);
             var players = leagueData.data.Players;
-            var playerRes = await axios.get(`/League/${leagueId}/${players.PlayerId}`);
 
             for (var player in players) {
+                var playerRes = await axios.get(`/League/${leagueId}/${player.PlayerId}`);
+
                 var emailBody = {
                     sender: leagueData.data.owner,
                     recipient: player.Name,

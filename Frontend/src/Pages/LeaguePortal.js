@@ -159,7 +159,7 @@ const LeaguePortal = (leagueId) => {
                 setCurrentChampion(champions[champions.length-1]);
             }
 
-            if (leagueInfo.data.playerSchedules.length == 0 && leagueInfo.data.finalSchedules.length == 0) {
+            if (leagueInfo.data.playerSchedules.length == 0 && leagueInfo.data.finalSchedules.length == 0 && !leagueHoldStatus) {
                 setLeagueHoldStatus(true);
                 if (Date.getMonth() == leagueInfo.data.StartDate.getMonth() && (leagueInfo.data.StartDate.getDate() - Date.getDate() <= 1)) {
                     setRequireSchedule(true);
@@ -946,6 +946,8 @@ const LeaguePortal = (leagueId) => {
 
                 await axios.put(`/League/${leagueId}/CombinedDivision/Reset`, reqBody);
             }
+
+            await axios.put(`/LeagueSeasonAssignments/${seasons.data.AssignmentsId}/ResetSchedules`);
         };
 
         if (checkIfSeasonCompleted()) {
@@ -1215,6 +1217,8 @@ const LeaguePortal = (leagueId) => {
 
                 await axios.put(`/League/${leagueId}/CombinedDivision/Reset`, reqBody);
             }
+
+            await axios.put(`/LeagueSeasonAssignments/${seasons.data.AssignmentsId}/ResetSchedules`);
         };
 
         updateEndOfSeason();

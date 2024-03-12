@@ -986,6 +986,30 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         }
     }
 
+    [HttpPut("{AssignmentsId}/ResetSchedules")]
+    public async Task<ActionResult> ResetSchedules(string AssignmentsId) {
+        try {
+            var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentsId);
+            if (assignment == null) {
+                return NotFound();
+            }
+
+            Dictionary<string, bool> upsertInfo = new Dictionary<string, bool>();
+            upsertInfo["FinalFullSchedule"] = false;
+            upsertInfo["PlayerFullSchedule"] = false;
+
+            Dictionary<string, object> updatedValues = new  Dictionary<string, object>();
+            updatedValues["FinalFullSchedule"] = new List<SingleGame>();
+            updatedValues["PlayerFullSchedule"] = new List<Tuple<string, List<object>>>();
+
+            await _leagueService.EditData("leagueSeasonAssignments", upsertInfo, updatedValues);
+
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
     [HttpPost("{AssignmentsId}/SendPlayerSchedule")]
     public async Task<ActionResult> SendPlayerScheduleEmail(string AssignmentsId, Dictionary<string, object> reqBody) {
         try {

@@ -867,8 +867,94 @@ const LeaguePortal = (leagueId) => {
 
         updateSeasonFinalScores();
 
+        var archieveSchedules = async () => {
+            var leagueData = await axios.get(`/League/${leagueId}`);
+
+            await axios.put(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}/Archieve/FinalFullSchedules`);
+
+            await axios.put(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}/Archieve/PlayerFullSchedules`);
+        };
+
+        var emailPlayers = async () => {
+            var leagueData = await axios.get(`/League/${leagueId}`);
+            var players = leagueData.data.Players;
+            var playerRes = await axios.get(`/League/${leagueId}/${players.PlayerId}`);
+
+            for (var player in players) {
+                var emailBody = {
+                    sender: leagueData.data.owner,
+                    recipient: player.Name,
+                    league: leagueData.data.Name,
+                    wins: parseInt(playerRes.data["wins"]),
+                    losses: parseInt(playerRes.data["losses"]),
+                    draws: parseInt(playerRes.data["draws"]),
+                    rank: parseInt(playerRes.data["rank"])
+                };
+
+                await axios.post(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}/EndOfSeasonEmail`, emailBody);
+            }
+        };
+
+        var resetStandings = async () => {
+            await axios.put(`/League/${leagueId}/ArchieveStandings`);
+
+            await axios.put(`/League/${leagueId}`);
+
+            const seasons = await axios.get(`/LeagueSeasonAssignments/${leagueData.data.SeasonAssignments}`);
+
+            if (!seasons.data.partitionsEnabled) {
+                return;
+            }
+
+            var reqBody = {
+                ReassignEverySeason : seasons.data.ReassignEverySeason
+            };
+
+            if (seasons.data.ReassignEverySeason) {
+              const divBody = {
+                players : leagueData.data.Players,
+                num_num_players_per_group : seasons.data.NumberOfPlayersPerPartition,
+                divisions : seasons.data.AllPartitions
+              };
+
+              var newPartitions = await axios.post(`/LeagueSeasonAssignments/${leagueData.data.SeasonAssignments}/GenerateDivision`, divBody);
+
+              for (var partition in Object.keys(seasons.data.AllPartitions)) {
+                reqBody[partition] = newPartitions[partition];
+              }
+            }
+            
+            await axios.put(`/League/${leagueId}/ResetDivisions`, reqBody);
+
+            reqBody = {
+                ReassignEverySeason : seasons.data.ReassignEverySeason
+            };
+
+            if (Object.keys(seasons.data.AllCombinedDivisions).length > 0) {
+                if (seasons.data.ReassignEverySeason) {
+                    var combinedDivisions = Object.keys(seasons.data.AllCombinedDivisions);
+
+                    var divisions = Object.keys(seasons.data.AllPartitions);
+
+                    for (var comb in combinedDivisions) {
+                        divisions.sort(() => Math.random() - 0.5);
+
+                        reqBody[comb] = divisions.splice(0, seasons.data.AllCombinedDivisions[comb].length);
+                    }
+                }
+
+                await axios.put(`/League/${leagueId}/CombinedDivision/Reset`, reqBody);
+            }
+        };
+
         if (checkIfSeasonCompleted()) {
-            setPlayoffsStart(true);
+            if (playoffsMode) {
+                setPlayoffsStart(true);
+            } else {
+                archieveSchedules();
+                emailPlayers();
+                resetStandings();
+            }
         }
 
     }, []);
@@ -1185,7 +1271,7 @@ const LeaguePortal = (leagueId) => {
         };
 
         addArchieves();
-    }, [champion]);
+    }, []);
 };
 
 export default LeaguePortal;

@@ -377,11 +377,16 @@ public class LeagueController : ControllerBase {
 
         var standings = league.LeagueStandings!.Table;
 
+        int i = 1;
+
         foreach (var entry in standings!) {
             if (entry["playerId"].ToString() == playerId) {
-                OkObjectResult res = new OkObjectResult(entry.Values);
+                var entryCopy = entry;
+                entryCopy["rank"] = i;
+                OkObjectResult res = new OkObjectResult(entryCopy);
                 return Ok(res);
             }
+            i++;
         }
 
         return NotFound();

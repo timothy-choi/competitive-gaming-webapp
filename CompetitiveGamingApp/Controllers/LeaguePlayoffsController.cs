@@ -51,6 +51,7 @@ public class LeaguePlayoffsController : ControllerBase {
                 WholeMode = Convert.ToBoolean(reqBody["WholeMode"]),
                 DefaultMode = Convert.ToBoolean(reqBody["DefaultMode"]),
                 CombinedDivisionMode = Convert.ToBoolean(reqBody["CombinedDivisionMode"]),
+                DivisionMode = Convert.ToBoolean(reqBody["DivisionMode"]),
                 WholeRoundOrdering = new List<Tuple<int, Tuple<string, string>>>(),
                 CombinedDivisionGroups = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),
                 DivisionBasedPlayoffPairings = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),

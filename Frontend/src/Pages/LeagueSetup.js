@@ -201,7 +201,8 @@ const LeagueSetup = (username) => {
                 RandomRoundMode : event.target.RandomRoundMode.value,
                 WholeMode : event.target.WholeMode.value,
                 DefaultMode : event.target.DefaultMode.value,
-                CombinedDivisionMode : event.target.CombinedDivisionModeMode.value
+                CombinedDivisionMode : event.target.CombinedDivisionModeMode.value,
+                DivisionMode : event.target.DivisionMode.value
             };
     
             const processPlayoffs = async (playoffInfo) => {

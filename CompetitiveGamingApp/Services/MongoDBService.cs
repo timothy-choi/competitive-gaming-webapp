@@ -155,6 +155,7 @@ public class MongoDBService {
                 { "WholeMode", playoffs.WholeMode },
                 { "DefaultMode", playoffs.DefaultMode },
                 { "CombinedDivisionMode", playoffs.CombinedDivisionMode },
+                { "DivisonMode", playoffs.DivisionMode},
                 { "WholeRoundOrdering", BsonDocumentWrapper.Create(playoffs.WholeRoundOrdering ?? new List<Tuple<int, Tuple<string, string>>>()) },
                 { "CombinedDivisionGroups", BsonDocumentWrapper.Create(playoffs.CombinedDivisionGroups ?? new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>()) },
                 { "DivisionBasedPlayoffPairings", BsonDocumentWrapper.Create(playoffs.DivisionBasedPlayoffPairings != null ? new List<Tuple<string, Tuple<int, Tuple<string, string>>>>() : null) },

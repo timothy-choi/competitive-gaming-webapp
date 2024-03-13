@@ -1277,6 +1277,38 @@ const LeaguePortal = (leagueId) => {
 
         addArchieves();
     }, []);
+
+    useEffect(() => {
+        var setupPlayoffs = async () => {
+            var league = await axios.get(`/League/${leagueId}`);
+
+            var playoffsInfo = await axios.get(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`);
+
+            if (playoffsInfo.data.wholeMode) {
+                if (playoffsInfo.data.wholeModeOrdering.length == 0) {
+
+                }
+            }
+            else if (playoffsInfo.data.DivisionMode) {
+                if (playoffsInfo.data.DivisionBasedPlayoffPairings.length == 0) {
+
+                }
+            }
+            else if (playoffsInfo.data.combinedDivisionMode) {
+                if (playoffsInfo.data.CombinedDivisionGroups.length == 0) {
+
+                }
+            }
+            else {
+                if (playoffsInfo.data.UserDefinedPlayoffMatchups.length == 0) {
+
+                }
+            }
+        };
+
+        setupPlayoffs();
+
+    }, [playoffsStart]);
 };
 
 export default LeaguePortal;

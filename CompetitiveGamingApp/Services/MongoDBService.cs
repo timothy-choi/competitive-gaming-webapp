@@ -159,7 +159,8 @@ public class MongoDBService {
                 { "WholeRoundOrdering", BsonDocumentWrapper.Create(playoffs.WholeRoundOrdering ?? new List<Tuple<int, Tuple<string, string>>>()) },
                 { "CombinedDivisionGroups", BsonDocumentWrapper.Create(playoffs.CombinedDivisionGroups ?? new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>()) },
                 { "DivisionBasedPlayoffPairings", BsonDocumentWrapper.Create(playoffs.DivisionBasedPlayoffPairings != null ? new List<Tuple<string, Tuple<int, Tuple<string, string>>>>() : null) },
-                { "UserDefinedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.UserDefinedPlayoffMatchups != null ? new List<Tuple<int, Tuple<string, string>>>() : null) }
+                { "UserDefinedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.UserDefinedPlayoffMatchups != null ? new List<Tuple<int, Tuple<string, string>>>() : null) },
+                { "PlayoffNames", new BsonArray(playoffs.PlayoffNames ?? new List<string>())}
             };
             break;
 

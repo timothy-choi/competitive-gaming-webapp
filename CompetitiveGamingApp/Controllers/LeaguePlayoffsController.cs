@@ -57,7 +57,8 @@ public class LeaguePlayoffsController : ControllerBase {
                 DivisionBasedPlayoffPairings = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),
                 UserDefinedPlayoffMatchups = new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>(),
                 FinalPlayoffBracket = new PlayoffBracket(),
-                ArchievePlayoffBrackets = new List<Tuple<int, PlayoffBracket?>>()
+                ArchievePlayoffBrackets = new List<Tuple<int, PlayoffBracket?>>(),
+                PlayoffNames = reqBody["PlayoffNames"] as List<string>
             };
 
             await _leagueService.PostData("leaguePlayoffConfig", currPlayoffs);

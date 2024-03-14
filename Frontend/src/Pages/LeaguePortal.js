@@ -1302,7 +1302,36 @@ const LeaguePortal = (leagueId) => {
                 }
             
                 return closestSmaller;
-            }
+            };
+
+            var  areDictionariesEqualExceptName = (dictA, dictB) => {
+                for (const key in dictA) {
+                    if (key !== "name" && dictA[key] !== dictB[key]) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            var findConsecutiveDuplicatesWithSameValue = (leagueStandings) => {
+                const duplicates = [];
+                let start = 0;
+
+                for (let i = 1; i < dictArray.length; i++) {
+                    if (!areDictionariesEqualExceptName(dictArray[start], dictArray[i])) {
+                        if (i - start >= 2) {
+                            duplicates.push([start, i - 1]);
+                        }
+                        start = i;
+                    }
+                }
+
+                if (dictArray.length - start >= 2) {
+                    duplicates.push([start, dictArray.length - 1]);
+                }
+
+                return duplicates;
+            };
             
 
             if (playoffsInfo.data.wholeMode) {
@@ -1328,34 +1357,6 @@ const LeaguePortal = (leagueId) => {
 
                 var selectedPlayers = [];
 
-                var  areDictionariesEqualExceptName = (dictA, dictB) => {
-                    for (const key in dictA) {
-                        if (key !== "name" && dictA[key] !== dictB[key]) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-
-                var findConsecutiveDuplicatesWithSameValue = (leagueStandings) => {
-                    const duplicates = [];
-                    let start = 0;
-
-                    for (let i = 1; i < dictArray.length; i++) {
-                        if (!areDictionariesEqualExceptName(dictArray[start], dictArray[i])) {
-                            if (i - start >= 2) {
-                                duplicates.push([start, i - 1]);
-                            }
-                            start = i;
-                        }
-                    }
-
-                    if (dictArray.length - start >= 2) {
-                        duplicates.push([start, dictArray.length - 1]);
-                    }
-
-                    return duplicates;
-                };
 
                 var allConsecValues = findConsecutiveDuplicatesWithSameValue(leagueStandings);
 
@@ -1419,8 +1420,87 @@ const LeaguePortal = (leagueId) => {
                 }
             }
             else {
+                var wholeMode = false;
                 if (playoffsInfo.data.UserDefinedPlayoffMatchups.length == 0) {
+                    wholeMode = true;
+                    await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'randomInitialMode': true});
 
+                    var size = config.data.PlayoffSizeLimit;
+
+                    if (!playoffsInfo.data.defaultMode) {
+                        size = findClosestSmallerSqrt(config.data.PlayoffSizeLimit);
+                        await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'defaultMode': true});
+                    }
+
+                    var reqBody = {
+                        num_of_players: size,
+                        division: []
+                    };
+
+                    await axios.post(`/LeaguePlayoffs/${leagueId}/WholeMode/Random`, reqBody);
+                }
+
+                if (wholeMode) {
+                    var leagueStandings = league.data.LeagueStandings.Table;
+
+                    var selectedPlayers = [];
+
+                    var allConsecValues = findConsecutiveDuplicatesWithSameValue(leagueStandings);
+
+                    if (allConsecValues.length > 0) {
+                        var allFixedPos = new Array(leagueStandings.length);
+
+                        for (var entry in allConsecValues) {
+                            var involvedPlayers = [];
+
+                            for (var st = entry[0]; st < entry[1]; st++) {
+                                involvedPlayers.push(leagueStandings[st]);
+                            }
+                            var randomnizeSelection = {
+                                conflictingPlayers: involvedPlayers
+                            };
+
+                            var newSelection = await axios.get(`/League/${league.LeagueId}`, randomnizeSelection);
+
+                            var start = entry[0];
+
+                            for (var updatedPos in newSelection) {
+                                allFixedPos[start] = updatedPos;
+                                start++;
+                            }
+                        }
+
+                        for (var i = 0; i < leagueStandings.length; ++i) {
+                            if (allFixedPos[i] == null) {
+                                allFixedPos[i] = leagueStandings[i];
+                            }
+                        }
+
+                        var tempStandings = allFixedPos.splice(0, config.data.PlayoffSizeLimit);
+
+                        for (var j = 0; j < tempStandings.length; ++j) {
+                            selectedPlayers.push({playerName: tempStandings["playerName"]});
+                        }
+                    } else {
+                        var temp = leagueStandings.splice(0, config.data.PlayoffSizeLimit);
+
+                        for (var j = 0; j < temp.length; ++j) {
+                            selectedPlayers.push({playerName: tempStandings["playerName"]});
+                        }
+                    }
+
+                    var wholeBracketBody = {
+                        PlayoffName : playoffsInfo.data.PlayoffNames[0],
+                        players: selectedPlayers
+                    };
+
+                    await axios.post(`/LeaguePlayoffs/${playoffsInfo.data.playoffsId}/WholePlayoffFormatBracket`, wholeBracketBody);
+                } else {
+                    var season = await axios.get(`/LeagueSeasonAssignments/${leagueData.data.seasonAssignments}`);
+                    var reqBody = {
+                        division_players: season.data.AllPartitions
+                    };
+                    await axios.post(`/League/${leagueData.data.playoffAssignemnts}`, reqBody);
                 }
             }
         };

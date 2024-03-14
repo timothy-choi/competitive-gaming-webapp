@@ -1289,12 +1289,35 @@ const LeaguePortal = (leagueId) => {
 
             var config = await axios.get(`/LeagueConfig/${league.data.LeagueConfig}`);
 
+            var findClosestSmallerSqrt = (number) => {
+                if (number <= 0) {
+                    return null; // Handle invalid input
+                }
+            
+                let closestSmaller = Math.floor(Math.sqrt(number));
+            
+                // Check if the square of closestSmaller is greater than the number
+                if (closestSmaller * closestSmaller > number) {
+                    closestSmaller--; // Decrement if it's greater
+                }
+            
+                return closestSmaller;
+            }
+            
+
             if (playoffsInfo.data.wholeMode) {
                 if (playoffsInfo.data.wholeModeOrdering.length == 0) {
                     await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'randomInitialMode': true});
-                    
+
+                    var size = config.data.PlayoffSizeLimit;
+
+                    if (!playoffsInfo.data.defaultMode) {
+                        size = findClosestSmallerSqrt(config.data.PlayoffSizeLimit);
+                        await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'defaultMode': true});
+                    }
+
                     var reqBody = {
-                        num_of_players: config.data.PlayoffSizeLimit,
+                        num_of_players: size,
                         division: []
                     };
 

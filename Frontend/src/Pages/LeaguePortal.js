@@ -1411,12 +1411,60 @@ const LeaguePortal = (leagueId) => {
             }
             else if (playoffsInfo.data.DivisionMode) {
                 if (playoffsInfo.data.DivisionBasedPlayoffPairings.length == 0) {
+                    await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'randomInitialMode': true});
 
+                    var seasons = await axios.get(`/LeagueSeasonAssignments/${league.data.SeasonAssignments}`);
+
+                    var size = 0;
+                    if (!playoffsInfo.data.defaultMode) {
+                        var group_size = config.data.PlayoffSizeLimit / seasons.data.AllPartitions.length;
+                        group_size = findClosestSmallerSqrt(size);
+                        size = group_size * seasons.data.AllPartitions.length;
+                        await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'defaultMode': true});
+                    }
+                    else {
+                        size = config.data.PlayoffSizeLimit;
+                    }
+
+                    var reqBody = {
+                        num_of_players: size,
+                        divisionMode: "division"
+                    };
+
+                    for (var div in Object.keys(seasons.data.AllPartitions)) {
+                        reqBody[div] = [];
+                    }
+                
+                    await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`, reqBody);
                 }
             }
             else if (playoffsInfo.data.combinedDivisionMode) {
                 if (playoffsInfo.data.CombinedDivisionGroups.length == 0) {
+                    await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'randomInitialMode': true});
 
+                    var seasons = await axios.get(`/LeagueSeasonAssignments/${league.data.SeasonAssignments}`);
+
+                    var size = 0;
+                    if (!playoffsInfo.data.defaultMode) {
+                        var group_size = config.data.PlayoffSizeLimit / seasons.data.AllCombinedDivisions.length;
+                        group_size = findClosestSmallerSqrt(size);
+                        size = group_size * seasons.data.AllCombinedDivisions.length;
+                        await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'defaultMode': true});
+                    }
+                    else {
+                        size = config.data.PlayoffSizeLimit;
+                    }
+
+                    var reqBody = {
+                        num_of_players: size,
+                        divisionMode: "combinedDivision"
+                    };
+
+                    for (var div in Object.keys(seasons.data.AllCombinedDivisions)) {
+                        reqBody[div] = [];
+                    }
+                
+                    await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`, reqBody);
                 }
             }
             else {

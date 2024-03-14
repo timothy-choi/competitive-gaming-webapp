@@ -1280,14 +1280,110 @@ const LeaguePortal = (leagueId) => {
 
     useEffect(() => {
         var setupPlayoffs = async () => {
+            if (!playoffsStart) {
+                return;
+            }
             var league = await axios.get(`/League/${leagueId}`);
 
             var playoffsInfo = await axios.get(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`);
 
+            var config = await axios.get(`/LeagueConfig/${league.data.LeagueConfig}`);
+
             if (playoffsInfo.data.wholeMode) {
                 if (playoffsInfo.data.wholeModeOrdering.length == 0) {
+                    await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'randomInitialMode': true});
+                    
+                    var reqBody = {
+                        num_of_players: config.data.PlayoffSizeLimit,
+                        division: []
+                    };
 
+                    await axios.post(`/LeaguePlayoffs/${leagueId}/WholeMode/Random`, reqBody);
                 }
+
+                var leagueStandings = league.data.LeagueStandings.Table;
+
+                var selectedPlayers = [];
+
+                var  areDictionariesEqualExceptName = (dictA, dictB) => {
+                    for (const key in dictA) {
+                        if (key !== "name" && dictA[key] !== dictB[key]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                var findConsecutiveDuplicatesWithSameValue = (leagueStandings) => {
+                    const duplicates = [];
+                    let start = 0;
+
+                    for (let i = 1; i < dictArray.length; i++) {
+                        if (!areDictionariesEqualExceptName(dictArray[start], dictArray[i])) {
+                            if (i - start >= 2) {
+                                duplicates.push([start, i - 1]);
+                            }
+                            start = i;
+                        }
+                    }
+
+                    if (dictArray.length - start >= 2) {
+                        duplicates.push([start, dictArray.length - 1]);
+                    }
+
+                    return duplicates;
+                };
+
+                var allConsecValues = findConsecutiveDuplicatesWithSameValue(leagueStandings);
+
+                if (allConsecValues.length > 0) {
+                    var allFixedPos = new Array(leagueStandings.length);
+
+                    for (var entry in allConsecValues) {
+                        var involvedPlayers = [];
+
+                        for (var st = entry[0]; st < entry[1]; st++) {
+                            involvedPlayers.push(leagueStandings[st]);
+                        }
+                        var randomnizeSelection = {
+                            conflictingPlayers: involvedPlayers
+                        };
+
+                        var newSelection = await axios.get(`/League/${league.LeagueId}`, randomnizeSelection);
+
+                        var start = entry[0];
+
+                        for (var updatedPos in newSelection) {
+                            allFixedPos[start] = updatedPos;
+                            start++;
+                        }
+                    }
+
+                    for (var i = 0; i < leagueStandings.length; ++i) {
+                        if (allFixedPos[i] == null) {
+                            allFixedPos[i] = leagueStandings[i];
+                        }
+                    }
+
+                    var tempStandings = allFixedPos.splice(0, config.data.PlayoffSizeLimit);
+
+                    for (var j = 0; j < tempStandings.length; ++j) {
+                        selectedPlayers.push({playerName: tempStandings["playerName"]});
+                    }
+                } else {
+                    var temp = leagueStandings.splice(0, config.data.PlayoffSizeLimit);
+
+                    for (var j = 0; j < temp.length; ++j) {
+                        selectedPlayers.push({playerName: tempStandings["playerName"]});
+                    }
+                }
+
+                var wholeBracketBody = {
+                    PlayoffName : playoffsInfo.data.PlayoffNames[0],
+                    players: selectedPlayers
+                };
+
+                await axios.post(`/LeaguePlayoffs/${playoffsInfo.data.playoffsId}/WholePlayoffFormatBracket`, wholeBracketBody);
             }
             else if (playoffsInfo.data.DivisionMode) {
                 if (playoffsInfo.data.DivisionBasedPlayoffPairings.length == 0) {

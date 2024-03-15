@@ -50,10 +50,6 @@ public class PlayoffGraph {
             }
         }
 
-        if (node != null) {
-            return node;
-        }
-
         foreach (var otherNode in AllOtherMatchups) {
             if ((otherNode.Item2.currentPlayoffMatchup.player1 == player1 && otherNode.Item2.currentPlayoffMatchup.player2 == player2) || (otherNode.Item2.currentPlayoffMatchup.player1 == player2 && otherNode.Item2.currentPlayoffMatchup.player2 == player1)) {
                 node = otherNode.Item2;
@@ -83,10 +79,6 @@ public class PlayoffGraph {
                 nodes.Add(startNode);
                 break;
             }
-        }
-
-        if (nodes.Count == 0) {
-            throw new Exception("Couldn't find playoff matchup");
         }
 
         foreach (var otherNode in AllOtherMatchups) {

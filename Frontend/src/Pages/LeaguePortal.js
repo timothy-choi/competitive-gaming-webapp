@@ -1437,6 +1437,64 @@ const LeaguePortal = (leagueId) => {
                 
                     await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`, reqBody);
                 }
+
+                var group_size = config.data.PlayoffSizeLimit / seasons.data.AllPartitions.length;
+
+                var divisions = league.data.DivisionStandings;
+
+                var allDiv = [];
+
+                for (var division in divisions) {
+                    var selectedPlayers = [];
+                    var conflicts = findConsecutiveDuplicatesWithSameValue(division.Table);
+                    if (conflicts.length == 0) {
+                        var temp = division.Table;
+                        selectedPlayers = temp.splice(0, group_size);
+                    }
+                    else {
+                        var temp = new Array(division.Table.length);
+
+                        for (var conflict in conflicts) {
+                            var start = conflict[0];
+                            var involved = [];
+                            while (start != conflict[1]) {
+                                involved.push(division.Table[start]);
+                                start++;
+                            }
+
+                            var randomnizeSelection = {
+                                conflictingPlayers: randomizedList
+                            };
+
+                            var randomizedList = await axios.get(`/League/${league.LeagueId}`, randomnizeSelection);
+
+                            start = conflict[0];
+
+                            for (var i = 0; i < randomizedList.length; ++i) {
+                                temp[start] = randomizedList[i];
+                            }
+                        }
+
+                        for (var j = 0; j < temp.length; ++j) {
+                            if (temp[j] == null) {
+                                temp[j] = division.Table[j];
+                            }
+                        }
+
+                        selectedPlayers = temp.splice(0, group_size);
+                    }
+
+                    var divInfo = [division.Name, {players: selectedPlayers}];
+                    allDiv.push(divInfo);
+                }
+
+                var reqBody = {
+                    mode: "Division",
+                    playoffNames: divisions.map(obj => obj.Name),
+                    players: allDiv
+                };
+
+                await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}/CreateDivisionBasedBracket`, reqBody);
             }
             else if (playoffsInfo.data.combinedDivisionMode) {
                 if (playoffsInfo.data.CombinedDivisionGroups.length == 0) {
@@ -1466,6 +1524,64 @@ const LeaguePortal = (leagueId) => {
                 
                     await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`, reqBody);
                 }
+
+                var group_size = config.data.PlayoffSizeLimit / seasons.data.CombinedDivisionGroups.length;
+
+                var combinedDivisions = league.data.combinedDivisionStandings;
+
+                var allCombDiv = [];
+
+                for (var combinedDiv in combinedDivisions) {
+                    var selectedPlayers = [];
+                    var conflicts = findConsecutiveDuplicatesWithSameValue(combinedDiv.Table);
+                    if (conflicts.length == 0) {
+                        var temp = combinedDiv.Table;
+                        selectedPlayers = temp.splice(0, group_size);
+                    }
+                    else {
+                        var temp = new Array(combinedDiv.Table.length);
+
+                        for (var conflict in conflicts) {
+                            var start = conflict[0];
+                            var involved = [];
+                            while (start != conflict[1]) {
+                                involved.push(combinedDiv.Table[start]);
+                                start++;
+                            }
+
+                            var randomnizeSelection = {
+                                conflictingPlayers: randomizedList
+                            };
+
+                            var randomizedList = await axios.get(`/League/${league.LeagueId}`, randomnizeSelection);
+
+                            start = conflict[0];
+
+                            for (var i = 0; i < randomizedList.length; ++i) {
+                                temp[start] = randomizedList[i];
+                            }
+                        }
+
+                        for (var j = 0; j < temp.length; ++j) {
+                            if (temp[j] == null) {
+                                temp[j] = combinedDiv.Table[j];
+                            }
+                        }
+
+                        selectedPlayers = temp.splice(0, group_size);
+                    }
+
+                    var divInfo = [combinedDiv.Name, {players: selectedPlayers}];
+                    allDiv.push(divInfo);
+                }
+
+                var reqBody = {
+                    mode: "CombDivisions",
+                    playoffNames: combinedDivisions.map(obj => obj.Name),
+                    players: allDiv
+                };
+
+                await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}/CreateDivisionBasedBracket`, reqBody);
             }
             else {
                 var wholeMode = false;

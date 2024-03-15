@@ -1410,12 +1410,12 @@ const LeaguePortal = (leagueId) => {
                 await axios.post(`/LeaguePlayoffs/${playoffsInfo.data.playoffsId}/WholePlayoffFormatBracket`, wholeBracketBody);
             }
             else if (playoffsInfo.data.DivisionMode) {
+                var size = 0;
                 if (playoffsInfo.data.DivisionBasedPlayoffPairings.length == 0) {
                     await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'randomInitialMode': true});
 
                     var seasons = await axios.get(`/LeagueSeasonAssignments/${league.data.SeasonAssignments}`);
 
-                    var size = 0;
                     if (!playoffsInfo.data.defaultMode) {
                         var group_size = config.data.PlayoffSizeLimit / seasons.data.AllPartitions.length;
                         group_size = findClosestSmallerSqrt(size);
@@ -1438,7 +1438,7 @@ const LeaguePortal = (leagueId) => {
                     await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`, reqBody);
                 }
 
-                var group_size = config.data.PlayoffSizeLimit / seasons.data.AllPartitions.length;
+                var group_size = size == 0 ? config.data.PlayoffSizeLimit / seasons.data.AllPartitions.length : size;
 
                 var divisions = league.data.DivisionStandings;
 
@@ -1497,12 +1497,12 @@ const LeaguePortal = (leagueId) => {
                 await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}/CreateDivisionBasedBracket`, reqBody);
             }
             else if (playoffsInfo.data.combinedDivisionMode) {
+                var size = 0;
                 if (playoffsInfo.data.CombinedDivisionGroups.length == 0) {
                     await axios.put(`/LeaguePlayoffs/${leagueId}/Modes`, {'randomInitialMode': true});
 
                     var seasons = await axios.get(`/LeagueSeasonAssignments/${league.data.SeasonAssignments}`);
 
-                    var size = 0;
                     if (!playoffsInfo.data.defaultMode) {
                         var group_size = config.data.PlayoffSizeLimit / seasons.data.AllCombinedDivisions.length;
                         group_size = findClosestSmallerSqrt(size);
@@ -1525,7 +1525,7 @@ const LeaguePortal = (leagueId) => {
                     await axios.post(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`, reqBody);
                 }
 
-                var group_size = config.data.PlayoffSizeLimit / seasons.data.CombinedDivisionGroups.length;
+                var group_size = size == 0 ? config.data.PlayoffSizeLimit / seasons.data.CombinedDivisionGroups.length : size;
 
                 var combinedDivisions = league.data.combinedDivisionStandings;
 

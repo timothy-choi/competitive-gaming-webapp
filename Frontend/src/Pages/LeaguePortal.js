@@ -1008,6 +1008,21 @@ const LeaguePortal = (leagueId) => {
 
             var foundGame = playoffGamesCopy.find(game => game.gameId == gameId);
 
+            const league = await axios.get(`/League/${leagueId}`);
+
+            const playoffs = await axios.get(`/LeaguePlayoffs/${league.data.PlayoffAssignments}`);
+
+            var bracket = "";
+
+            for (var b in playoffs.data.FinalPlayoffBracket.SubPlayoffBrackets) {
+                var matchup = bracket.FindPlayerMatchup(foundGame.hostPlayer, foundGame.guestPlayer);
+
+                if (matchup != null) {
+                    bracket = b.playoffName;
+                    break;
+                }
+            }
+
             const leagueInfo = await axios.get(`/League/${LeagueId}`);
 
             if (foundGame != null) {
@@ -1041,6 +1056,29 @@ const LeaguePortal = (leagueId) => {
                         if (foundGame.round.contains("Championship")) {
                             setCurrentChampion(foundGame.host_wins > foundGame.guest_wins ? foundGame.hostPlayer : foundGame.guestPlayer);
                             champs = true;
+                        } else {
+                            var Ordering = null;
+                            if (playoffs.data.wholeMode) {
+                                Ordering = playoffs.data.wholeModeOrdering;
+                            }
+                            if (playoffs.data.DivisionMode) {
+                                Ordering = playoffs.data.DivisionBasedPlayoffPairings;
+                            }
+                            if (playoffs.data.combinedDivisionMode) {
+                                Ordering = playoffs.data.CombinedDivisionGroups;
+                            }
+                            else {
+                                Ordering = playoffs.data.userDefinedOrdering;
+                            }
+                            const reqBody = {
+                                winner: foundGame.host_wins > foundGame.guest_wins ? foundGame.hostPlayer : foundGame.guestPlayer,
+                                bracket: bracket,
+                                player1: foundGame.hostPlayer,
+                                player2: foundGame.guestPlayer,
+                                Ordering: Ordering
+                            };
+
+                            await axios.post(`/LeaguePlayoffs/${playoff.data.PlayoffId}`, reqBody);
                         }
                     }
                 }
@@ -1048,6 +1086,29 @@ const LeaguePortal = (leagueId) => {
                     if (foundGame.round.contains("Championship")) {
                         setCurrentChampion(foundGame.hostScore > foundGame.guestScore ? foundGame.hostPlayer : foundGame.guestPlayer);
                         champs = true;
+                    } else {
+                        var Ordering = null;
+                        if (playoffs.data.wholeMode) {
+                            Ordering = playoffs.data.wholeModeOrdering;
+                        }
+                        if (playoffs.data.DivisionMode) {
+                            Ordering = playoffs.data.DivisionBasedPlayoffPairings;
+                        }
+                        if (playoffs.data.combinedDivisionMode) {
+                            Ordering = playoffs.data.CombinedDivisionGroups;
+                        }
+                        else {
+                            Ordering = playoffs.data.userDefinedOrdering;
+                        }
+                        const reqBody = {
+                            winner: foundGame.host_wins > foundGame.guest_wins ? foundGame.hostPlayer : foundGame.guestPlayer,
+                            bracket: bracket,
+                            player1: foundGame.hostPlayer,
+                            player2: foundGame.guestPlayer,
+                            Ordering: Ordering
+                        };
+
+                        await axios.post(`/LeaguePlayoffs/${playoff.data.PlayoffId}`, reqBody);
                     }
                 }
 

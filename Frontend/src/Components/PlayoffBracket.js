@@ -21,7 +21,45 @@ const PlayoffBracket = (leagueId, leaguePlayoffId) => {
     }, []);
 
     useEffect(() => {
-    
+        var updateSeries = async () => {
+            var res = await axios.get(`/data/UpdateMatchupSeries/${leaguePlayoffId}`);
+
+            setPlayoffBracket(JSON.parse(res.data));
+        };
+
+        updateSeries();
+    }, []);
+
+    useEffect(() => {
+        var updatePlayoffRound = async () => {
+            
+        };
+
+        updatePlayoffRound();
+    }, []);
+
+    useEffect(() => {
+        var updateInGameScore = async () => {
+
+        };
+
+        updateInGameScore();
+    }, []);
+
+    useEffect(() => {
+        var updateFinalScore = async () => {
+
+        };
+
+        updateFinalScore();
+    }, []);
+
+    useEffect(() => {
+        var addInNextGame = async () => {
+
+        };
+
+        addInNextGame();
     }, []);
 
     useEffect(() => {

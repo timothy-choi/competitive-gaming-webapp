@@ -1015,7 +1015,7 @@ const LeaguePortal = (leagueId) => {
             var bracket = "";
 
             for (var b in playoffs.data.FinalPlayoffBracket.SubPlayoffBrackets) {
-                var matchup = bracket.FindPlayerMatchup(foundGame.hostPlayer, foundGame.guestPlayer);
+                var matchup = await axios.get(`/LeaguePlayoffs/${playoffs.PlayoffId}/${foundGame.hostPlayer}/${foundGame.guestPlayer}/${b.playoffName}`);
 
                 if (matchup != null) {
                     bracket = b.playoffName;

@@ -32,15 +32,41 @@ const PlayoffBracket = (leagueId, leaguePlayoffId) => {
 
     useEffect(() => {
         var updatePlayoffRound = async () => {
-            
+            var res = await axios.get(`/data/UpdatePlayoffBracket/${leagueId}`);
+
+            setPlayoffBracket(JSON.parse(res.data));
         };
 
         updatePlayoffRound();
     }, []);
 
     useEffect(() => {
-        var updateInGameScore = async () => {
+        var updateFinalPlayoffRound = async () => {
+            var res = await axios.get(`/data/UpdateFinalRounds/${leaguePlayoffId}`);
 
+            setPlayoffBracket(JSON.parse(res.data));
+        };
+
+        updateFinalPlayoffRound();
+    }, []);
+
+    useEffect(() => {
+        var addInFinalRounds = async () => {
+            var res = await axios.get(`/data/SetupFinalRounds/${leaguePlayoffId}`);
+
+            setPlayoffBracket(JSON.parse(res.data));
+        };
+
+        addInFinalRounds();
+    }, []);
+
+    useEffect(() => {
+        var updateInGameScore = async () => {
+            var res = await axios.get(`/data/AddInGameScore/app`);
+
+            var temp = await axios.get(`/LeaguePlayoffs/${leaguePlayoffId}/PlayoffBracket`);
+
+            setPlayoffBracket(temp.data);
         };
 
         updateInGameScore();
@@ -48,7 +74,11 @@ const PlayoffBracket = (leagueId, leaguePlayoffId) => {
 
     useEffect(() => {
         var updateFinalScore = async () => {
+            var res = await axios.get(`/data/UpdateSingleGameFinalScore/app`);
 
+            var temp = await axios.get(`/LeaguePlayoffs/${leaguePlayoffId}/PlayoffBracket`);
+
+            setPlayoffBracket(temp.data);
         };
 
         updateFinalScore();
@@ -56,7 +86,11 @@ const PlayoffBracket = (leagueId, leaguePlayoffId) => {
 
     useEffect(() => {
         var addInNextGame = async () => {
+            var res = await axios.get(`/data/AddGameToMatchup/${leaguePlayoffId}`);
 
+            var temp = await axios.get(`/LeaguePlayoffs/${leaguePlayoffId}/PlayoffBracket`);
+
+            setPlayoffBracket(temp.data);
         };
 
         addInNextGame();

@@ -1771,6 +1771,55 @@ const LeaguePortal = (leagueId) => {
         setupPlayoffs();
 
     }, [playoffsStart]);
+
+    const handleGenerateScheduleSubmit = (event) => {
+        event.preventDefault();
+
+        const generateSchedule = async () => {
+            const leagueSettings = await axios.get(`LeagueConfig/${leagueConfig}`);
+            const leagueSeasonInfo = await axios.get(`LeagueSeasonAssignments/${seasonAssignments}`);
+
+            const reqBody = {
+                whole_mode: leagueSettings.data.WholeMode,
+                players: players,
+                num_games: leagueSettings.data.NumberOfGames,
+                start_date: leagueSettings.data.firstSeasonMatch,
+                intervals_between_games: leagueSettings.data.intervalsBetweenGames,
+                intervals_between_games_hours: leagueSettings.data.intervalsBetweenGamesHours,
+                do_not_play: leagueSeasonInfo.data.PlayerExemptLists,
+                groups: leagueSeasonInfo.data.AllPartitions,
+                outside_groups: leagueSeasonsInfo.data.OutsideDivsionSelections,
+                player_groups: leagueSeasonInfo.data.AllPartitions,
+                outside_player_limit: leagueSeasonInfo.data.InterDivsionalGameLimit
+            };
+
+            const schedule = await axios.post(`LeagueConfig/${seasonAssignments}`, reqBody);
+
+            reqBody = {
+                PlayerFullSchedule: schedule.data
+            };
+
+            await axios.put(`LeagueConfig/${seasonAssignments}`, reqBody);
+
+            var ownerInfo = await axios.get(`Player/${owner}`);
+
+            for (var player in players) {
+                var playerInfo = await axios.get(`Player/${player.username}`);
+                var body = {
+                    username: player.username,
+                    league: name,
+                    recipient: playerInfo.data.playerEmail,
+                    sender: ownerInfo.data.playerEmail
+                }
+
+                await axios.post(`LeagueSeasonAssignments/${seasonAssignments}/SendPlayerSchedule`, body);
+            }
+
+            setRequireSchedule(false);
+        }
+
+        generateSchedule();
+    };
 };
 
 export default LeaguePortal;

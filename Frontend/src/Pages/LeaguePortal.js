@@ -1820,6 +1820,41 @@ const LeaguePortal = (leagueId) => {
 
         generateSchedule();
     };
+
+    const handleScheduleUploadSubmit = (event) => {
+        event.preventDefault();
+
+        var file = event.target.files[0];
+
+        const processSchedule = async (schedule_file) => {
+            var reqBody = {
+                file: schedule_file,
+                players: players
+            };
+
+            await axios.post(`LeagueSeasonAssignments/${seasonAssignments}/UploadSchedule`, reqBody);
+
+            await axios.put(`LeagueSeasonAssignments/${seasonAssignments}/FinalSeasonSchedule`);
+
+            var ownerInfo = await axios.get(`Player/${owner}`);
+
+            for (var player in players) {
+                var playerInfo = await axios.get(`Player/${player.username}`);
+                var body = {
+                    username: player.username,
+                    league: name,
+                    recipient: playerInfo.data.playerEmail,
+                    sender: ownerInfo.data.playerEmail
+                }
+
+                await axios.post(`LeagueSeasonAssignments/${seasonAssignments}/SendPlayerSchedule`, body);
+            }
+
+            setRequireSchedule(false);
+        };
+
+        processSchedule(file);
+    };
 };
 
 export default LeaguePortal;

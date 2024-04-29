@@ -1855,6 +1855,47 @@ const LeaguePortal = (leagueId) => {
 
         processSchedule(file);
     };
+
+    const handleGenerateDivisionsSubmit = (event) => {
+        event.preventDefault();
+
+        const generateDivisons = async () => {
+            var seasonInfo = await axios.get(`/seasonAssignments/${seasonAssignments}`);
+            var reqBody = {
+                "players": players,
+                "num_players_per_group": seasonInfo.NumberOfPlayersPerPartition,
+                "divisions": divisions
+            };
+
+            var partitionInfo = await axios.post(`/seasonAssignments/${seasonAssignments}/GenerateDivision`, reqBody);
+
+            reqBody = {
+                "divisions": Object.keys(partitionInfo.data)
+            };
+
+            await axios.post(`LeagueAssignments/${leagueId}/Division/Create`, reqBody);
+
+            const metrics = await axios.get(`/LeagueConfig/${leagueConfig}`);
+
+            for (var division in Object.keys(partitionInfo.data)) {
+                for (var player in partitionInfo.data[`${division}`]) {
+                    var playerInfo = await axios.get(`/Player/${player}`);
+                    reqBody = {}
+                    for (var metric in metrics) {
+                        reqBody[`${metric}`] = null
+                    }
+
+                    await axios.post(`/League/${leagueId}/${division}/${playerInfo.username}`, reqBody);
+                }
+            }
+
+            var leagueStandings = await axios.get(`/League/${leagueId}`);
+
+            setDivisionStandings(leagueStandings.data.divisionStandings);
+        }
+        
+        generateDivisons();
+    };
 };
 
 export default LeaguePortal;

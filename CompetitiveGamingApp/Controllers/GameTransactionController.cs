@@ -50,7 +50,8 @@ public class GameTransactionController : ControllerBase {
                 gameId = gameInfo["gameId"],
                 playerLost = gameInfo["playerLost"],
                 amountPaid = gameInfo["amountPaid"] == "" ? 0.00 : Convert.ToDouble(gameInfo["amountPaid"]),
-                timePaid = Convert.ToDateTime(gameInfo["timePaid"])
+                timePaid = Convert.ToDateTime(gameInfo["timePaid"]),
+                paymentId = gameInfo["paymentId"]
             };
             await _singleTransService.addNewGameResult(curr);
             return Ok();

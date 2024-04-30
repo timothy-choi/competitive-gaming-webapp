@@ -32,7 +32,7 @@ public class SingleGamePaymentTransactionsService {
 
     public async Task addNewGameResult(SingleGamePaymentTransactions newTrans) {
         try {
-            string cmd = "INSERT INTO public.GameHistory (TransactionId, initPlayer, hostPlayer, gameId, playerLost, amountPaid, timePaid) VALUES (@TransactionId, @initPlayer, @hostPlayer, @gameId, @playerLost, @amountPaid, @timePaid)";
+            string cmd = "INSERT INTO public.GameHistory (TransactionId, initPlayer, hostPlayer, gameId, playerLost, amountPaid, timePaid, paymentId) VALUES (@TransactionId, @initPlayer, @hostPlayer, @gameId, @playerLost, @amountPaid, @timePaid, @paymentId)";
             await _dbServices.EditData<SingleGamePaymentTransactions>(cmd, newTrans);
         } catch {
             throw new Exception("Couldn't add new game history");

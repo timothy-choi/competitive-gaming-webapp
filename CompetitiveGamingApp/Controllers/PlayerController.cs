@@ -68,7 +68,8 @@ public class PlayerController : ControllerBase {
                 leagueJoined = false,
                 playerInGame = false,
                 playerLeagueJoined = "",
-                singlePlayerRecord = new List<int>()
+                singlePlayerRecord = new List<int>(),
+                singleGamePrice = Convert.ToDouble(playerInfo["price"])
             };
 
             await _playerService.AddAsync(createdPlayer);
@@ -219,6 +220,24 @@ public class PlayerController : ControllerBase {
 
             await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", gameStatus, player[0].playerId!);
             await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", player[0].playerName + "_" + gameStatus, "app");
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{username}/{newPrice}/changeFee")]
+    public async Task<ActionResult> changeFee(string username, double newPrice) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
+            player[0].singleGamePrice = newPrice;
+            _playerService.SaveChanges();
+
+            await _kafkaProducer.ProduceMessageAsync("ChangedSingleGameFee", $"{newPrice}", player[0].playerId!);
+            await _kafkaProducer.ProduceMessageAsync("ChangedSingleGameFee",  $"{newPrice}", "app");
             return Ok();
         } catch {
             return BadRequest();

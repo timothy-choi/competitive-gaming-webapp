@@ -8,4 +8,5 @@ public class SingleGamePaymentTransactions {
     public String? playerLost {get; set;}
     public double amountPaid {get; set;}
     public DateTime timePaid {get; set;}
+    public String paymentId {get; set;}
 }

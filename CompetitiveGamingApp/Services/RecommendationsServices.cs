@@ -7,7 +7,7 @@ public class PlayerRecommendationServices : DbContext {
     : base(options) 
     {
     }
-    public DbSet<PlayerRecommendationServices> RecommendationAccounts {get; set;}
+    public DbSet<PlayerRecommendations> RecommendationAccounts {get; set;}
 }
 
 public class LeagueRecommendationServices : DbContext {
@@ -15,5 +15,5 @@ public class LeagueRecommendationServices : DbContext {
     : base(options) 
     {
     }
-    public DbSet<LeagueRecommendationServices> RecommendationAccounts {get; set;}
+    public DbSet<LeagueRecommendations> RecommendationAccounts {get; set;}
 }

@@ -42,7 +42,7 @@ class UserIncrementalSVD:
     def predict(self, user_index, item_index):
         return self.U[user_index, :].dot(self.V[item_index, :])
 
-    def recommend(self, user_index, num_recommendations=5):
+    def recommend(self, user_index, user_item_matrix, num_recommendations=5):
         user_similarity = self.U.dot(self.U[user_index,:])
         recommendations = []
 
@@ -59,12 +59,12 @@ class UserIncrementalSVD:
         filtered_recommendations = [
             (user_idx, league_idx, prediction) 
             for user_idx, league_idx, prediction in recommendations
-            if self.user_item_matrix[user_index, league_idx] == 0
+            if user_item_matrix[user_index, league_idx] == 0
         ]
 
         return filtered_recommendations[:num_recommendations]
 
-    def add_data(self, username, league, wins, losses, league_tags):
+    def add_data(self, username, league, wins, losses, league_tags, user_matrix):
         if username not in self.user_ids:
             self.user_ids[username] = self.user_count
             self.user_count += 1
@@ -79,11 +79,17 @@ class UserIncrementalSVD:
         user_idx = self.user_ids[username]
         league_idx = self.league_ids[league]
 
+        user_matrix[user_idx, league_idx, 0] = wins
+        user_matrix[user_idx, league_idx, 1] = losses
+        user_matrix[user_idx, league_idx, 2:] = tags_encoded[_]
+
         tags_encoded = np.zeros(len(league_tags), dtype=int)
 
         data_point = np.array([wins, losses] + tags_encoded.tolist())
 
         self.sgd_incremental(user_idx, league_idx, data_point)
+
+        return user_matrix
 
     def sgd_incremental(self, user_idx, league_idx, data_point):
         n_features = data_point.size

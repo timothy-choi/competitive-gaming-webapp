@@ -9,6 +9,8 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Linq;
+using RabbitMQ;
+using System.Reflection.PortableExecutable;
 
 [ApiController]
 [Route("api/Recommendation")]
@@ -18,9 +20,13 @@ public class RecommendationController : ControllerBase {
     private PlayerRecommendationServices _playerServices;
 
     private LeagueRecommendationServices _leagueServices;
+    private Producer _producer;
+    private Consumer _consumer;
     public RecommendationController(PlayerRecommendationServices playerServices, LeagueRecommendationServices leagueServices) {
         _playerServices = playerServices;
         _leagueServices = leagueServices;
+        _producer = new Producer();
+        _consumer = new Consumer();
     }
 
     [HttpGet("/Player/${PlayerRecommendationId}")]
@@ -78,6 +84,25 @@ public class RecommendationController : ControllerBase {
             await _playerServices.SaveChangesAsync();
 
             return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpGet("{playerUsername}/FindRecommendations")]
+    public async Task<ActionResult<List<String>>> findUserRecommendations(string playerUsername) {
+        try {
+            Dictionary<string, object> msg = new Dictionary<string, object>();
+
+            msg["val"] = playerUsername;
+
+            _producer.SendMessage("player_rec_notifications", msg);
+
+            List<String> recommendations = await _consumer.ReceiveUserRecommendations(playerUsername);
+
+            OkObjectResult res = new OkObjectResult(recommendations);
+
+            return Ok(res);
         } catch {
             return BadRequest();
         }

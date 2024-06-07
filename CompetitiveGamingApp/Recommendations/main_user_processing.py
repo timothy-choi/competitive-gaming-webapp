@@ -5,6 +5,7 @@ import time
 import pika
 from cachetools import LRUCache
 import shelve
+import json
 
 def create_or_load_cache():
     try:
@@ -20,15 +21,20 @@ def create_or_load_cache():
     except (FileNotFoundError, shelve.ShelfError):
         pass
 
-def send_response_back(recommendations):
+def send_response_back(player_uname, recommendations):
     connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
     channel = connection.channel()
 
-    channel.queue_declare("recommendations_queue")
+    channel.queue_declare("recommendations_queue_" + player_uname)
 
-    msg = " ".join(recommendations)
+    req = {
+        "player" : player_uname,
+        "recommendations" : recommendations
+    }
 
-    channel.basic_publish(exchange='', routing_key="recommendations_queue", body=msg)
+    msg = json.dumps(req)
+
+    channel.basic_publish(exchange='', routing_key="recommendations_queue_" + player_uname, body=msg)
 
     connection.close()
 
@@ -92,7 +98,7 @@ def main():
 
     if len(user_records.PlayerHistoryRecords) >= 10:
         recommendations = RunUserRecommendationModelFlow(player_uname, user_records.PlayerHistoryRecords)
-        send_response_back(recommendations)
+        send_response_back(player_uname, recommendations)
 
 if __name__ == "__main__":
     while True:

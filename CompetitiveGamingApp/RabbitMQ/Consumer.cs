@@ -543,4 +543,29 @@ public class Consumer {
 
         return res;
     }
+
+    public async Task<List<String>> ReceiveLeagueRecommendations(String player_uname) {
+        using var connection = _factory.CreateConnection();
+        using var channel = connection.CreateModel();
+
+        channel.QueueDeclare(queue: "recommendations_league_queue_" + player_uname, durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+        var consumer = new EventingBasicConsumer(channel);
+
+        List<String> res = new List<String>();
+
+        consumer.Received += (model, ea) => {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+            var data = JsonConvert.DeserializeObject<Dictionary<String, object>>(message)!;
+
+            res = (List<string>)data["recommendations"];
+            
+            channel.BasicAck(ea.DeliveryTag, false);
+        };
+
+        channel.BasicConsume(queue: "recommendations_league_queue_" + player_uname, autoAck: false, consumer: consumer);
+
+        return res;
+    }
 }

@@ -168,8 +168,24 @@ public class RecommendationController : ControllerBase {
         }
     }
 
-    
+    [HttpGet("{playerUsername}/FindLeagueRecommendations")]
+    public async Task<ActionResult<List<String>>> findLeagueRecommendations(string playerUsername) {
+        try {
+            Dictionary<string, object> msg = new Dictionary<string, object>();
 
+            msg["val"] = playerUsername;
+
+            _producer.SendMessage("league_rec_notifications", msg);
+
+            List<String> recommendations = await _consumer.ReceiveLeagueRecommendations(playerUsername);
+
+            OkObjectResult res = new OkObjectResult(recommendations);
+
+            return Ok(res);
+        } catch {
+            return BadRequest();
+        }
+    }
 
 }
 

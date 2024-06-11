@@ -42,17 +42,28 @@ class UserIncrementalSVD:
     def predict(self, user_index, item_index):
         return self.U[user_index, :].dot(self.V[item_index, :])
 
-    def recommend(self, user_index, user_item_matrix, num_recommendations=5):
-        user_similarity = self.U.dot(self.U[user_index,:])
+    def recommend(self, user_index, user_item_matrix, unplayed_users, num_recommendations=5):
         recommendations = []
 
-        for user_idx in range(len(self.U)):
-            if user_idx != user_idx:
-                similarity = user_similarity[user_idx]
-                for league_idx in range(len(self.V)):
-                    prediction = self.predict(user_idx, league_idx)
-                    weighted_pred = prediction  * similarity
-                    recommendations.append((user_idx, league_idx, weighted_pred))
+        for unplayed_user in unplayed_users:
+            if unplayed_user not in self.user_ids:
+                unplayed_user_idx = self.user_count
+                self.user_ids[unplayed_user] = unplayed_user_idx
+                self.user_count += 1
+                new_user_factor = np.random.normal(scale=1./self.n_factors, size=(1, self.n_factors))
+                if self.U is not None:
+                    self.U = np.vstack([self.U, new_user_factor])
+                else:
+                    self.U = new_user_factor
+            else:
+                unplayed_user_idx = self.user_ids[unplayed_user]
+            
+            similarity = np.dot(self.U[user_index, :], self.U[unplayed_user_idx, :])
+
+        for league_idx in range(len(self.V)):
+            prediction = self.predict(unplayed_user_idx, league_idx)
+            weighted_pred = prediction * similarity
+            recommendations.append((unplayed_user_idx, league_idx, weighted_pred))
         
         recommendations.sort(key=lambda x: x[2], reverse=True)
         
@@ -69,12 +80,10 @@ class UserIncrementalSVD:
             self.user_ids[username] = self.user_count
             self.user_count += 1
             new_user_factor = np.random.normal(scale=1./self.n_factors, size=(1, self.n_factors))
-            self.U = np.vstack([self.U, new_user_factor])
-        if league not in self.league_ids:
-            self.league_ids[league] = self.league_count
-            self.league_count += 1
-            new_league_factor = np.random.normal(scale=1./self.n_factors, size=(1, self.n_factors))
-            self.V = np.vstack([self.V, new_league_factor])
+            if self.U is not None:
+                self.U = np.vstack([self.user_factors, new_user_factor])
+            else:
+                self.U = new_user_factor
         
         user_idx = self.user_ids[username]
         league_idx = self.league_ids[league]

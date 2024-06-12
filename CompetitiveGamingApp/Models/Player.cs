@@ -15,4 +15,5 @@ public class Player {
     public String? playerLeagueJoined {get; set;}
     public List<int>? singlePlayerRecord {get; set;}
     public double singleGamePrice {get; set;}
+    public bool enablePushNotifications {get; set;}
 }

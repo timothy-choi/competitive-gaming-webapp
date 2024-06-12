@@ -69,7 +69,8 @@ public class PlayerController : ControllerBase {
                 playerInGame = false,
                 playerLeagueJoined = "",
                 singlePlayerRecord = new List<int>(),
-                singleGamePrice = Convert.ToDouble(playerInfo["price"])
+                singleGamePrice = Convert.ToDouble(playerInfo["price"]),
+                enablePushNotifications = Convert.ToBoolean(playerInfo["pushNotifications"])
             };
 
             await _playerService.AddAsync(createdPlayer);
@@ -258,6 +259,27 @@ public class PlayerController : ControllerBase {
             var record = player[0].singlePlayerRecord;
 
             await _kafkaProducer.ProduceMessageAsync("UpdatePlayerRecord", string.Join(",", record!), player[0].playerId!);
+            return Ok();
+        } catch {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("/changedPushNotifications/{username}")]
+    public async Task<ActionResult> updatePushNotificaitonOption(string username) {
+        try {
+            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
+            if (player == null) {
+                return BadRequest();
+            }
+            if (player[0].enablePushNotifications) {
+                player[0].enablePushNotifications = false;
+            }
+            else {
+                player[0].enablePushNotifications = true;
+            }
+            _playerService.SaveChanges();
+            
             return Ok();
         } catch {
             return BadRequest();

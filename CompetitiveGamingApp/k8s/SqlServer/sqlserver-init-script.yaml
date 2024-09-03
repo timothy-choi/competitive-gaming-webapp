@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sqlserver-init-scripts
+data:
+  init.sql: |
+    CREATE DATABASE SqlServerGameData;
+    USE SqlServerGameData;
+    CREATE TABLE PlayerAuth (
+        PlayerAuthId VARCHAR(1000) PRIMARY KEY,
+        PlayerUsername VARCHAR(1000),
+        PlayerPassword VARCHAR(1000)
+    );

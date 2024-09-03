@@ -23,19 +23,6 @@ spec:
       labels:
         app: postgres
     spec:
-      initContainers:
-      - name: init-history-table
-        image: postgres:latest
-        command: ['sh', '-c', 'psql -U postgres -f /config/init-history-table.sql']
-        volumeMounts:
-        - name: postgres-init-scripts
-          mountPath: /config
-      - name: init-game-table
-        image: postgres:latest
-        command: ['sh', '-c', 'psql -U postgres -f /config/init-historgamey-table.sql']
-        volumeMounts:
-        - name: postgres-init-scripts
-          mountPath: /config
       containers:
       - name: postgres
         image: postgres:latest
@@ -53,10 +40,12 @@ spec:
                 name: postgres-secrets
                 key: POSTGRES_PASSWORD
         - name: POSTGRES_DB
-          value: PostgresSqlGameHistoryTable
+          value: PostgresGameData
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
+        - name: postgres-init-scripts
+          mountPath: /docker-entrypoint-initdb.d/
       volumes:
       - name: postgres-init-scripts
         configMap:

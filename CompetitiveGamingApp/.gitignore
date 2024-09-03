@@ -1,2 +1,3 @@
 appsettings.json
 mongodb-deployment.yaml
+k8s/Postgres/postgres-secret.yaml

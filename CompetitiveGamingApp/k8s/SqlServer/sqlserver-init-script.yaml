@@ -11,3 +11,65 @@ data:
         PlayerUsername VARCHAR(1000),
         PlayerPassword VARCHAR(1000)
     );
+
+    CREATE TABLE Player (
+      playerId NVARCHAR(255) PRIMARY KEY,
+      playerName NVARCHAR(255),
+      playerUsername NVARCHAR(255),
+      playerEmail NVARCHAR(255),
+      playerJoined DATETIME NOT NULL,
+      playerAvailable BIT NOT NULL,
+      playerInGame BIT NOT NULL,
+      playerFriends NVARCHAR(MAX),
+      leagueJoined BIT NOT NULL,
+      playerLeagueJoined NVARCHAR(255),
+      singlePlayerRecord VARBINARY(MAX),
+      singleGamePrice FLOAT NOT NULL,
+      enablePushNotifications BIT NOT NULL
+    );
+
+    CREATE TABLE PlayerPaymentAccount (
+      playerPaymentAccountId NVARCHAR(255) PRIMARY KEY,
+      playerUsername NVARCHAR(255),
+      playerPaymentUsername NVARCHAR(255),
+      playerCashAppId NVARCHAR(255),
+      MerchantId NVARCHAR(255),
+      idempotencyKey NVARCHAR(255),
+      webhookEndpoints NVARCHAR(MAX)
+    );
+
+    CREATE TABLE PlayerGameRecords (
+      PlayerGameRecordId NVARCHAR(255) PRIMARY KEY,
+      PlayerRecommendationId NVARCHAR(255), -- Foreign key to PlayerRecommendations table
+      PlayerId NVARCHAR(255),
+      PlayerUsername NVARCHAR(255),
+      PlayerRecord VARBINARY(MAX), -- Serialized list of integers
+      PlayerLeagueJoined BIT NOT NULL,
+      PlayerLeague NVARCHAR(255),
+      PlayerLeagueTags NVARCHAR(MAX), -- Serialized list of strings
+      FOREIGN KEY (PlayerRecommendationId) REFERENCES PlayerRecommendations(PlayerRecommendationId)
+    );
+
+    CREATE TABLE PlayerRecommendations (
+      PlayerRecommendationId NVARCHAR(255) PRIMARY KEY,
+      PlayerId NVARCHAR(255),
+      PlayerUsername NVARCHAR(255)
+    );
+
+    CREATE TABLE LeagueJoinRecords (
+      LeagueJoinRecordId NVARCHAR(255) PRIMARY KEY,
+      LeagueRecommendationId NVARCHAR(255), -- Foreign key to LeagueRecommendations table
+      LeagueId NVARCHAR(255),
+      LeagueName NVARCHAR(255),
+      LeagueTags NVARCHAR(MAX), -- Serialized list of strings
+      LeaguePlayerOverallRecord VARBINARY(MAX), -- Serialized list of integers
+      LeagueIndividualOverallRecord VARBINARY(MAX), -- Serialized list of list of integers
+      FOREIGN KEY (LeagueRecommendationId) REFERENCES LeagueRecommendations(LeagueRecommendationId)
+    );
+
+    CREATE TABLE LeagueRecommendations (
+      LeagueRecommendationId NVARCHAR(255) PRIMARY KEY,
+      PlayerId NVARCHAR(255),
+      PlayerUsername NVARCHAR(255)
+    );
+

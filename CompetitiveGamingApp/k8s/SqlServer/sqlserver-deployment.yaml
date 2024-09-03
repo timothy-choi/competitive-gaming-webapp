@@ -39,8 +39,13 @@ spec:
         volumeMounts:
         - name: sqlserver-storage
           mountPath: /var/lib/mssql
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
       volumes:
-      - name: sqlserver-data
+      - name: init-scripts
+        configMap:
+          name: sqlserver-init-scripts
+      - name: sqlserver-storage
         persistentVolumeClaim:
           claimName: sqlserver-pvc
 ---

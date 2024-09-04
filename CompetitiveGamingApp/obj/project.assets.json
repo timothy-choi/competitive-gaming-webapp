@@ -1,16 +1,16 @@
 {
   "version": 3,
   "targets": {
-    "net7.0": {
+    "net8.0": {
       "AWSSDK.Core/3.7.302.8": {
         "type": "package",
         "compile": {
-          "lib/netcoreapp3.1/AWSSDK.Core.dll": {
+          "lib/net8.0/AWSSDK.Core.dll": {
             "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/netcoreapp3.1/AWSSDK.Core.dll": {
+          "lib/net8.0/AWSSDK.Core.dll": {
             "related": ".pdb;.xml"
           }
         }
@@ -21,12 +21,12 @@
           "AWSSDK.Core": "[3.7.302.8, 4.0.0)"
         },
         "compile": {
-          "lib/netcoreapp3.1/AWSSDK.Lambda.dll": {
+          "lib/net8.0/AWSSDK.Lambda.dll": {
             "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/netcoreapp3.1/AWSSDK.Lambda.dll": {
+          "lib/net8.0/AWSSDK.Lambda.dll": {
             "related": ".pdb;.xml"
           }
         }
@@ -5929,7 +5929,7 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net7.0": [
+    "net8.0": [
       "AWSSDK.Lambda >= 3.7.303.44",
       "AWSSDK.S3 >= 3.7.205.17",
       "Confluent.Kafka >= 2.3.0",
@@ -5951,29 +5951,29 @@
     ]
   },
   "packageFolders": {
-    "/Users/timchoi/.nuget/packages/": {}
+    "/home/tim/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
+      "projectUniqueName": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
       "projectName": "CompetitiveGamingApp",
-      "projectPath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
-      "packagesPath": "/Users/timchoi/.nuget/packages/",
-      "outputPath": "/Users/timchoi/Projects/Side_Projects_2023/competitive-gaming-web-app/CompetitiveGamingApp/obj/",
+      "projectPath": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/CompetitiveGamingApp.csproj",
+      "packagesPath": "/home/tim/.nuget/packages/",
+      "outputPath": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/timchoi/.nuget/NuGet/NuGet.Config"
+        "/home/tim/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
-        "net7.0"
+        "net8.0"
       ],
       "sources": {
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net7.0": {
-          "targetAlias": "net7.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "projectReferences": {}
         }
       },
@@ -5981,11 +5981,16 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
-      "net7.0": {
-        "targetAlias": "net7.0",
+      "net8.0": {
+        "targetAlias": "net8.0",
         "dependencies": {
           "AWSSDK.Lambda": {
             "target": "Package",
@@ -6081,19 +6086,29 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.401/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.401/PortableRuntimeIdentifierGraph.json"
       }
     }
   },
   "logs": [
     {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'Npgsql' 7.0.6 has a known high severity vulnerability, https://github.com/advisories/GHSA-x9vc-6hfv-hg8c",
+      "libraryId": "Npgsql",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
+    {
       "code": "NU1701",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'WebSocketSharp 1.0.3-rc11' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net7.0'. This package may not be fully compatible with your project.",
+      "message": "Package 'WebSocketSharp 1.0.3-rc11' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net8.0'. This package may not be fully compatible with your project.",
       "libraryId": "WebSocketSharp",
       "targetGraphs": [
-        "net7.0"
+        "net8.0"
       ]
     }
   ]

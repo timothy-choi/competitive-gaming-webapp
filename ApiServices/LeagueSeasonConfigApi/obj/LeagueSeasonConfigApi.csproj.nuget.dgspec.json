@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/PlayerApi/PlayerApi.csproj": {}
+    "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/LeagueSeasonConfigApi/LeagueSeasonConfigApi.csproj": {}
   },
   "projects": {
-    "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/PlayerApi/PlayerApi.csproj": {
+    "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/LeagueSeasonConfigApi/LeagueSeasonConfigApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/PlayerApi/PlayerApi.csproj",
-        "projectName": "PlayerApi",
-        "projectPath": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/PlayerApi/PlayerApi.csproj",
+        "projectUniqueName": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/LeagueSeasonConfigApi/LeagueSeasonConfigApi.csproj",
+        "projectName": "LeagueSeasonConfigApi",
+        "projectPath": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/LeagueSeasonConfigApi/LeagueSeasonConfigApi.csproj",
         "packagesPath": "/home/tim/.nuget/packages/",
-        "outputPath": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/PlayerApi/obj/",
+        "outputPath": "/home/tim/Desktop/competitive-gaming-webapp/CompetitiveGamingApp/ApiServices/LeagueSeasonConfigApi/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/tim/.nuget/NuGet/NuGet.Config"
@@ -43,31 +43,9 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
-            "Confluent.Kafka": {
-              "target": "Package",
-              "version": "[2.3.0, )"
-            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[8.0.8, )"
-            },
-            "Microsoft.EntityFrameworkCore": {
-              "target": "Package",
-              "version": "[8.0.8, )"
-            },
-            "Microsoft.EntityFrameworkCore.Design": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[8.0.8, )"
-            },
-            "Microsoft.EntityFrameworkCore.SqlServer": {
-              "target": "Package",
-              "version": "[8.0.8, )"
-            },
-            "Microsoft.EntityFrameworkCore.Tools": {
-              "target": "Package",
-              "version": "[8.0.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

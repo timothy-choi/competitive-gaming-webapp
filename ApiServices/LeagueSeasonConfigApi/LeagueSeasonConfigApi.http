@@ -1,0 +1,6 @@
+@LeagueSeasonConfigApi_HostAddress = http://localhost:5151
+
+GET {{LeagueSeasonConfigApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

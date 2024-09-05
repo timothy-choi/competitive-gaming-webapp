@@ -18,7 +18,7 @@ public class MongoDBService {
             throw new ArgumentNullException("MongoDB connection string is missing.");
         }
 
-        var client = new MongoClient(mongoDbSettings.ConnectionString);
+        client = new MongoClient(mongoDbSettings.ConnectionString);
     }
 
     public async Task<List<object>> GetAllData(string db) {

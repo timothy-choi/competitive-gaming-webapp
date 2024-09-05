@@ -16,13 +16,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings"));
 
-builder.Services.AddSingleton<IMongoClient>(sp =>
-    new MongoClient(sp.GetRequiredService<IOptions<MongoDbSettings>>().Value.ConnectionString));
+builder.Services.AddSingleton(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
+
 
 builder.Services.AddScoped(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
-    var client = sp.GetRequiredService<IMongoClient>();
+    var client = sp.GetRequiredService<MongoClient>();
     return client.GetDatabase(settings.DatabaseName);
 });
 

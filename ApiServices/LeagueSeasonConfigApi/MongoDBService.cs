@@ -9,8 +9,8 @@ namespace CompetitiveGamingApp.Services;
 
 public class MongoDBService {
     private readonly MongoClient client;
-    public MongoDBService(IConfiguration configuration) {
-         var mongoDbSettings = configuration.GetSection("MongoDbSettings").Get<MongoDbSettings>();
+    public MongoDBService(MongoClient mongoClient, IConfiguration configuration) {
+        var mongoDbSettings = configuration.GetSection("MongoDbSettings").Get<MongoDbSettings>();
         Console.WriteLine($"MongoDB Connection String: {mongoDbSettings.ConnectionString}"); // For debugging
 
         if (string.IsNullOrEmpty(mongoDbSettings.ConnectionString))
@@ -18,7 +18,7 @@ public class MongoDBService {
             throw new ArgumentNullException("MongoDB connection string is missing.");
         }
 
-        client = new MongoClient(mongoDbSettings.ConnectionString);
+        client = mongoClient;
     }
 
     public async Task<List<object>> GetAllData(string db) {

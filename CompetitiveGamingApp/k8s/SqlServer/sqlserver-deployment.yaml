@@ -30,15 +30,12 @@ spec:
         - containerPort: 1433
         env:
         - name: SA_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: sqlserver-secret
-              key: sa-password
+          value: k8sLovers!
         - name: ACCEPT_EULA
           value: "Y"
         volumeMounts:
         - name: sqlserver-storage
-          mountPath: /var/lib/mssql
+          mountPath: /var/opt/mssql/data
         - name: init-scripts
           mountPath: /docker-entrypoint-initdb.d
       volumes:
@@ -60,5 +57,6 @@ spec:
     - protocol: TCP
       port: 1433
       targetPort: 1433
-  type: ClusterIP  # or NodePort/LoadBalancer if needed
+      nodePort: 30007
+  type: NodePort  # or NodePort/LoadBalancer if needed
 

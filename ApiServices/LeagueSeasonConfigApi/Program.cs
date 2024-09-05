@@ -18,6 +18,8 @@ builder.Services.AddScoped(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
+builder.Services.AddControllers(); // If you're using controllers
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -27,4 +29,23 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
+// Enable CORS
+app.UseCors("AllowAll");
+
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+// Map controller endpoints (only necessary if you're using controllers)
+app.MapControllers(); // Use this if you're using attribute routing with controllers
+
+// Build and run the application
+app.Run();

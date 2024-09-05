@@ -3,6 +3,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using ApiServices.LeagueSeasonConfigApi;
+using CompetitiveGamingApp.Services;
+using CompetitiveGamingApp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,8 @@ builder.Services.AddScoped(sp =>
     var client = sp.GetRequiredService<IMongoClient>();
     return client.GetDatabase(settings.DatabaseName);
 });
+
+builder.Services.AddScoped<MongoDBService>(); // Ensure MongoDBService is registered
 
 builder.Services.AddCors(options =>
 {

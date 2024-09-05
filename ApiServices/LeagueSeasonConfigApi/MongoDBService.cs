@@ -56,30 +56,6 @@ public class MongoDBService {
     BsonDocument doc;
 
     switch (db) {
-        case "leagueInfo":
-            League leagueInfo = (League)document;
-            doc = new BsonDocument {
-                { "LeagueId", leagueInfo.LeagueId },
-                { "Name", leagueInfo.Name },
-                { "Owner", leagueInfo.Owner },
-                { "Description", leagueInfo.Description },
-                { "Players", new BsonArray(leagueInfo.Players ?? new List<Dictionary<string, object?>>()) },
-                { "tags", new BsonArray(leagueInfo.tags ?? new List<string?>()) },
-                { "LeagueConfig", leagueInfo.LeagueConfig },
-                { "SeasonAssignments", leagueInfo.SeasonAssignments },
-                { "LeagueStandings", leagueInfo.LeagueStandings != null ? BsonDocument.Parse(leagueInfo.LeagueStandings.ToJson()) : BsonNull.Value },
-                { "AchieveLeagueStandings", new BsonArray(leagueInfo.AchieveLeagueStandings ?? new List<LeagueTable>()) },
-                { "DivisionStandings", new BsonDocument(leagueInfo.DivisionStandings ?? new Dictionary<string, DivisionTable>()) },
-                { "ArchieveDivisionStandings", new BsonArray(leagueInfo.ArchieveDivisionStandings ?? new List<Dictionary<string, DivisionTable>>()) },
-                { "CombinedDivisionStandings", new BsonDocument(leagueInfo.CombinedDivisionStandings ?? new Dictionary<string, CombinedDivisionTable>()) },
-                { "ArchieveCombinedDivisionStandings", new BsonArray(leagueInfo.ArchieveCombinedDivisionStandings ?? new List<Dictionary<string, CombinedDivisionTable>>()) },
-                { "Champions", new BsonArray(leagueInfo.Champions ?? new List<Tuple<string, string>>()) },
-                { "PlayoffAssignments", leagueInfo.PlayoffAssignments },
-                { "Season", leagueInfo.Season },
-                { "StartDate", leagueInfo.StartDate }
-            };
-            break;
-
         case "leagueConfig":
             LeagueSeasonConfig leagueConfig = (LeagueSeasonConfig)document;
             doc = new BsonDocument {
@@ -110,60 +86,6 @@ public class MongoDBService {
                 { "otherMetrics", new BsonArray(leagueConfig.otherMetrics ?? new List<string>()) }
             };
             break;
-
-        case "leagueSeasonAssignments":
-            LeaguePlayerSeasonAssignments assignments = (LeaguePlayerSeasonAssignments)document;
-            doc = new BsonDocument {
-                { "AssignmentsId", assignments.AssignmentsId },
-                { "ConfigId", assignments.ConfigId },
-                { "LeagueId", assignments.LeagueId },
-                { "PartitionsEnabled", assignments.PartitionsEnabled },
-                { "ReassignEverySeason", assignments.ReassignEverySeason },
-                { "AutomaticInduction", assignments.AutomaticInduction },
-                { "NumberOfPlayersPerPartition", assignments.NumberOfPlayersPerPartition },
-                { "NumberOfPartitions", assignments.NumberOfPartitions },
-                { "AutomaticScheduling", assignments.AutomaticScheduling },
-                { "ExcludeOutsideGames", assignments.ExcludeOutsideGames },
-                { "InterDvisionGameLimit", assignments.InterDvisionGameLimit },
-                { "RepeatMatchups", assignments.RepeatMatchups },
-                { "MaxRepeatMatchups", assignments.MaxRepeatMatchups },
-                { "DivisionSelective", assignments.DivisionSelective },
-                { "OutsideDivisionSelections", BsonDocumentWrapper.Create(assignments.OutsideDivisionSelections ?? new Dictionary<string, List<string>>()) },
-                { "RandomizeDivisionSelections", assignments.RandomizeDivisionSelections },
-                { "PlayerSelection", assignments.PlayerSelection },
-                { "PlayerExemptLists", BsonDocumentWrapper.Create(assignments.PlayerExemptLists ?? new Dictionary<string, List<string>>()) },
-                { "repeatAllMatchups", assignments.repeatAllMatchups },
-                { "minRepeatMatchups", assignments.minRepeatMatchups },
-                { "maxRepeatMatchups", assignments.maxRepeatMatchups },
-                { "playAllPlayers", assignments.playAllPlayers },
-                { "AllPartitions", BsonDocumentWrapper.Create(assignments.AllPartitions ?? new Dictionary<string, List<string>>()) },
-                { "AllCombinedDivisions", BsonDocumentWrapper.Create(assignments.AllCombinedDivisions ?? new Dictionary<string, List<string>>()) },
-                { "PlayerFullSchedule", BsonDocumentWrapper.Create(assignments.PlayerFullSchedule ?? new List<Tuple<string, List<object>>>()) },
-                { "ArchievePlayerFullSchedule", BsonDocumentWrapper.Create(assignments.ArchievePlayerFullSchedule ?? new List<List<Tuple<string, List<object>>>>()) },
-                { "FinalFullSchedule", BsonDocumentWrapper.Create(assignments.FinalFullSchedule ?? new List<SingleGame>()) },
-                { "ArchieveFinalFullSchedule", BsonDocumentWrapper.Create(assignments.ArchieveFinalFullSchedule ?? new List<List<SingleGame>>()) }
-            };
-            break;
-
-        case "leaguePlayoffConfig":
-            LeaguePlayoffs playoffs = (LeaguePlayoffs)document;
-            doc = new BsonDocument {
-                { "LeaguePlayoffId", playoffs.LeaguePlayoffId },
-                { "LeagueId", playoffs.LeagueId },
-                { "RandomInitialMode", playoffs.RandomInitialMode },
-                { "RandomRoundMode", playoffs.RandomRoundMode },
-                { "WholeMode", playoffs.WholeMode },
-                { "DefaultMode", playoffs.DefaultMode },
-                { "CombinedDivisionMode", playoffs.CombinedDivisionMode },
-                { "DivisonMode", playoffs.DivisionMode},
-                { "WholeRoundOrdering", BsonDocumentWrapper.Create(playoffs.WholeRoundOrdering ?? new List<Tuple<int, Tuple<string, string>>>()) },
-                { "CombinedDivisionGroups", BsonDocumentWrapper.Create(playoffs.CombinedDivisionGroups ?? new List<Tuple<string, List<Tuple<int, Tuple<string, string>>>>>()) },
-                { "DivisionBasedPlayoffPairings", BsonDocumentWrapper.Create(playoffs.DivisionBasedPlayoffPairings != null ? new List<Tuple<string, Tuple<int, Tuple<string, string>>>>() : null) },
-                { "UserDefinedPlayoffMatchups", BsonDocumentWrapper.Create(playoffs.UserDefinedPlayoffMatchups != null ? new List<Tuple<int, Tuple<string, string>>>() : null) },
-                { "PlayoffNames", new BsonArray(playoffs.PlayoffNames ?? new List<string>())}
-            };
-            break;
-
         default:
             throw new ArgumentException("Invalid database name");
     }

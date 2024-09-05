@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using MongoDB.Bson;
 using CompetitiveGamingApp.Models;
+using ApiServices.LeagueSeasonConfigApi;
 
 
 namespace CompetitiveGamingApp.Services;
@@ -9,7 +10,15 @@ namespace CompetitiveGamingApp.Services;
 public class MongoDBService {
     private readonly MongoClient client;
     public MongoDBService(IConfiguration configuration) {
-        client = new MongoClient(configuration.GetConnectionString("MongoDB_URI"));
+         var mongoDbSettings = configuration.GetSection("MongoDbSettings").Get<MongoDbSettings>();
+        Console.WriteLine($"MongoDB Connection String: {mongoDbSettings.ConnectionString}"); // For debugging
+
+        if (string.IsNullOrEmpty(mongoDbSettings.ConnectionString))
+        {
+            throw new ArgumentNullException("MongoDB connection string is missing.");
+        }
+
+        var client = new MongoClient(mongoDbSettings.ConnectionString);
     }
 
     public async Task<List<object>> GetAllData(string db) {

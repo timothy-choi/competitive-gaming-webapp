@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leagueseasonconfigapi-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leagueseasonconfigapi
+  template:
+    metadata:
+      labels:
+        app: leagueseasonconfigapi
+    spec:
+      containers:
+      - name: leagueseasonconfigapi
+        image: timchoi123/leagueseasonconfigapi:latest # Replace with your Docker image and tag
+        ports:
+        - containerPort: 8080 # Replace with the port your API listens on
+        # Add other environment variables or configurations as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leagueconfigapi-service
+spec:
+  selector:
+    app: leagueseasonconfigapi
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080 # This should match the containerPort in the Deployment YAML
+    nodePort: 30002
+  type: NodePort # Change this to NodePort or LoadBalancer if you need external access
+

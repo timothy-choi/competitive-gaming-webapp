@@ -12,7 +12,7 @@ data:
         PlayerPassword VARCHAR(1000)
     );
 
-    CREATE TABLE Player (
+    CREATE TABLE Players (
       playerId NVARCHAR(255) PRIMARY KEY,
       playerName NVARCHAR(255),
       playerUsername NVARCHAR(255),

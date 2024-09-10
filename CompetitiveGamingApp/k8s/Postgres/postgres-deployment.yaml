@@ -26,33 +26,18 @@ spec:
       containers:
       - name: postgres
         image: postgres:latest
-        ports:
-        - containerPort: 5432
         env:
         - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secrets
-              key: POSTGRES_USER
+          value: "user_admin"
         - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-                name: postgres-secrets
-                key: POSTGRES_PASSWORD
+          value: "k8sLovers"
         - name: POSTGRES_DB
-          value: PostgresGameData
-        volumeMounts:
-        - name: postgres-data
-          mountPath: /var/lib/postgresql/data
-        - name: postgres-init-scripts
-          mountPath: /docker-entrypoint-initdb.d/
-      volumes:
-      - name: postgres-init-scripts
-        configMap:
-          name: postgres-init-scripts
-      - name: postgres-data
-        persistentVolumeClaim:
-          claimName: postgres-history-pvc
+          value: "postgresgamedata"
+        - name: LOCAL_PG_HOST
+          value: "localhost"
+        - name: LOCAL_PG_PORT
+          value: "5432"  # Default port for PostgreSQL
+
 ---
 apiVersion: v1
 kind: Service

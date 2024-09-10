@@ -6,6 +6,7 @@ using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using KafkaHelper;
+using Newtonsoft.Json;
 
 [ApiController]
 [Route("api/Players")]
@@ -57,11 +58,12 @@ public class PlayerController : ControllerBase {
     [HttpPost]
     public async Task<ActionResult<string>> CreatePlayer([FromBody] Dictionary<string, string> playerInfo) {
         try {
+            Dictionary<string, string> infoContent = JsonConvert.DeserializeObject<Dictionary<string, string>>(playerInfo["playerInfo"]);
             Player createdPlayer = new Player {
                 playerId = Guid.NewGuid().ToString(),
-                playerName = playerInfo["name"],
-                playerUsername = playerInfo["playerUsername"],
-                playerEmail = playerInfo["playerEmail"],
+                playerName = infoContent["name"],
+                playerUsername = infoContent["playerUsername"],
+                playerEmail = infoContent["playerEmail"],
                 playerJoined = DateTime.Now,
                 playerAvailable = false,
                 playerFriends = new List<string>(),
@@ -69,8 +71,8 @@ public class PlayerController : ControllerBase {
                 playerInGame = false,
                 playerLeagueJoined = "",
                 singlePlayerRecord = new List<int>(),
-                singleGamePrice = Convert.ToDouble(playerInfo["price"]),
-                enablePushNotifications = Convert.ToBoolean(playerInfo["pushNotifications"])
+                singleGamePrice = Convert.ToDouble(infoContent["price"]),
+                enablePushNotifications = Convert.ToBoolean(infoContent["pushNotifications"])
             };
 
             await _playerService.AddAsync(createdPlayer);

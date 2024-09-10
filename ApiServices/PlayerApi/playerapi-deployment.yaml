@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: playerapi-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: playerapi
+  template:
+    metadata:
+      labels:
+        app: playerapi
+    spec:
+      containers:
+      - name: playerapi
+        image: timchoi123/playerapi:latest # Replace with your Docker image and tag
+        ports:
+        - containerPort: 8081 # Replace with the port your API listens on
+        # Add other environment variables or configurations as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: playerapi-service
+spec:
+  selector:
+    app: playerapi
+  ports:
+  - protocol: TCP
+    port: 81
+    targetPort: 8081 # This should match the containerPort in the Deployment YAML
+    nodePort: 30003
+  type: NodePort # Change this to NodePort or LoadBalancer if you need external access
+

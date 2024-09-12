@@ -1,0 +1,6 @@
+@SingleGameApi_HostAddress = http://localhost:5055
+
+GET {{SingleGameApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

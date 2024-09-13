@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: singlegameapi-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: singlegameapi
+  template:
+    metadata:
+      labels:
+        app: singlegameapi
+    spec:
+      containers:
+      - name: singlegameapi
+        image: timchoi123/singlegameapi:latest # Replace with your Docker image and tag
+        ports:
+        - containerPort: 8082 # Replace with the port your API listens on
+        # Add other environment variables or configurations as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: singlegameapi-service
+spec:
+  selector:
+    app: singlegameapi
+  ports:
+  - protocol: TCP
+    port: 82
+    targetPort: 8082 # This should match the containerPort in the Deployment YAML
+    nodePort: 30004
+  type: NodePort # Change this to NodePort or LoadBalancer if you need external access
+

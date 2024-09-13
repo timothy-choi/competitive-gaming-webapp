@@ -2,12 +2,31 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
+  labels:
+    app: postgres
 spec:
+  storageClassName: manual
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
-      storage: 3Gi
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-volume
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /data/postgresql
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -25,7 +44,9 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:latest
+        image: postgres:14
+        ports: 
+        - containerPort: 5432
         env:
         - name: POSTGRES_USER
           value: "user_admin"
@@ -33,22 +54,26 @@ spec:
           value: "k8sLovers"
         - name: POSTGRES_DB
           value: "postgresgamedata"
-        - name: LOCAL_PG_HOST
-          value: "localhost"
-        - name: LOCAL_PG_PORT
-          value: "5432"  # Default port for PostgreSQL
-
+        volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            name: postgresdata
+      volumes:
+        - name: postgresdata
+          persistentVolumeClaim:
+            claimName: postgres-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
+  labels:
+    app: postgres
 spec:
   selector:
     app: postgres
   ports:
-    - protocol: TCP
-      port: 5432
+    - port: 5432
       targetPort: 5432
-  type: ClusterIP  # or NodePort/LoadBalancer if needed
+      nodePort: 30414
+  type: NodePort  # or NodePort/LoadBalancer if needed
 

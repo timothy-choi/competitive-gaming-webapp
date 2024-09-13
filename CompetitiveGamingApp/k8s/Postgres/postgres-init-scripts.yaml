@@ -19,7 +19,7 @@ data:
         paymentId: VARCHAR(1000)
     );
 
-    CREATE TABLE PostgresSqlSingleGameTable (
+    CREATE TABLE public.SingleGames (
       SingleGameId VARCHAR(255) PRIMARY KEY,
       hostPlayer VARCHAR(255),
       guestPlayer VARCHAR(255),

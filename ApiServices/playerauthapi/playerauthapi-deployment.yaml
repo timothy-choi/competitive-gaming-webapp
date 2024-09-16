@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: playerauthapi-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: playerauthapi
+  template:
+    metadata:
+      labels:
+        app: playerauthapi
+    spec:
+      containers:
+      - name: playerauthapi
+        image: timchoi123/playerauthapi:latest # Replace with your Docker image and tag
+        ports:
+        - containerPort: 8087 # Replace with the port your API listens on
+        # Add other environment variables or configurations as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: playerauthapi-service
+spec:
+  selector:
+    app: playerauthapi
+  ports:
+  - protocol: TCP
+    port: 90
+    targetPort: 8087 # This should match the containerPort in the Deployment YAML
+    nodePort: 30012
+  type: NodePort # Change this to NodePort or LoadBalancer if you need external access

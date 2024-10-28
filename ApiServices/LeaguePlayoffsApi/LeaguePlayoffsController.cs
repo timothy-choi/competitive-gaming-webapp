@@ -33,7 +33,7 @@ public class LeaguePlayoffsController : ControllerBase {
 
     [HttpGet("{LeaguePlayoffId}")]
     public async Task<ActionResult<LeaguePlayoffs>> GetLeaguePlayoffs(string LeaguePlayoffId) {
-        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffConfig", LeaguePlayoffId);
+        var playoffs = (LeaguePlayoffs) await _leagueService.GetData("leaguePlayoffs", LeaguePlayoffId);
         if (playoffs == null) {
             return BadRequest();
         }

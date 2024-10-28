@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-transactions-pvc
+  labels:
+    app: postgres
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-transactions-volume
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /data/postgresql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-transactions-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+        ports: 
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: "user_admin"
+        - name: POSTGRES_PASSWORD
+          value: "k8sLovers"
+        - name: POSTGRES_DB
+          value: "postgrestransactionsdata"
+        - name: PGDATA
+          value: "/var/lib/postgresql/new_data"
+        volumeMounts:
+          - mountPath: /var/lib/postgresql/new_data
+            name: postgrestransdata
+      volumes:
+        - name: postgrestransdata
+          persistentVolumeClaim:
+            claimName: postgres-transactions-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-transactions-service
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+      nodePort: 30415
+  type: NodePort  # or NodePort/LoadBalancer if needed
+

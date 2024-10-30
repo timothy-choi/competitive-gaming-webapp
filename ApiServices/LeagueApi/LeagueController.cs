@@ -11,6 +11,8 @@ using System.Globalization;
 using static PlayerComparer;
 using KafkaHelper;
 using Newtonsoft.Json;
+using System.Text.Json;
+
 
 [ApiController]
 [Route("api/League")]
@@ -42,6 +44,25 @@ public class LeagueController : ControllerBase {
     [HttpPost]
     public async Task<ActionResult<League>> CreateLeague(Dictionary<string, object> leagueInput) {
         try {
+             DateTime startDate;
+        
+            if (leagueInput.TryGetValue("StartDate", out object startDateValue))
+            {
+                if (startDateValue is JsonElement jsonElement)
+                {
+                    // Assuming StartDate is a string in a valid date format
+                    startDate = jsonElement.GetDateTime(); // or use jsonElement.GetString() to get the date string and then parse
+                }
+                else
+                {
+                    startDate = Convert.ToDateTime(startDateValue);
+                }
+            }
+            else
+            {
+                throw new Exception("StartDate not found in input.");
+            }
+
             League curr = new League {
                 LeagueId = Guid.NewGuid().ToString(),
                 Name = leagueInput["LeagueName"].ToString(),
@@ -60,14 +81,14 @@ public class LeagueController : ControllerBase {
                 Champions = new List<Tuple<String, String>>(),
                 PlayoffAssignments = "",
                 Season = 1,
-                StartDate = Convert.ToDateTime(leagueInput["StartDate"])
+                StartDate = startDate
             };
-
             await _leagueService.PostData("leagueInfo", curr);
             OkObjectResult res = new OkObjectResult(curr);
             return Ok(res);
         }
-        catch {
+        catch (Exception e) {
+            Console.WriteLine(e.Message);
             return BadRequest();
         }
     }

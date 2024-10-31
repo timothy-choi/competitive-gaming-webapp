@@ -1020,10 +1020,13 @@ public class LeagueController : ControllerBase {
     [HttpPut("{LeagueId}/ResetSeasonSchedules")] 
     public async Task<ActionResult> ResetSchedules(string LeagueId) {
          try {
-            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
+               var bsonDoc = await _leagueService.GetData("leagueInfo", LeagueId) as BsonDocument;
+                if (bsonDoc == null) {
+                    return NotFound();
+                }
+
+                // Deserialize the BsonDocument to League model
+                var league = BsonSerializer.Deserialize<League>(bsonDoc);
 
             Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
             upsertOpt["PlayerFullSchedule"] = false;
@@ -1032,11 +1035,14 @@ public class LeagueController : ControllerBase {
             Dictionary<string, object> archievedTables = new Dictionary<string, object>();
             archievedTables["PlayerFullSchedule"] = new List<Tuple<string, List<object>>>();
             archievedTables["FinalFullSchedule"] = new List<SingleGame>();
+            archievedTables["IdName"] = "";
+            archievedTables["id"] = LeagueId;
 
             await _leagueService.EditData("leagueInfo", upsertOpt, archievedTables);
 
             return Ok();
-        } catch {
+        } catch (Exception e) {
+            Console.WriteLine(e.Message);
             return BadRequest();
         }
     }

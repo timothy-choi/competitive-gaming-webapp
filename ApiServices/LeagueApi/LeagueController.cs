@@ -1041,27 +1041,35 @@ public class LeagueController : ControllerBase {
         }
     }
 
-    [HttpPut("{LeagueId}/EditStartDate")] 
-    public async Task<ActionResult> EditStartDate(string LeagueId, Dictionary<string, DateTime> reqBody) {
-         try {
-            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-
-            Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
-            upsertOpt["StartDate"] = false;
-            
-            Dictionary<string, object> archievedTables = new Dictionary<string, object>();
-            archievedTables["StartDate"] = Convert.ToDateTime(reqBody["StartDate"]);
-
-            await _leagueService.EditData("leagueInfo", upsertOpt, archievedTables);
-
-            return Ok();
-        } catch {
-            return BadRequest();
+   [HttpPut("{LeagueId}/EditStartDate")] 
+public async Task<ActionResult> EditStartDate(string LeagueId, Dictionary<string, DateTime> reqBody) {
+    try {
+        // Retrieve the data as BsonDocument
+        var bsonDoc = await _leagueService.GetData("leagueInfo", LeagueId) as BsonDocument;
+        if (bsonDoc == null) {
+            return NotFound();
         }
+
+        // Deserialize the BsonDocument to League model
+        var league = BsonSerializer.Deserialize<League>(bsonDoc);
+
+        Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
+        upsertOpt["StartDate"] = false;
+        
+        Dictionary<string, object> archivedTables = new Dictionary<string, object>();
+        archivedTables["StartDate"] = Convert.ToDateTime(reqBody["StartDate"]);
+        archivedTables["IdName"] = "";
+        archivedTables["id"] = "";
+
+        await _leagueService.EditData("leagueInfo", upsertOpt, archivedTables);
+
+        return Ok();
+    } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return BadRequest();
     }
+}
+
 
 }
 

@@ -29,6 +29,7 @@ public class CombinedDivisionTable {
 
 public class League {
     [BsonId]
+    public ObjectId Id { get; set; } 
     public String? LeagueId {get; set;}
     public String? Name {get; set;}
     public String? Owner {get; set;}

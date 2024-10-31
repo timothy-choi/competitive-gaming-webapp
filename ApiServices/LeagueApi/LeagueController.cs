@@ -26,9 +26,17 @@ public class LeagueController : ControllerBase {
 
     [HttpGet]
     public async Task<ActionResult<List<League>>> GetAllLeagues() {
-       var allLeagues = await _leagueService.GetAllData("leagueInfo");
-       OkObjectResult res = new OkObjectResult(allLeagues);
-       return Ok(allLeagues); 
+        try {
+            var allLeagues = await _leagueService.GetAllData("leagueInfo");
+            OkObjectResult res = new OkObjectResult(allLeagues);
+            return Ok(allLeagues); 
+        } catch (InvalidCastException ex) {
+            Console.WriteLine($"Serialization error: {ex.Message}");
+            return StatusCode(500, "Internal server error during serialization.");
+        } catch (Exception e) {
+            Console.WriteLine(e.Message);
+            return BadRequest();
+        }
     }
 
     [HttpGet("{LeagueId}")]

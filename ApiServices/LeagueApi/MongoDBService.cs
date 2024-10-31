@@ -3,6 +3,8 @@ using MongoDB.Bson;
 using CompetitiveGamingApp.Models;
 using ApiServices.LeagueApi;
 using ApiServices.LeagueApi.MongoDBSettings;
+using MongoDB.Bson.Serialization;
+
 
 
 namespace ApiServices.LeagueApi.MongoDBService;
@@ -22,12 +24,17 @@ public class MongoDBService {
         client = mongoClient;
     }
 
-    public async Task<List<object>> GetAllData(string db) {
+    public async Task<List<League>> GetAllData(string db) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         if (db == "leagueInfo" || db == "leagueConfig" || db == "leagueSeasonAssignments" || db == "leaguePlayoffs") {
             var filter = Builders<BsonDocument>.Filter.Empty;
             List<BsonDocument> bsonDocuments = await db_collection.Find(filter).ToListAsync();
-            return bsonDocuments.Cast<object>().ToList();
+
+           List<League> leagues = bsonDocuments
+            .Select(doc => BsonSerializer.Deserialize<League>(doc)) // Use BsonSerializer to deserialize to League
+            .ToList();
+
+            return leagues;
         }
         else {
             throw new ArgumentException("Invalid collection name");

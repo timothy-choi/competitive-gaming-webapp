@@ -12,6 +12,9 @@ using static PlayerComparer;
 using KafkaHelper;
 using Newtonsoft.Json;
 using System.Text.Json;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+
 
 
 [ApiController]
@@ -41,12 +44,17 @@ public class LeagueController : ControllerBase {
 
     [HttpGet("{LeagueId}")]
     public async Task<ActionResult<League>> GetLeagueById(string LeagueId) {
-        var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
-        if (league == null) {
+        // Fetch the BsonDocument from the service
+        var bsonDocument = await _leagueService.GetData("leagueInfo", LeagueId) as BsonDocument;
+
+        if (bsonDocument == null) {
             return NotFound();
         }
-        OkObjectResult res = new OkObjectResult(league);
-        return Ok(res);
+
+        // Deserialize BsonDocument to League
+        League league = BsonSerializer.Deserialize<League>(bsonDocument);
+        
+        return Ok(league);
     }
 
     [HttpPost]

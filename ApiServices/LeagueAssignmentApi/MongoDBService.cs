@@ -95,7 +95,6 @@ public class MongoDBService {
                 { "PlayerExemptLists", BsonDocumentWrapper.Create(assignments.PlayerExemptLists ?? new Dictionary<string, List<string>>()) },
                 { "repeatAllMatchups", assignments.repeatAllMatchups },
                 { "minRepeatMatchups", assignments.minRepeatMatchups },
-                { "maxRepeatMatchups", assignments.maxRepeatMatchups },
                 { "playAllPlayers", assignments.playAllPlayers },
                 { "AllPartitions", BsonDocumentWrapper.Create(assignments.AllPartitions ?? new Dictionary<string, List<string>>()) },
                 { "AllCombinedDivisions", BsonDocumentWrapper.Create(assignments.AllCombinedDivisions ?? new Dictionary<string, List<string>>()) },

@@ -20,6 +20,9 @@ using Email;
 using KafkaHelper;
 using ApiServices.LeagueAssignmentApi.RedisServer;
 using System.Text.Json;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+
 
 
 using ApiServices.LeagueAssignmentApi.MongoDBService;
@@ -39,12 +42,16 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
 
     [HttpGet("{AssignmentId}")]
     public async Task<ActionResult<LeaguePlayerSeasonAssignments>> GetSeasonAssignments(string AssignmentId) {
-        var assignment = (LeaguePlayerSeasonAssignments) await _leagueService.GetData("leagueSeasonAssignments", AssignmentId);
-        if (assignment == null) {
+         var bsonDocument = await _leagueService.GetData("leagueSeasonAssignments", AssignmentId) as BsonDocument;
+
+        if (bsonDocument == null) {
             return NotFound();
         }
-        OkObjectResult res = new OkObjectResult(assignment);
-        return Ok(res);
+
+        // Deserialize BsonDocument to League
+        LeaguePlayerSeasonAssignments league = BsonSerializer.Deserialize<LeaguePlayerSeasonAssignments>(bsonDocument);
+        
+        return Ok(league);
     }
 
 [HttpPost]
@@ -640,7 +647,7 @@ public async Task<ActionResult<string>> CreateSeasonAssignments(Dictionary<strin
             payload["players"] = (List<string>) reqBody["players"];
             payload["num_games"] = Convert.ToInt32(reqBody["num_games"]);
             payload["min_repeat_times"] = assignment.minRepeatMatchups;
-            payload["max_repeat_times"] = assignment.maxRepeatMatchups;
+            payload["max_repeat_times"] = assignment.MaxRepeatMatchups;
             payload["start_dates"] = (Dictionary<string, DateTime>) reqBody["start_dates"];
             payload["intervals_between_games"] = Convert.ToInt32(reqBody["intervals_between_games"]);
             payload["intervals_between_games_hours"] = Convert.ToInt32(reqBody["intervals_between_games_hours"]);

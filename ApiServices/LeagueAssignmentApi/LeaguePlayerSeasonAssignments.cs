@@ -7,6 +7,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 public class LeaguePlayerSeasonAssignments {
     [BsonId]
+    public ObjectId Id { get; set; } 
     public String? AssignmentsId {get; set;}
     public String? ConfigId {get; set;}
     public String? LeagueId {get; set;}
@@ -30,7 +31,6 @@ public class LeaguePlayerSeasonAssignments {
     public Dictionary<string, List<string>> PlayerExemptLists {get; set;} //list of all players you do not want to play for each player
     public bool repeatAllMatchups {get; set;} //true = if league has no divisions, players need to play each other at least twice.
     public int minRepeatMatchups {get; set;} //# of repeat matchup each player needs to face at a minimum
-    public int maxRepeatMatchups {get; set;}
     public bool playAllPlayers {get; set;} //true = all players need to play one another at least once
 
     

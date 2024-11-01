@@ -19,6 +19,8 @@ using RabbitMQ;
 using Email;
 using KafkaHelper;
 using ApiServices.LeagueAssignmentApi.RedisServer;
+using System.Text.Json;
+
 
 using ApiServices.LeagueAssignmentApi.MongoDBService;
 
@@ -45,49 +47,51 @@ public class LeagueSeasonAssignmentsController : ControllerBase {
         return Ok(res);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<string>> CreateSeasonAssignments(Dictionary<string, object> reqBody) {
-        try {
-            LeaguePlayerSeasonAssignments currLeague = new LeaguePlayerSeasonAssignments {
-                AssignmentsId = Guid.NewGuid().ToString(),
-                ConfigId = reqBody["ConfigId"] as string,
-                LeagueId = reqBody["LeagueId"] as string,
-                PartitionsEnabled = Convert.ToBoolean(reqBody["PartitionsEnabled"]),
-                ReassignEverySeason = Convert.ToBoolean(reqBody["ReassignEverySeason"]),
-                AutomaticInduction = Convert.ToBoolean(reqBody["AutomaticInduction"]),
-                NumberOfPlayersPerPartition = Convert.ToInt32(reqBody["NumberOfPlayersPerPartition"]),
-                NumberOfPartitions = Convert.ToInt32(reqBody["NumberOfPartitions"]),
-                AutomaticScheduling = Convert.ToBoolean(reqBody["AutomaticScheduling"]),
-                ExcludeOutsideGames = Convert.ToBoolean(reqBody["ExcludeOutsideGames"]),
-                InterDvisionGameLimit = Convert.ToInt32(reqBody["InterDivisionGameLimit"]),
-                RepeatMatchups = Convert.ToBoolean(reqBody["RepeatMatchups"]),
-                MaxRepeatMatchups = Convert.ToInt32(reqBody["MaxRepeatMatchups"]),
-                DivisionSelective = Convert.ToBoolean(reqBody["DivisionSelective"]),
-                OutsideDivisionSelections = new Dictionary<string, List<string>>(),
-                RandomizeDivisionSelections = Convert.ToBoolean(reqBody["RandomizeDivisionSelections"]),
-                PlayerSelection = Convert.ToBoolean(reqBody["PlayerSelection"]),
-                PlayerExemptLists = new Dictionary<string, List<string>>(),
-                repeatAllMatchups = Convert.ToBoolean(reqBody["repeatAllMatchups"]),
-                minRepeatMatchups = Convert.ToInt32(reqBody["minRepeatMatchups"]),
-                maxRepeatMatchups = Convert.ToInt32(reqBody["maxRepeatMatchups"]),
-                playAllPlayers = Convert.ToBoolean(reqBody["playAllPlayers"]),
-                AllPartitions = new Dictionary<String, List<String>>(),
-                AllCombinedDivisions = new Dictionary<String, List<String>>(),
-                PlayerFullSchedule = new List<Tuple<string, List<object>>>(),
-                ArchievePlayerFullSchedule = new List<List<Tuple<string, List<object>>>>(),
-                FinalFullSchedule = new List<SingleGame>(),
-                ArchieveFinalFullSchedule = new List<List<SingleGame>>()
-            };
+[HttpPost]
+public async Task<ActionResult<string>> CreateSeasonAssignments(Dictionary<string, object> reqBody) {
+    try {
+        LeaguePlayerSeasonAssignments currLeague = new LeaguePlayerSeasonAssignments {
+            AssignmentsId = Guid.NewGuid().ToString(),
+            ConfigId = reqBody["ConfigId"] is JsonElement configId ? configId.GetString() : null,
+            LeagueId = reqBody["LeagueId"] is JsonElement leagueId ? leagueId.GetString() : null,
+            PartitionsEnabled = reqBody["PartitionsEnabled"] is JsonElement partitionsEnabled ? partitionsEnabled.GetBoolean() : false,
+            ReassignEverySeason = reqBody["ReassignEverySeason"] is JsonElement reassignEverySeason ? reassignEverySeason.GetBoolean() : false,
+            AutomaticInduction = reqBody["AutomaticInduction"] is JsonElement automaticInduction ? automaticInduction.GetBoolean() : false,
+            NumberOfPlayersPerPartition = reqBody["NumberOfPlayersPerPartition"] is JsonElement numPlayersPerPartition ? numPlayersPerPartition.GetInt32() : 0,
+            NumberOfPartitions = reqBody["NumberOfPartitions"] is JsonElement numPartitions ? numPartitions.GetInt32() : 0,
+            AutomaticScheduling = reqBody["AutomaticScheduling"] is JsonElement automaticScheduling ? automaticScheduling.GetBoolean() : false,
+            ExcludeOutsideGames = reqBody["ExcludeOutsideGames"] is JsonElement excludeOutsideGames ? excludeOutsideGames.GetBoolean() : false,
+            InterDvisionGameLimit = reqBody["InterDivisionGameLimit"] is JsonElement interDivisionGameLimit ? interDivisionGameLimit.GetInt32() : 0,
+            RepeatMatchups = reqBody["RepeatMatchups"] is JsonElement repeatMatchups ? repeatMatchups.GetBoolean() : false,
+            MaxRepeatMatchups = reqBody["MaxRepeatMatchups"] is JsonElement maxRepeatMatchups ? maxRepeatMatchups.GetInt32() : 0,
+            DivisionSelective = reqBody["DivisionSelective"] is JsonElement divisionSelective ? divisionSelective.GetBoolean() : false,
+            OutsideDivisionSelections = new Dictionary<string, List<string>>(), // Populate as needed
+            RandomizeDivisionSelections = reqBody["RandomizeDivisionSelections"] is JsonElement randomizeDivisionSelections ? randomizeDivisionSelections.GetBoolean() : false,
+            PlayerSelection = reqBody["PlayerSelection"] is JsonElement playerSelection ? playerSelection.GetBoolean() : false,
+            PlayerExemptLists = new Dictionary<string, List<string>>(), // Populate as needed
+            repeatAllMatchups = reqBody["repeatAllMatchups"] is JsonElement repeatAllMatchups ? repeatAllMatchups.GetBoolean() : false,
+            minRepeatMatchups = reqBody["minRepeatMatchups"] is JsonElement minRepeatMatchups ? minRepeatMatchups.GetInt32() : 0,
+            //maxRepeatMatchups = reqBody["maxRepeatMatchups"] is JsonElement maxRepeatMatchups ? maxRepeatMatchups.GetInt32() : 0,
+            playAllPlayers = reqBody["playAllPlayers"] is JsonElement playAllPlayers ? playAllPlayers.GetBoolean() : false,
+            AllPartitions = new Dictionary<String, List<String>>(), // Populate as needed
+            AllCombinedDivisions = new Dictionary<String, List<String>>(), // Populate as needed
+            PlayerFullSchedule = new List<Tuple<string, List<object>>>(),
+            ArchievePlayerFullSchedule = new List<List<Tuple<string, List<object>>>>(),
+            FinalFullSchedule = new List<SingleGame>(),
+            ArchieveFinalFullSchedule = new List<List<SingleGame>>()
+        };
 
-            await _leagueService.PostData("leagueSeasonAssignments", currLeague);
+        await _leagueService.PostData("leagueSeasonAssignments", currLeague);
 
-            OkObjectResult res = new OkObjectResult(currLeague.AssignmentsId);
-            return Ok(res);
-        } catch {
-            return BadRequest();      
-        }
+        OkObjectResult res = new OkObjectResult(currLeague.AssignmentsId);
+        return Ok(res);
+    } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return BadRequest();      
     }
+}
 
+    
     [HttpDelete("{AssignmentsId}")]
     public async Task<ActionResult> DeleteSeasonAssignments(string AssignmentsId) {
         try {

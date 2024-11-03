@@ -38,33 +38,48 @@ public class PlayerAuthController : ControllerBase {
         return CryptographicOperations.FixedTimeEquals(comparedHash, Convert.FromHexString(hashedPassword));
     }
 
-    [HttpPost("register")]
-    public async Task<ActionResult> Register([FromBody] Dictionary<string, string> authInfo) {
-        try {
-            if (HttpContext.Session.Keys.Contains("username")) {
-                return Unauthorized();
-            }
-            var acct = await _playerAuthServices.playerAuths.AsQueryable().Where(u => u.PlayerUsername == authInfo["username"]).ToListAsync();
-            if (acct != null) {
-                return BadRequest();
-            }
-            if (authInfo["password"].Length < 9 || !authInfo["password"].Any(Char.IsDigit) || !authInfo["password"].Any(c => !Char.IsLetterOrDigit(c)) || !authInfo["password"].Any(char.IsLetter) || !authInfo["password"].Equals(authInfo["retype_password"])) {
-                return BadRequest();
-            }
-
-            PlayerAuth currAuth = new PlayerAuth {
-                PlayerAuthId = Guid.NewGuid().ToString(),
-                PlayerUsername = authInfo["username"],
-                PlayerPassword = HashPassword(authInfo["password"])
-            };
-
-            await _playerAuthServices.AddAsync(currAuth);
-            await _playerAuthServices.SaveChangesAsync();
-            return Ok();
-        } catch {
-            return BadRequest();
+   [HttpPost("register")]
+public async Task<ActionResult> Register(Dictionary<string, string> authInfo) {
+    try {
+        Console.WriteLine("Username: " + authInfo["username"]);
+        
+        // Check if username already exists
+        bool userExists = await _playerAuthServices.playerAuths
+            .AsQueryable()
+            .AnyAsync(u => u.PlayerUsername == authInfo["username"]);
+        
+        if (userExists) {
+            Console.WriteLine("here");
+            return BadRequest("Username already exists.");
         }
+
+        // Validate password
+        if (authInfo["password"].Length < 9 ||
+            !authInfo["password"].Any(char.IsDigit) ||
+            !authInfo["password"].Any(c => !char.IsLetterOrDigit(c)) ||
+            !authInfo["password"].Any(char.IsLetter) ||
+            authInfo["password"] != authInfo["retype_password"]) {
+            Console.WriteLine("here2");
+            return BadRequest("Password does not meet requirements.");
+        }
+
+        // Create and save new account
+        PlayerAuth currAuth = new PlayerAuth {
+            PlayerAuthId = Guid.NewGuid().ToString(),
+            PlayerUsername = authInfo["username"],
+            PlayerPassword = HashPassword(authInfo["password"])
+        };
+
+        await _playerAuthServices.AddAsync(currAuth);
+        await _playerAuthServices.SaveChangesAsync();
+        return Ok("Registration successful.");
+    } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return BadRequest("An error occurred while registering.");
     }
+}
+
+
 
     [HttpPost("login")]
     public async Task<ActionResult> Login([FromBody] Dictionary<string, string> loginInfo) {

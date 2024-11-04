@@ -123,51 +123,81 @@ public async Task<ActionResult<string>> CreatePlayer(Dictionary<string, object> 
         }
     }
 
-    [HttpPost("friends")]
-    public async Task<ActionResult> AddFriend([FromBody] Dictionary<string, string> userInfo) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == userInfo["username"]).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            var singlePlayer = player[0];
-            singlePlayer.playerFriends?.Add(userInfo["friendUsername"]);
-            _playerService.SaveChanges();
-
-            await _kafkaProducer.ProduceMessageAsync("addPlayerFriend", userInfo["friendUsername"], singlePlayer.playerId!);
-            return Ok();
-        } catch {
-            return BadRequest();
+   [HttpPost("friends")]
+public async Task<ActionResult> AddFriend(Dictionary<string, object> userInfo)
+{
+    try
+    {
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == userInfo["username"].ToString());
+        
+        if (player == null)
+        {
+            return NotFound($"Player with username {userInfo["username"].ToString()} not found.");
         }
-    }
 
-    [HttpDelete("{username}/{friendUsername}")]
-    public async Task<ActionResult> RemoveFriend(string username, string friendUsername) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            var singlePlayer = player[0];
-            var index = -1;
-            for (int i = 0; i < singlePlayer.playerFriends?.Count; ++i) {
-                if (singlePlayer.playerFriends[i].Equals(friendUsername)) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1) {
-                return BadRequest();
-            }
-            singlePlayer.playerFriends?.RemoveAt(index);
-            _playerService.SaveChanges();
-
-            await _kafkaProducer.ProduceMessageAsync("RemoveFromFriendsList", index.ToString(), singlePlayer.playerId!);
-            return Ok();
-        } catch {
-            return BadRequest();
+        // Add friend if not already in list
+        if (player.playerFriends == null)
+        {
+            player.playerFriends = new List<string>();
         }
+
+        if (!player.playerFriends.Contains(userInfo["friendUsername"].ToString()))
+        {
+            player.playerFriends.Add(userInfo["friendUsername"].ToString());
+        }
+        else
+        {
+            return BadRequest("Friend already added.");
+        }
+
+        await _playerService.SaveChangesAsync();
+        
+        //await _kafkaProducer.ProduceMessageAsync("addPlayerFriend", userInfo["friendUsername"], player.playerId!);
+        
+        return Ok(new { message = $"{userInfo["friendUsername"].ToString()} added as friend." });
     }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
+    }
+}
+
+[HttpDelete("friends/{username}/{friendUsername}")]
+public async Task<ActionResult> RemoveFriend(string username, string friendUsername)
+{
+    try
+    {
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == username);
+        
+        if (player == null)
+        {
+            return NotFound($"Player with username {username} not found.");
+        }
+
+        // Ensure friend exists in the list
+        if (player.playerFriends == null || !player.playerFriends.Contains(friendUsername))
+        {
+            return BadRequest($"{friendUsername} is not in the friend list.");
+        }
+
+        player.playerFriends.Remove(friendUsername);
+        
+        await _playerService.SaveChangesAsync();
+
+        //await _kafkaProducer.ProduceMessageAsync("RemoveFromFriendsList", friendUsername, player.playerId!);
+        
+        return Ok(new { message = $"{friendUsername} removed from friends list." });
+    }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
+    }
+}
+
 
    [HttpPut("{username}/{leagueName}")]
 public async Task<ActionResult> JoinLeague(string username, string leagueName)

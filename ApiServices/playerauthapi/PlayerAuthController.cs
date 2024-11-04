@@ -105,8 +105,8 @@ public async Task<ActionResult> Login(Dictionary<string, string> loginInfo) {
         }
 
         // Login success
-        //HttpContext.Session.SetString("username", loginInfo["username"]);
-        //_configuration["WebSocketConfig:StopServer"] = "Start";
+        HttpContext.Session.SetString("username", loginInfo["username"]);
+        //configuration["WebSocketConfig:StopServer"] = "Start";
         return Ok();
     } 
     catch (Exception e) {

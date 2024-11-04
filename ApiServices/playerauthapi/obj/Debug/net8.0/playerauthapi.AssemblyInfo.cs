@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("playerauthapi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1638f9780c3ab294b0eeee84079e762797bebe6d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e61bc554f67b219ad1946b836d8f0f22ad6ca0a")]
 [assembly: System.Reflection.AssemblyProductAttribute("playerauthapi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("playerauthapi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

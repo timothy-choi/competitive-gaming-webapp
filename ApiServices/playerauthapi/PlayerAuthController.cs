@@ -21,10 +21,10 @@ public class PlayerAuthController : ControllerBase {
         _configuration = configuration;
     }
 
-    private static string HashPassword(string password) {
+    private static string HashPassword(string password, byte[] salt) {
         var hash = Rfc2898DeriveBytes.Pbkdf2(
             Encoding.UTF8.GetBytes(password),
-            RandomNumberGenerator.GetBytes(64),
+            salt,
             400000,
             HashAlgorithmName.SHA512,
             64
@@ -63,11 +63,14 @@ public async Task<ActionResult> Register(Dictionary<string, string> authInfo) {
             return BadRequest("Password does not meet requirements.");
         }
 
+        byte[] salt = RandomNumberGenerator.GetBytes(64);
+
         // Create and save new account
         PlayerAuth currAuth = new PlayerAuth {
             PlayerAuthId = Guid.NewGuid().ToString(),
             PlayerUsername = authInfo["username"],
-            PlayerPassword = HashPassword(authInfo["password"])
+            PlayerPassword = HashPassword(authInfo["password"], salt),
+            PlayerSalt = Encoding.UTF8.GetString(salt)
         };
 
         await _playerAuthServices.AddAsync(currAuth);
@@ -90,7 +93,7 @@ public async Task<ActionResult> Register(Dictionary<string, string> authInfo) {
                 return BadRequest();
             }
 
-            var hashedPassword = HashPassword(loginInfo["password"]);
+            var hashedPassword = HashPassword(loginInfo["password"], Encoding.UTF8.GetBytes(acct[0].PlayerSalt!));
             if (!CheckPassword(acct[0].PlayerPassword!, hashedPassword)) {
                 Console.WriteLine(2);
                 return BadRequest();
@@ -155,7 +158,7 @@ public async Task<ActionResult> Register(Dictionary<string, string> authInfo) {
                 return BadRequest();
             }
 
-            acct[0].PlayerPassword = HashPassword(newPassword);
+            acct[0].PlayerPassword = HashPassword(newPassword, Encoding.UTF8.GetBytes(acct[0].PlayerSalt));
             await _playerAuthServices.SaveChangesAsync();
             return Ok();
         } catch {

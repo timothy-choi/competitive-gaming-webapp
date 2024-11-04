@@ -169,43 +169,73 @@ public async Task<ActionResult<string>> CreatePlayer(Dictionary<string, object> 
         }
     }
 
-    [HttpPut("{username}/{leagueName}")]
-    public async Task<ActionResult> JoinLeague(string username, string leagueName) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            player[0].leagueJoined = true;
-            player[0].playerLeagueJoined = leagueName;
-            _playerService.SaveChanges();
+   [HttpPut("{username}/{leagueName}")]
+public async Task<ActionResult> JoinLeague(string username, string leagueName)
+{
+    try
+    {
+        // Retrieve the player using FirstOrDefaultAsync to fetch a single record
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == username);
+        
+        if (player == null)
+        {
+            return NotFound($"Player with username {username} not found.");
+        }
 
-            await _kafkaProducer.ProduceMessageAsync("JoinedLeagueStatus", leagueName, player[0].playerId!);
-            return Ok();
-        }
-        catch {
-            return BadRequest();
-        }
+        // Update player's league information
+        player.leagueJoined = true;
+        player.playerLeagueJoined = leagueName;
+
+        // Save changes asynchronously
+        await _playerService.SaveChangesAsync();
+
+        // Produce Kafka message
+        //await _kafkaProducer.ProduceMessageAsync("JoinedLeagueStatus", leagueName, player.playerId!);
+
+        return Ok();
     }
-
-     [HttpPut("{username}")]
-    public async Task<ActionResult> LeaveLeague(string username) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            player[0].leagueJoined = false;
-            player[0].playerLeagueJoined = null;
-            _playerService.SaveChanges();
-
-            await _kafkaProducer.ProduceMessageAsync("LeftLeagueStatus", "left", player[0].playerId!);
-            return Ok();
-        }
-        catch {
-            return BadRequest();
-        }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
     }
+}
+
+
+  [HttpPut("{username}")]
+public async Task<ActionResult> LeaveLeague(string username)
+{
+    try
+    {
+        // Retrieve the player using FirstOrDefaultAsync
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == username);
+
+        if (player == null)
+        {
+            return NotFound($"Player with username {username} not found.");
+        }
+
+        // Update player's league information
+        player.leagueJoined = false;
+        player.playerLeagueJoined = null;
+
+        // Save changes asynchronously
+        await _playerService.SaveChangesAsync();
+
+        // Produce Kafka message
+        //await _kafkaProducer.ProduceMessageAsync("LeftLeagueStatus", "left", player.playerId!);
+
+        return Ok();
+    }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
+    }
+}
+
 
     [HttpPut("available/{username}/{status}")]
 public async Task<ActionResult> ChangeAvailableStatus(string username, bool status)

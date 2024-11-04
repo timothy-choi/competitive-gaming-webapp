@@ -230,43 +230,75 @@ public async Task<ActionResult<string>> CreatePlayer(Dictionary<string, object> 
         }
     }
 
-    [HttpPut("playing/{username}/{status}")]
-    public async Task<ActionResult> changeGameStatus(string username, bool status) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            player[0].playerInGame = status;
-            _playerService.SaveChanges();
-
-            string gameStatus = status ? "Playing in game" : "open";
-
-            await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", gameStatus, player[0].playerId!);
-            await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", player[0].playerName + "_" + gameStatus, "app");
-            return Ok();
-        } catch {
-            return BadRequest();
+  [HttpPut("playing/{username}/{status}")]
+public async Task<ActionResult> ChangeGameStatus(string username, bool status)
+{
+    try
+    {
+        // Retrieve the player using FirstOrDefaultAsync to prevent loading unnecessary data
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == username);
+        
+        if (player == null)
+        {
+            return NotFound($"Player with username {username} not found.");
         }
+
+        // Update the player's in-game status
+        player.playerInGame = status;
+        
+        // Save changes asynchronously
+        await _playerService.SaveChangesAsync();
+
+        string gameStatus = status ? "Playing in game" : "Open";
+
+        // Produce Kafka messages
+        //await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", gameStatus, player.playerId!);
+        //await _kafkaProducer.ProduceMessageAsync("ChangedGameStatus", $"{player.playerName}_{gameStatus}", "app");
+
+        return Ok();
     }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
+    }
+}
 
-    [HttpPut("{username}/{newPrice}/changeFee")]
-    public async Task<ActionResult> changeFee(string username, double newPrice) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            player[0].singleGamePrice = newPrice;
-            _playerService.SaveChanges();
 
-            await _kafkaProducer.ProduceMessageAsync("ChangedSingleGameFee", $"{newPrice}", player[0].playerId!);
-            await _kafkaProducer.ProduceMessageAsync("ChangedSingleGameFee",  $"{newPrice}", "app");
-            return Ok();
-        } catch {
-            return BadRequest();
+   [HttpPut("{username}/{newPrice}/changeFee")]
+public async Task<ActionResult> ChangeFee(string username, double newPrice)
+{
+    try
+    {
+        // Retrieve the player using FirstOrDefaultAsync
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == username);
+        
+        if (player == null)
+        {
+            return NotFound($"Player with username {username} not found.");
         }
+
+        // Update the single game price
+        player.singleGamePrice = newPrice;
+        
+        // Save changes asynchronously
+        await _playerService.SaveChangesAsync();
+
+        // Produce Kafka messages
+        //await _kafkaProducer.ProduceMessageAsync("ChangedSingleGameFee", $"{newPrice}", player.playerId!);
+        //await _kafkaProducer.ProduceMessageAsync("ChangedSingleGameFee", $"{newPrice}", "app");
+
+        return Ok();
     }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
+    }
+}
+
 
 
 [HttpPut("/record/{username}/{wins}/{losses}")]

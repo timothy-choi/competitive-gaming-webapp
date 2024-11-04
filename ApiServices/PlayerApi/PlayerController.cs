@@ -7,6 +7,7 @@ using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
 using KafkaHelper;
 using Newtonsoft.Json;
+using System.Text.Json;
 
 [ApiController]
 [Route("api/Players")]
@@ -55,36 +56,56 @@ public class PlayerController : ControllerBase {
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult<string>> CreatePlayer([FromBody] Dictionary<string, string> playerInfo) {
-        try {
-            Dictionary<string, string> infoContent = JsonConvert.DeserializeObject<Dictionary<string, string>>(playerInfo["playerInfo"]);
-            Player createdPlayer = new Player {
-                playerId = Guid.NewGuid().ToString(),
-                playerName = infoContent["name"],
-                playerUsername = infoContent["playerUsername"],
-                playerEmail = infoContent["playerEmail"],
-                playerJoined = DateTime.Now,
-                playerAvailable = false,
-                playerFriends = new List<string>(),
-                leagueJoined = false,
-                playerInGame = false,
-                playerLeagueJoined = "",
-                singlePlayerRecord = new List<int>(),
-                singleGamePrice = Convert.ToDouble(infoContent["price"]),
-                enablePushNotifications = Convert.ToBoolean(infoContent["pushNotifications"])
-            };
+[HttpPost]
+public async Task<ActionResult<string>> CreatePlayer(Dictionary<string, object> infoContent)
+{
+    try
+    {
+        // Generate a new player object
+        Player createdPlayer = new Player
+        {
+            playerId = Guid.NewGuid().ToString(),
+            playerName = infoContent["name"].ToString(),
+            playerUsername = infoContent["playerUsername"].ToString(),
+            playerEmail = infoContent["playerEmail"].ToString(),
+            playerJoined = DateTime.Now,
+            playerAvailable = false,
+            playerFriends = new List<string>(),
+            leagueJoined = false,
+            playerInGame = false,
+            playerLeagueJoined = "",
+            singleGamePrice = Convert.ToDouble(((JsonElement)infoContent["price"]).GetDouble()),
+            enablePushNotifications = ((JsonElement)infoContent["pushNotifications"]).GetBoolean()
+        };
 
-            await _playerService.AddAsync(createdPlayer);
-            await _playerService.SaveChangesAsync();
+        // Convert singlePlayerRecord list to byte array if provided
+        if (infoContent.ContainsKey("singlePlayerRecord") && infoContent["singlePlayerRecord"] is JsonElement jsonElementRecord && jsonElementRecord.ValueKind == JsonValueKind.Array)
+        {
+            List<int> intList = new List<int>();
+            foreach (var item in jsonElementRecord.EnumerateArray())
+            {
+                intList.Add(item.GetInt32());
+            }
+            createdPlayer.singlePlayerRecord = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(intList);
+        }
 
-            OkObjectResult res = new OkObjectResult(createdPlayer.playerId);
-            return Ok(res);
-        }
-        catch {
-            return BadRequest();
-        }
+        // Save the new player to the database
+        await _playerService.AddAsync(createdPlayer);
+        await _playerService.SaveChangesAsync();
+
+        // Return the playerId of the created player
+        return Ok(createdPlayer.playerId);
     }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+
+
+
+   
 
     [HttpDelete("{username}")]
     public async Task<ActionResult> DeletePlayer(string username) {
@@ -247,6 +268,8 @@ public class PlayerController : ControllerBase {
         }
     }
 
+
+/*
     [HttpPut("/record/{username}/{wins}/{losses}")]
     public async Task<ActionResult> updatePlayerRecord(string username, int wins, int losses) {
         try {
@@ -266,6 +289,7 @@ public class PlayerController : ControllerBase {
             return BadRequest();
         }
     }
+    */
 
     [HttpPut("/changedPushNotifications/{username}")]
     public async Task<ActionResult> updatePushNotificaitonOption(string username) {

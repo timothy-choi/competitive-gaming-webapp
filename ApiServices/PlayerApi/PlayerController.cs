@@ -269,27 +269,57 @@ public async Task<ActionResult<string>> CreatePlayer(Dictionary<string, object> 
     }
 
 
-/*
-    [HttpPut("/record/{username}/{wins}/{losses}")]
-    public async Task<ActionResult> updatePlayerRecord(string username, int wins, int losses) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            player[0].singlePlayerRecord[0] += wins;
-            player[0].singlePlayerRecord[1] += losses;
-            _playerService.SaveChanges();
-
-            var record = player[0].singlePlayerRecord;
-
-            await _kafkaProducer.ProduceMessageAsync("UpdatePlayerRecord", string.Join(",", record!), player[0].playerId!);
-            return Ok();
-        } catch {
-            return BadRequest();
+[HttpPut("/record/{username}/{wins}/{losses}")]
+public async Task<ActionResult> UpdatePlayerRecord(string username, int wins, int losses)
+{
+    try
+    {
+        // Fetch the player
+        var player = await _playerService.players
+                                         .AsQueryable()
+                                         .Where(user => user.playerUsername == username)
+                                         .FirstOrDefaultAsync();
+                                         
+        if (player == null)
+        {
+            return BadRequest("Player not found");
         }
+
+        // Deserialize singlePlayerRecord from byte[] to List<int>
+        List<int> record = new List<int>();
+        if (player.singlePlayerRecord != null && player.singlePlayerRecord.Length > 0)
+        {
+            record = System.Text.Json.JsonSerializer.Deserialize<List<int>>(player.singlePlayerRecord);
+        }
+
+        // Ensure record has space for wins and losses (2 elements in this example)
+        if (record.Count < 2)
+        {
+            record = new List<int> { 0, 0 }; // Initialize if empty or not enough elements
+        }
+
+        // Update wins and losses
+        record[0] += wins;
+        record[1] += losses;
+
+        // Serialize back to byte[] and update player's singlePlayerRecord
+        player.singlePlayerRecord = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(record);
+
+        // Save changes
+        await _playerService.SaveChangesAsync();
+
+        // Produce Kafka message with updated record
+        // await _kafkaProducer.ProduceMessageAsync("UpdatePlayerRecord", string.Join(",", record), player.playerId);
+
+        return Ok();
     }
-    */
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+
 
     [HttpPut("/changedPushNotifications/{username}")]
     public async Task<ActionResult> updatePushNotificaitonOption(string username) {

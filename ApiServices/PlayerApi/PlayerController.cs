@@ -208,27 +208,41 @@ public async Task<ActionResult<string>> CreatePlayer(Dictionary<string, object> 
     }
 
     [HttpPut("available/{username}/{status}")]
-    public async Task<ActionResult> changeAvailableStatus(string username, bool status) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            player[0].playerAvailable = status;
-            _playerService.SaveChanges();
+public async Task<ActionResult> ChangeAvailableStatus(string username, bool status)
+{
+    try
+    {
+        // Retrieve the player using FirstOrDefaultAsync
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == username);
 
-            string availableStatus = status ? "available" : "unavailable";
-
-            await _kafkaProducer.ProduceMessageAsync("ChangedAvailableStatus", availableStatus, player[0].playerId!);
-
-            //new call to kafka
-            await _kafkaProducer.ProduceMessageAsync("ChangedAvailableStatus", player[0].playerName + "_" + availableStatus, "app");
-
-            return Ok();
-        } catch {
-            return BadRequest();
+        if (player == null)
+        {
+            return NotFound($"Player with username {username} not found.");
         }
+
+        // Update player's availability status
+        player.playerAvailable = status;
+
+        // Save changes asynchronously
+        await _playerService.SaveChangesAsync();
+
+        // Determine availability status as string
+        string availableStatus = status ? "available" : "unavailable";
+
+        // Produce Kafka messages
+        //await _kafkaProducer.ProduceMessageAsync("ChangedAvailableStatus", availableStatus, player.playerId!);
+        //await _kafkaProducer.ProduceMessageAsync("ChangedAvailableStatus", $"{player.playerName}_{availableStatus}", "app");
+
+        return Ok();
     }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
+    }
+}
+
 
   [HttpPut("playing/{username}/{status}")]
 public async Task<ActionResult> ChangeGameStatus(string username, bool status)
@@ -352,25 +366,34 @@ public async Task<ActionResult> UpdatePlayerRecord(string username, int wins, in
 }
 
 
+[HttpPut("/changedPushNotifications/{username}")]
+public async Task<ActionResult> UpdatePushNotificationOption(string username)
+{
+    try
+    {
+        // Retrieve the player using FirstOrDefaultAsync to fetch a single record
+        var player = await _playerService.players
+                                          .AsQueryable()
+                                          .FirstOrDefaultAsync(user => user.playerUsername == username);
 
-    [HttpPut("/changedPushNotifications/{username}")]
-    public async Task<ActionResult> updatePushNotificaitonOption(string username) {
-        try {
-            var player = await _playerService.players.AsQueryable().Where(user => user.playerUsername == username).ToListAsync();
-            if (player == null) {
-                return BadRequest();
-            }
-            if (player[0].enablePushNotifications) {
-                player[0].enablePushNotifications = false;
-            }
-            else {
-                player[0].enablePushNotifications = true;
-            }
-            _playerService.SaveChanges();
-            
-            return Ok();
-        } catch {
-            return BadRequest();
+        if (player == null)
+        {
+            return NotFound($"Player with username {username} not found.");
         }
+
+        // Toggle push notification setting
+        player.enablePushNotifications = !player.enablePushNotifications;
+
+        // Save changes asynchronously
+        await _playerService.SaveChangesAsync();
+
+        return Ok(new { message = $"Push notification setting updated to {player.enablePushNotifications}" });
     }
+    catch (Exception ex)
+    {
+        return BadRequest($"An error occurred: {ex.Message}");
+    }
+}
+
+   
 }

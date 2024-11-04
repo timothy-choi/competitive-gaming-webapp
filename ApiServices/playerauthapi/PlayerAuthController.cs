@@ -115,16 +115,10 @@ public async Task<ActionResult> Login(Dictionary<string, string> loginInfo) {
     }
 }
 
-
- 
-
     [HttpPost("logout")]
     public async Task<ActionResult> Logout() {
-        if (HttpContext.Session.Keys.Contains("username")) {
-            return Unauthorized();
-        }
         HttpContext.Session.Remove("username");
-        _configuration["WebSocketConfig:StopServer"] = "Stop";
+        //_configuration["WebSocketConfig:StopServer"] = "Stop";
         return Ok();
     }
 

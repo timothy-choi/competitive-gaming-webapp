@@ -70,7 +70,7 @@ public async Task<ActionResult> Register(Dictionary<string, string> authInfo) {
             PlayerAuthId = Guid.NewGuid().ToString(),
             PlayerUsername = authInfo["username"],
             PlayerPassword = HashPassword(authInfo["password"], salt),
-            PlayerSalt = Encoding.UTF8.GetString(salt)
+            PlayerSalt = Convert.ToHexString(salt) 
         };
 
         await _playerAuthServices.AddAsync(currAuth);
@@ -82,31 +82,41 @@ public async Task<ActionResult> Register(Dictionary<string, string> authInfo) {
     }
 }
 
+[HttpPost("login")]
+public async Task<ActionResult> Login(Dictionary<string, string> loginInfo) {
+    try {
+        var acct = await _playerAuthServices.playerAuths
+            .AsQueryable()
+            .Where(u => u.PlayerUsername == loginInfo["username"])
+            .FirstOrDefaultAsync();
 
-
-    [HttpPost("login")]
-    public async Task<ActionResult> Login([FromBody] Dictionary<string, string> loginInfo) {
-        try {
-            var acct = await _playerAuthServices.playerAuths.AsQueryable().Where(u => u.PlayerUsername == loginInfo["username"]).ToListAsync();
-            if (acct == null) {
-                Console.WriteLine(1);
-                return BadRequest();
-            }
-
-            var hashedPassword = HashPassword(loginInfo["password"], Encoding.UTF8.GetBytes(acct[0].PlayerSalt!));
-            if (!CheckPassword(acct[0].PlayerPassword!, hashedPassword)) {
-                Console.WriteLine(2);
-                return BadRequest();
-            }
-            HttpContext.Session.SetString("username", loginInfo["username"]);
-            _configuration["WebSocketConfig:StopServer"] = "Start";
-            return Ok();
-        } 
-        catch (Exception e) {
-            Console.WriteLine(e.ToString());
-            return BadRequest();
+        if (acct == null) {
+            Console.WriteLine("User not found");
+            return BadRequest("User not found");
         }
+
+        // Retrieve the stored salt and hash the input password
+        var salt = Convert.FromHexString(acct.PlayerSalt!);  // Convert salt back to byte array
+        var hashedPassword = HashPassword(loginInfo["password"], salt);
+
+        if (acct.PlayerPassword != hashedPassword) {
+            Console.WriteLine("Invalid password");
+            return BadRequest("Invalid password");
+        }
+
+        // Login success
+        //HttpContext.Session.SetString("username", loginInfo["username"]);
+        //_configuration["WebSocketConfig:StopServer"] = "Start";
+        return Ok();
+    } 
+    catch (Exception e) {
+        Console.WriteLine(e.ToString());
+        return BadRequest("An error occurred");
     }
+}
+
+
+ 
 
     [HttpPost("logout")]
     public async Task<ActionResult> Logout() {

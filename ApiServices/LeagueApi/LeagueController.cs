@@ -182,24 +182,40 @@ public class LeagueController : ControllerBase {
     }
 
     [HttpPut("{LeagueId}/SeasonChange")]
-    public async Task<ActionResult<int>> SetNewSeason(string LeagueId) {
-        try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-            Dictionary<String, object> body = new Dictionary<String, object>();
-            body["Season"] = Convert.ToInt32(((League) league).Season) + 1;
-
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["PlayoffAssignmentId"] = false;
-            await _leagueService.EditData("leagueInfo", upsertStatus, body);
-            OkObjectResult res = new OkObjectResult(Convert.ToInt32(((League) league).Season) + 1);
-            return Ok(res);
-        } catch {
-            return BadRequest();
+public async Task<ActionResult<int>> SetNewSeason(string LeagueId) {
+    try {
+        // Retrieve league data
+        var leagueDoc = await _leagueService.GetData("leagueInfo", LeagueId) as BsonDocument;
+        if (leagueDoc == null) {
+            return NotFound();
         }
+
+        // Deserialize BsonDocument to League object
+        var league = BsonSerializer.Deserialize<League>(leagueDoc);
+
+        // Prepare update data
+        var body = new Dictionary<string, object> {
+            { "Season", league.Season + 1 },
+            { "IdName", "LeagueId" }, // Assuming "LeagueId" is the actual field name in the database
+            { "id", LeagueId }
+        };
+
+        // Define fields for upsert options
+        var upsertStatus = new Dictionary<string, bool> {
+            { "PlayoffAssignmentId", false }
+        };
+
+        // Perform the update
+        await _leagueService.EditData("leagueInfo", upsertStatus, body);
+
+        // Return the new season value
+        return Ok(league.Season + 1);
+    } catch (Exception e) {
+        Console.WriteLine(e.ToString());  // Log full exception for debugging
+        return BadRequest("An error occurred while setting the new season.");
     }
+}
+
 
     [HttpPut("{LeagueId}/tags/{TagValue}")] 
     public async Task<ActionResult> AddNewTag(string LeagueId, string TagValue) {

@@ -158,17 +158,19 @@ public async Task<ActionResult> SetConfigId(string LeagueId, string LeagueConfig
         }
         
         var body = new Dictionary<string, object> {
-            {"ConfigId", LeagueConfigId},
-             { "IdName", "LeagueId" }, // Assuming "LeagueId" is the actual field name in the database
-            { "id", LeagueId }
+            {"LeagueConfig", LeagueConfigId}
         };
 
         var upsertStatus = new Dictionary<string, bool> {
             ["ConfigId"] = false
         };
 
-        await _leagueService.EditData("leagueInfo", upsertStatus, body);
-        return Ok();
+        var result = await _leagueService.UpdateExistingAttributes("leagueInfo", LeagueId, body);
+        if (result) {
+            return Ok("config id updated successfully.");
+        }
+
+        return NotFound("League not found or no updates made.");
     } catch {
         return BadRequest();
     }
@@ -183,17 +185,19 @@ public async Task<ActionResult> SetPlayoffAssignments(string LeagueId, string Pl
         }
         
         var body = new Dictionary<string, object> {
-                {"PlayoffAssignmentId", PlayoffAssignmentId},
-             { "IdName", "LeagueId" }, // Assuming "LeagueId" is the actual field name in the database
-            { "id", LeagueId }
+                {"PlayoffAssignments", PlayoffAssignmentId}
         };
 
         var upsertStatus = new Dictionary<string, bool> {
             ["PlayoffAssignmentId"] = false
         };
 
-        await _leagueService.EditData("leagueInfo", upsertStatus, body);
-        return Ok();
+        var result = await _leagueService.UpdateExistingAttributes("leagueInfo", LeagueId, body);
+        if (result) {
+            return Ok("Season assignments updated successfully.");
+        }
+
+        return NotFound("League not found or no updates made.");
     } catch {
         return BadRequest();
     }

@@ -1047,7 +1047,7 @@ public class LeagueController : ControllerBase {
         }
     }
 
-   [HttpPut("{LeagueId}/EditStartDate")] 
+ [HttpPut("{LeagueId}/EditStartDate")]
 public async Task<ActionResult> EditStartDate(string LeagueId, Dictionary<string, DateTime> reqBody) {
     try {
         // Retrieve the data as BsonDocument
@@ -1059,22 +1059,33 @@ public async Task<ActionResult> EditStartDate(string LeagueId, Dictionary<string
         // Deserialize the BsonDocument to League model
         var league = BsonSerializer.Deserialize<League>(bsonDoc);
 
-        Dictionary<string, bool> upsertOpt = new Dictionary<string, bool>();
-        upsertOpt["StartDate"] = false;
-        
-        Dictionary<string, object> archivedTables = new Dictionary<string, object>();
-        archivedTables["StartDate"] = Convert.ToDateTime(reqBody["StartDate"]);
-        archivedTables["IdName"] = "";
-        archivedTables["id"] = "";
+        // Prepare upsert options
+        Dictionary<string, bool> upsertOpt = new Dictionary<string, bool> {
+            { "StartDate", false }
+        };
 
+        // Check if reqBody contains "StartDate"
+        if (!reqBody.ContainsKey("StartDate")) {
+            return BadRequest("StartDate is required.");
+        }
+
+        // Prepare values to update
+        Dictionary<string, object> archivedTables = new Dictionary<string, object> {
+            { "StartDate", reqBody["StartDate"] },
+            { "IdName", "LeagueId" },  // Use the actual field name used in MongoDB for the ID
+            { "id", LeagueId }
+        };
+
+        // Call EditData to update the document
         await _leagueService.EditData("leagueInfo", upsertOpt, archivedTables);
 
         return Ok();
     } catch (Exception e) {
-        Console.WriteLine(e.Message);
-        return BadRequest();
+        Console.WriteLine(e.ToString());  // Log the full exception details
+        return BadRequest("An error occurred while updating the start date.");
     }
 }
+
 
 
 }

@@ -109,36 +109,40 @@ public class MongoDBService {
     }
 }
 
-    public async Task EditData(string db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
-        var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
-        var filter = Builders<BsonDocument>.Filter.Eq(newValues["IdName"].ToString(), newValues["id"]);
+public async Task EditData(string db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
+    var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
+    var filter = Builders<BsonDocument>.Filter.Eq(newValues["IdName"].ToString(), newValues["id"]);
 
-        var updateBuilder = Builders<BsonDocument>.Update;
-        var updateDefinition = updateBuilder.Combine();
+    UpdateDefinition<BsonDocument> updateDefinition = null;
+    var updateBuilder = Builders<BsonDocument>.Update;
 
-        foreach (var key in newValues.Keys) {
-            if (key != "IdName" && key != "id") {
-                if (upsertChangeStatus.TryGetValue(key, out bool shouldUpsert)) {
-                    if (shouldUpsert) {
-                        updateDefinition = updateDefinition.Push(key, newValues[key]);
-                    }
-                    else {
-                        updateDefinition = updateDefinition.Set(key, newValues[key]);
-                    }
-                }
-                else {
-                    updateDefinition = updateDefinition.Set(key, newValues[key]);
-                }
+    foreach (var key in newValues.Keys) {
+        if (key != "IdName" && key != "id") {
+            UpdateDefinition<BsonDocument> singleUpdate;
+            if (upsertChangeStatus.TryGetValue(key, out bool shouldUpsert) && shouldUpsert) {
+                singleUpdate = updateBuilder.Push(key, newValues[key]);
+            } else {
+                singleUpdate = updateBuilder.Set(key, newValues[key]);
             }
-        }
-
-        try {
-            await db_collection.UpdateOneAsync(filter, updateDefinition);
-        }
-        catch {
-            throw new Exception("Update League Failed!");
+            // Combine the updates only if updateDefinition is not null, else start with singleUpdate
+            updateDefinition = updateDefinition == null ? singleUpdate : updateBuilder.Combine(updateDefinition, singleUpdate);
         }
     }
+
+    if (updateDefinition == null) {
+        throw new Exception("No valid updates specified in newValues.");
+    }
+
+    try {
+        await db_collection.UpdateOneAsync(filter, updateDefinition, new UpdateOptions { IsUpsert = true });
+    }
+    catch (Exception ex) {
+        Console.WriteLine(ex.Message);
+        throw new Exception("Update League Failed!", ex);
+    }
+}
+
+
     public async Task DeleteData(String db, string docId) {
         var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
         string IdName = "";

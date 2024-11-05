@@ -109,6 +109,26 @@ public class MongoDBService {
     }
 }
 
+   public async Task<bool> UpdateExistingAttributes(string db, string leagueId, Dictionary<string, object> updates)
+    {
+         var db_collection = client.GetDatabase("league").GetCollection<League>(db);
+        var filter = Builders<League>.Filter.Eq(l => l.LeagueId, leagueId); // Replace with actual field name
+
+        var updateDefinitions = new List<UpdateDefinition<League>>();
+
+        // Create update definitions for the fields that need to be updated
+        foreach (var update in updates)
+        {
+            updateDefinitions.Add(Builders<League>.Update.Set(update.Key, update.Value));
+        }
+
+        var updateCombined = Builders<League>.Update.Combine(updateDefinitions);
+        var result = await db_collection.UpdateOneAsync(filter, updateCombined);
+
+        return result.ModifiedCount > 0;
+    }
+
+
 public async Task EditData(string db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
     var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);
     var filter = Builders<BsonDocument>.Filter.Eq(newValues["IdName"].ToString(), newValues["id"]);

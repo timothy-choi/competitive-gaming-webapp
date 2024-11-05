@@ -123,63 +123,81 @@ public class LeagueController : ControllerBase {
         }
     }
 
-    [HttpPut("{LeagueId}/{SeasonAssignmentsId}")]
-    public async Task<ActionResult> SetSeasonConfig(string LeagueId, string SeasonAssignmentsId) {
-        try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-            Dictionary<String, object> body = new Dictionary<String, object>();
-            body["AssignmentsId"] = SeasonAssignmentsId;
+[HttpPut("{LeagueId}/season-config/{SeasonAssignmentsId}")]
+public async Task<ActionResult> SetSeasonConfig(string LeagueId, string SeasonAssignmentsId) {
+    try {
+        var league = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null) {
+            return NotFound();
+        }
 
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["AssignmentsId"] = false;
-            await _leagueService.EditData("leagueInfo", upsertStatus, body);
-            return Ok();
+        // Prepare the update dictionary with the existing attribute name
+        var updates = new Dictionary<string, object> {
+            { "SeasonAssignments", SeasonAssignmentsId }
+        };
+
+        // Call the UpdateExistingAttributes method to modify only existing attributes
+        var result = await _leagueService.UpdateExistingAttributes("leagueInfo", LeagueId, updates);
+        if (result) {
+            return Ok("Season assignments updated successfully.");
         }
-        catch {
-            return BadRequest();
-        }
+
+        return NotFound("League not found or no updates made.");
+    } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return BadRequest("An error occurred while updating the season configuration.");
     }
+}
 
-    [HttpPut("{LeagueId}/{LeagueConfigId}")]
-    public async Task<ActionResult> SetConfigId(string LeagueId, string LeagueConfigId) {
-        try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-            Dictionary<String, object> body = new Dictionary<String, object>();
-            body["ConfigId"] = LeagueConfigId;
-
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["ConfigId"] = false;
-            await _leagueService.EditData("leagueInfo", upsertStatus, body);
-            return Ok();
-        } catch {
-            return BadRequest();
+[HttpPut("{LeagueId}/config/{LeagueConfigId}")]
+public async Task<ActionResult> SetConfigId(string LeagueId, string LeagueConfigId) {
+    try {
+        var league = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null) {
+            return NotFound();
         }
+        
+        var body = new Dictionary<string, object> {
+            {"ConfigId", LeagueConfigId},
+             { "IdName", "LeagueId" }, // Assuming "LeagueId" is the actual field name in the database
+            { "id", LeagueId }
+        };
+
+        var upsertStatus = new Dictionary<string, bool> {
+            ["ConfigId"] = false
+        };
+
+        await _leagueService.EditData("leagueInfo", upsertStatus, body);
+        return Ok();
+    } catch {
+        return BadRequest();
     }
+}
 
-    [HttpPut("{LeagueId}/{PlayoffAssigmentId}")]
-    public async Task<ActionResult> SetPlayoffAssignments(string LeagueId, string PlayoffAssignmentId) {
-        try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-            Dictionary<String, object> body = new Dictionary<String, object>();
-            body["PlayoffAssignmentId"] = PlayoffAssignmentId;
-
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["PlayoffAssignmentId"] = false;
-            await _leagueService.EditData("leagueInfo", upsertStatus, body);
-            return Ok();
-        } catch {
-            return BadRequest();
+[HttpPut("{LeagueId}/playoff-assignments/{PlayoffAssignmentId}")]
+public async Task<ActionResult> SetPlayoffAssignments(string LeagueId, string PlayoffAssignmentId) {
+    try {
+        var league = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null) {
+            return NotFound();
         }
+        
+        var body = new Dictionary<string, object> {
+                {"PlayoffAssignmentId", PlayoffAssignmentId},
+             { "IdName", "LeagueId" }, // Assuming "LeagueId" is the actual field name in the database
+            { "id", LeagueId }
+        };
+
+        var upsertStatus = new Dictionary<string, bool> {
+            ["PlayoffAssignmentId"] = false
+        };
+
+        await _leagueService.EditData("leagueInfo", upsertStatus, body);
+        return Ok();
+    } catch {
+        return BadRequest();
     }
+}
 
     [HttpPut("{LeagueId}/SeasonChange")]
 public async Task<ActionResult<int>> SetNewSeason(string LeagueId) {

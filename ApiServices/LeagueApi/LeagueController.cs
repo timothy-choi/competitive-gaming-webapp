@@ -239,24 +239,33 @@ public async Task<ActionResult<int>> SetNewSeason(string LeagueId) {
 }
 
 
-    [HttpPut("{LeagueId}/tags/{TagValue}")] 
-    public async Task<ActionResult> AddNewTag(string LeagueId, string TagValue) {
-        try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-            Dictionary<String, object> body = new Dictionary<String, object>();
-            body["tag"] = TagValue;
-
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["tag"] = true;
-            await _leagueService.EditData("leagueInfo", upsertStatus, body);
-            return Ok();
-        } catch {
-            return BadRequest();
+   [HttpPut("{LeagueId}/tags/{TagValue}")]
+public async Task<ActionResult> AddNewTag(string LeagueId, string TagValue)
+{
+    try
+    {
+        var league = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null)
+        {
+            return NotFound();
         }
+
+        // Assuming "Tags" is the field name for an array in the League model
+        bool result = await _leagueService.UpdateArrayAttributes("leagueInfo", LeagueId, "tags", TagValue, true);
+
+        if (!result)
+        {
+            return BadRequest("Failed to add new tag.");
+        }
+
+        return Ok();
     }
+    catch
+    {
+        return BadRequest();
+    }
+}
+
 
     [HttpPut("{LeagueId}/players/{PlayerName}")]
     public async Task<ActionResult> AddNewPlayer(string LeagueId, string PlayerName) {

@@ -128,6 +128,30 @@ public class MongoDBService {
         return result.ModifiedCount > 0;
     }
 
+      public async Task<bool> UpdateArrayAttributes(string db, string leagueId, string fieldName, object valueToModify, bool addOperation)
+    {
+        var db_collection = client.GetDatabase("league").GetCollection<League>(db);
+        var filter = Builders<League>.Filter.Eq(l => l.LeagueId, leagueId); // Ensure LeagueId is the correct property
+
+        UpdateDefinition<League> update;
+
+        if (addOperation)
+        {
+            // Add to the array (use $push or $addToSet based on requirements)
+            update = Builders<League>.Update.Push(fieldName, valueToModify);
+        }
+        else
+        {
+            // Remove from the array (use $pull)
+            update = Builders<League>.Update.Pull(fieldName, valueToModify);
+        }
+
+        // Execute the update operation
+        var result = await db_collection.UpdateOneAsync(filter, update);
+
+        return result.ModifiedCount > 0; // Return true if any documents were modified
+    }
+
 
 public async Task EditData(string db, Dictionary<string, bool> upsertChangeStatus, Dictionary<string, object> newValues) {
     var db_collection = client.GetDatabase("league").GetCollection<BsonDocument>(db);

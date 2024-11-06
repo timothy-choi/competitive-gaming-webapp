@@ -266,65 +266,77 @@ public async Task<ActionResult> AddNewTag(string LeagueId, string TagValue)
     }
 }
 
-
-    [HttpPut("{LeagueId}/players/{PlayerName}")]
-    public async Task<ActionResult> AddNewPlayer(string LeagueId, string PlayerName) {
-        try {
-            var league = await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["Players"] = true;
-
-            Dictionary<string, string> playerInfo = new Dictionary<string, string>();
-            playerInfo["PlayerName"] = PlayerName;
-            playerInfo["DateJoined"] = DateTime.Now.ToString();
-            Dictionary<String, object> body = new Dictionary<String, object>();
-            body["Players"] = playerInfo;
-
-            await _leagueService.EditData("leagueInfo", upsertStatus, body);
-
-            await _kafkaProducer.ProduceMessageAsync("AddingNewPlayerInLeague", PlayerName + "_" + playerInfo["DateJoined"], LeagueId);
-            return Ok();
+[HttpPut("{LeagueId}/players/{PlayerName}")]
+public async Task<ActionResult> AddNewPlayer(string LeagueId, string PlayerName)
+{
+    try
+    {
+        var league = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null)
+        {
+            return NotFound();
         }
-        catch {
-            return BadRequest();
+
+        var playerInfo = new Dictionary<string, object>
+        {
+            { "PlayerName", PlayerName },
+            { "DateJoined", DateTime.Now }
+        };
+
+        // Assuming "Players" is the field name for an array of player objects in the League model
+        bool result = await _leagueService.UpdateArrayAttributes("leagueInfo", LeagueId, "Players", playerInfo, true);
+
+        if (!result)
+        {
+            return BadRequest("Failed to add new player.");
         }
+
+       // await _kafkaProducer.ProduceMessageAsync("AddingNewPlayerInLeague", PlayerName + "_" + playerInfo["DateJoined"], LeagueId);
+        return Ok();
     }
-
-    [HttpPut("{LeagueId}/players/{PlayerId}/delete")]
-    public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerId) {
-        try {
-            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-            var players = league.Players;
-
-            int size = players.Count;
-
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["Players"] = false;
-
-            players.RemoveAll(p => p.ContainsKey("PlayerId") && p["PlayerId"].ToString() == PlayerId);
-
-            if (players.Count == size) {
-                return NotFound();
-            }
-
-            Dictionary<string, object> playersVal = new Dictionary<string, object>();
-            playersVal["Players"] = players;
-
-            await _leagueService.EditData("leagueId", upsertStatus, playersVal);
-
-            await _kafkaProducer.ProduceMessageAsync("RemovingPlayerInLeague", PlayerId, LeagueId);
-            return Ok();
-        }
-        catch {
-            return BadRequest();
-        }
+    catch (Exception e)
+    {
+        Console.WriteLine(e.Message);
+        return BadRequest();
     }
+}
+
+
+[HttpPut("{LeagueId}/players/{PlayerId}/delete")]
+public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerId)
+{
+    try
+    {
+        var league = (League)await _leagueService.GetData("leagueInfo", LeagueId);
+        if (league == null)
+        {
+            return NotFound();
+        }
+
+        var playerToRemove = league.Players.FirstOrDefault(p => p["PlayerId"].ToString() == PlayerId);
+        if (playerToRemove == null)
+        {
+            return NotFound();
+        }
+
+        // Assuming "Players" is the field name for an array in the League model
+        bool result = await _leagueService.UpdateArrayAttributes("leagueInfo", LeagueId, "Players", playerToRemove, false);
+
+        if (!result)
+        {
+            return BadRequest("Failed to remove player.");
+        }
+
+        //await _kafkaProducer.ProduceMessageAsync("RemovingPlayerInLeague", PlayerId, LeagueId);
+        return Ok();
+    }
+    catch
+    {
+        return BadRequest();
+    }
+}
+
+  
 
     [HttpPut("{LeagueId}/Champion/{PlayerName}")]
     public async Task<ActionResult> AddNewChampion(string LeagueId, string PlayerName) {

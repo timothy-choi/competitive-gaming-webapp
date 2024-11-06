@@ -302,24 +302,41 @@ public async Task<ActionResult> AddNewPlayer(string LeagueId, string PlayerName)
 }
 
 
-[HttpPut("{LeagueId}/players/{PlayerId}/delete")]
-public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerId)
+[HttpPut("{LeagueId}/players/{PlayerName}/delete")]
+public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerName)
 {
     try
     {
-        var league = (League)await _leagueService.GetData("leagueInfo", LeagueId);
-        if (league == null)
+        // Retrieve data as BsonDocument, then deserialize to League
+        var leagueDocument = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (leagueDocument == null)
         {
             return NotFound();
         }
 
-        var playerToRemove = league.Players.FirstOrDefault(p => p["PlayerId"].ToString() == PlayerId);
+        // Deserialize BsonDocument to League
+        League league;
+        if (leagueDocument is League)
+        {
+            league = (League)leagueDocument;
+        }
+        else if (leagueDocument is BsonDocument bsonDocument)
+        {
+            league = BsonSerializer.Deserialize<League>(bsonDocument);
+        }
+        else
+        {
+            return BadRequest("Failed to process league data.");
+        }
+
+        // Locate the player by PlayerName
+        var playerToRemove = league.Players.FirstOrDefault(p => p["PlayerName"].ToString() == PlayerName);
         if (playerToRemove == null)
         {
-            return NotFound();
+            return NotFound("Player not found.");
         }
 
-        // Assuming "Players" is the field name for an array in the League model
+        // Update array attributes to remove the player
         bool result = await _leagueService.UpdateArrayAttributes("leagueInfo", LeagueId, "Players", playerToRemove, false);
 
         if (!result)
@@ -327,14 +344,18 @@ public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerId)
             return BadRequest("Failed to remove player.");
         }
 
-        //await _kafkaProducer.ProduceMessageAsync("RemovingPlayerInLeague", PlayerId, LeagueId);
+        // Optional: Log or send a Kafka message
+        // await _kafkaProducer.ProduceMessageAsync("RemovingPlayerInLeague", PlayerName, LeagueId);
+
         return Ok();
     }
-    catch
+    catch (Exception ex)
     {
-        return BadRequest();
+        Console.WriteLine(ex.Message);
+        return BadRequest("An error occurred while attempting to remove the player.");
     }
 }
+
 
   
 

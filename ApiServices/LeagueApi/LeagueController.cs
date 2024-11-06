@@ -356,34 +356,57 @@ public async Task<ActionResult> RemovePlayer(string LeagueId, string PlayerName)
     }
 }
 
-
-  
-
-    [HttpPut("{LeagueId}/Champion/{PlayerName}")]
-    public async Task<ActionResult> AddNewChampion(string LeagueId, string PlayerName) {
-        try {
-            var league = (League) await _leagueService.GetData("leagueInfo", LeagueId);
-            if (league == null) {
-                return NotFound();
-            }
-
-            var champions_size = league.Champions.Count;
-
-            Dictionary<string, bool> upsertStatus = new Dictionary<string, bool>();
-            upsertStatus["Champions"] = true;
-
-            Dictionary<string, object> champ = new Dictionary<string, object>();
-            champ["Champions"] = Tuple.Create(PlayerName, "Season " + champions_size + 1);
-
-            await _leagueService.EditData("leagueId", upsertStatus, champ);
-
-            await _kafkaProducer.ProduceMessageAsync("AddNewChampion", PlayerName, LeagueId);
-
-            return Ok();
-        } catch {
-            return BadRequest();
+     [HttpPut("{LeagueId}/Champion/{PlayerName}")]
+public async Task<ActionResult> AddNewChampion(string LeagueId, string PlayerName)
+{
+    try
+    {
+        // Retrieve the league data as a BsonDocument
+        var leagueDocument = await _leagueService.GetData("leagueInfo", LeagueId);
+        if (leagueDocument == null)
+        {
+            return NotFound("League not found.");
         }
+
+        // Deserialize BsonDocument to League if necessary
+        League league;
+        if (leagueDocument is League)
+        {
+            league = (League)leagueDocument;
+        }
+        else if (leagueDocument is BsonDocument bsonDocument)
+        {
+            league = BsonSerializer.Deserialize<League>(bsonDocument);
+        }
+        else
+        {
+            return BadRequest("Failed to process league data.");
+        }
+
+        // Determine the season based on the current count of champions
+        int seasonNumber = league.Champions.Count + 1;
+        var championEntry = Tuple.Create(PlayerName, "Season " + seasonNumber);
+
+        // Add the new champion to the Champions array
+        bool result = await _leagueService.UpdateArrayAttributes("leagueInfo", LeagueId, "Champions", championEntry, true);
+
+        if (!result)
+        {
+            return BadRequest("Failed to add champion.");
+        }
+
+        // Optional: Log or produce a Kafka message
+        //await _kafkaProducer.ProduceMessageAsync("AddNewChampion", PlayerName, LeagueId);
+
+        return Ok();
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.Message);
+        return BadRequest("An error occurred while attempting to add the champion.");
+    }
+}
+
 
     [HttpPut("{LeagueId}")]
     public async Task<ActionResult> ResetLeagueStandings(string LeagueId) {

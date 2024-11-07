@@ -18,7 +18,6 @@ public class SingleGame {
     public int hostScore {get; set;}
 
     public int guestScore {get; set;}
-    public List<InGameScore>? inGameScores {get; set;} = new List<InGameScore>();
     public TimeSpan timePlayed {get; set;}
     public String? gameEditor {get; set;}
     public String? twitchBroadcasterId {get; set;}

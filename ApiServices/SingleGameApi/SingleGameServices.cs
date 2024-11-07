@@ -1,5 +1,11 @@
 namespace CompetitiveGamingApp.Services;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NpgsqlTypes;
+using Dapper;
+using Npgsql;
+using System.Data;
+
 
 using CompetitiveGamingApp.Models;
 
@@ -38,14 +44,45 @@ public class SingleGameServices {
         }
     }
 
-    public async Task CreateGame(SingleGame currMatch) {
-        try {
-            string cmd = "INSERT INTO public.singleGames (SingleGameId, hostPlayer, guestPlayer, finalScore, inGameScores, timePlayed, gameEditor, twitchBroadcasterId, otherGameInfo, predictionId, videoFilePath) VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @finalScore, @inGameScores, @timePlayed, @gameEditor, @twitchBroadcasterId, @otherGameInfo, @predictionId, @videoFilePath)";
-            await _dbServices.EditData<SingleGame>(cmd, currMatch);
-        } catch {
-            throw new Exception("Couldn't create game!");
-        }
+public async Task CreateGame(SingleGame currMatch)
+{
+    try
+    {
+        // SQL command string
+        string cmd = "INSERT INTO public.singleGames " +
+                     "(SingleGameId, hostPlayer, guestPlayer, hostScore, guestScore, " +
+                     "timePlayed, gameEditor, twitchBroadcasterId, otherGameInfo, predictionId, videoFilePath) " +
+                     "VALUES (@SingleGameId, @hostPlayer, @guestPlayer, @hostScore, @guestScore, " +
+                     "@timePlayed, @gameEditor, @twitchBroadcasterId, @otherGameInfo, @predictionId, @videoFilePath)";
+
+        // Create Dapper parameters
+        var parameters = new DynamicParameters();
+        parameters.Add("@SingleGameId", currMatch.SingleGameId);
+        parameters.Add("@hostPlayer", currMatch.hostPlayer);
+        parameters.Add("@guestPlayer", currMatch.guestPlayer);
+        parameters.Add("@hostScore", currMatch.hostScore);
+        parameters.Add("@guestScore", currMatch.guestScore);
+
+        // Pass TimeSpan directly, let Dapper/Npgsql handle conversion to INTERVAL
+        parameters.Add("@timePlayed", currMatch.timePlayed); // No string conversion needed
+        parameters.Add("@gameEditor", currMatch.gameEditor);
+        parameters.Add("@twitchBroadcasterId", currMatch.twitchBroadcasterId);
+        parameters.Add("@otherGameInfo", currMatch.otherGameInfo);
+        parameters.Add("@predictionId", currMatch.predictionId);
+        parameters.Add("@videoFilePath", currMatch.videoFilePath);
+
+        // Execute the query with Dapper
+        await _dbServices.EditData<SingleGame>(cmd, parameters);
     }
+    catch (Exception ex)
+    {
+        // Log the exception for debugging
+        Console.WriteLine($"Error inserting game: {ex.Message}");
+        throw new Exception("Couldn't create game!", ex); // Include original exception as inner exception
+    }
+}
+
+
 
     public async Task DeleteGame(string gameId) {
         try {
@@ -75,27 +112,6 @@ public class SingleGameServices {
             throw new Exception("Couldn't name game editor");
         }
     }
-   
-   public async Task AddInGameScores(InGameScore score, string gameId)
-{
-    try
-    {
-        // Fetch the game by gameId
-        string cmd = "SELECT * FROM public.singleGames WHERE SingleGameId = @gameId";
-        SingleGame? game = await _dbServices.GetAsync<SingleGame>(cmd, new { gameId });
-        
-        // Add the new score to the game's InGameScores list
-        game?.inGameScores!.Add(score);
-
-        // Update the game with the new scores (Dapper will handle JSON conversion)
-        cmd = "UPDATE public.singleGames SET inGameScores = @InGameScores WHERE SingleGameId = @gameId";
-        await _dbServices.EditData<SingleGame>(cmd, new { game.inGameScores, gameId });
-    }
-    catch
-    {
-        throw new Exception("Couldn't add in-game score");
-    }
-}
 
 
 

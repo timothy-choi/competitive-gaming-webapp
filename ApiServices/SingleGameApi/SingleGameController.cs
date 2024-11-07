@@ -68,16 +68,15 @@ public class SingleGameController : ControllerBase {
     }
 
     [HttpPost]
-    public async Task<ActionResult<string>> createNewGame([FromBody] Dictionary<string, string> gameInfo) {
+    public async Task<ActionResult<string>> createNewGame(Dictionary<string, object> gameInfo) {
         try {
             SingleGame scheduledGame = new SingleGame {
                 SingleGameId = Guid.NewGuid().ToString(),
-                hostPlayer = gameInfo["hostPlayer"],
-                guestPlayer = gameInfo["guestPlayer"],
+                hostPlayer = gameInfo["hostPlayer"].ToString(),
+                guestPlayer = gameInfo["guestPlayer"].ToString(),
                 hostScore = 0,
                 guestScore = 0,
-                inGameScores = new List<InGameScore>(),
-                timePlayed = TimeSpan.Parse(gameInfo["gametime"]),
+                timePlayed = TimeSpan.Parse(gameInfo["gametime"].ToString()),
                 gameEditor = null,
                 twitchBroadcasterId = null,
                 predictionId = "",
@@ -90,7 +89,8 @@ public class SingleGameController : ControllerBase {
 
             return Ok(res);
         }
-        catch {
+        catch (Exception e) {
+            Console.WriteLine(e.Message);
             return BadRequest();
         }
     }
@@ -151,39 +151,6 @@ public class SingleGameController : ControllerBase {
             return BadRequest();
         }
     }
-
-    [HttpPost("/inGameScores")]
-public async Task<ActionResult> AddInGameScore([FromBody] Dictionary<string, string> inGameScoreInfo)
-{
-    try
-    {
-        // Create a new InGameScore object based on the incoming data
-        var newScore = new InGameScore
-        {
-            Desc = Convert.ToInt32(inGameScoreInfo["desc"]),
-            ScoreHost = Convert.ToInt32(inGameScoreInfo["hostScore"]),
-            ScoreGuest = Convert.ToInt32(inGameScoreInfo["guestScore"])
-        };
-
-        // Call the service method with the InGameScore object and gameId
-        await _singleGameService.AddInGameScores(newScore, inGameScoreInfo["gameId"]);
-
-        // Prepare a message for Kafka using the newly added score information
-        string info = $"Round {newScore.Desc}, (Host: {newScore.ScoreHost}, Guest: {newScore.ScoreGuest})";
-
-        // Produce Kafka messages with the gameId and score information
-        await _kafkaProducer.ProduceMessageAsync("AddInGameScore", $"{inGameScoreInfo["gameId"]}_{info}", "app");
-        await _kafkaProducer.ProduceMessageAsync("AddInGameScore", info, inGameScoreInfo["gameId"]);
-
-        // Return success response
-        return Ok();
-    }
-    catch
-    {
-        // Return a Bad Request response in case of an error
-        return BadRequest();
-    }
-}
 
     [HttpPost("/otherGameInfo")]
     public async Task<ActionResult> AddOtherGameInfo([FromBody] Dictionary<string, string> otherGameInfo) {

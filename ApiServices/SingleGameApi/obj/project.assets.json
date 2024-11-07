@@ -1636,19 +1636,19 @@
     ]
   },
   "packageFolders": {
-    "/home/tim/.nuget/packages/": {}
+    "/Users/timchoi/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/tim/Desktop/competitive-gaming-webapp/ApiServices/SingleGameApi/SingleGameApi.csproj",
+      "projectUniqueName": "/Users/timchoi/Projects/competitive-gaming-webapp/ApiServices/SingleGameApi/SingleGameApi.csproj",
       "projectName": "SingleGameApi",
-      "projectPath": "/home/tim/Desktop/competitive-gaming-webapp/ApiServices/SingleGameApi/SingleGameApi.csproj",
-      "packagesPath": "/home/tim/.nuget/packages/",
-      "outputPath": "/home/tim/Desktop/competitive-gaming-webapp/ApiServices/SingleGameApi/obj/",
+      "projectPath": "/Users/timchoi/Projects/competitive-gaming-webapp/ApiServices/SingleGameApi/SingleGameApi.csproj",
+      "packagesPath": "/Users/timchoi/.nuget/packages/",
+      "outputPath": "/Users/timchoi/Projects/competitive-gaming-webapp/ApiServices/SingleGameApi/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/tim/.nuget/NuGet/NuGet.Config"
+        "/Users/timchoi/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -1733,7 +1733,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.401/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.403/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

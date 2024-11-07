@@ -9,16 +9,24 @@ public class SingleGameServices {
     public SingleGameServices(IDBService dbServices) {
         _dbServices = dbServices;
     }
-    public async Task<List<SingleGame>?> GetAllGames() {
-        try {
-            string cmd = "SELECT * FROM public.singleGames";
-            List<SingleGame>? allGames = await _dbServices.GetAll<SingleGame>(cmd, new {});
-            return allGames;
-        } catch (Exception e) {
-            Console.WriteLine(e);
-            throw new Exception("Couldn't get all games!");
-        }
+
+  public async Task<List<SingleGame>> GetAllGames()
+{
+    try
+    {
+        string cmd = "SELECT * FROM public.singleGames";
+        List<SingleGame> allGames = await _dbServices.GetAll<SingleGame>(cmd, new {});
+
+        return allGames; // Returns an empty list if no data is found
     }
+    catch (Exception e)
+    {
+        Console.WriteLine($"Error fetching all games: {e.Message}");
+        throw new Exception("Couldn't get all games!", e); // Include the original exception as inner exception
+    }
+}
+
+
 
     public async Task<SingleGame?> GetGame(string gameId) {
         try {

@@ -31,19 +31,8 @@ public class DBService : IDBService {
 
     public async Task<List<T>?> GetAll<T>(string cmd, object parms)
 {
-    if (typeof(T) == typeof(SingleGame))
-    {
-        var result = (await _db_singleGame.QueryAsync<T>(cmd, parms)).ToList();
-
-        if (!result.Any()) // Check if the result list is empty
-        {
-            throw new Exception("No data found");
-        }
-        
-        return result;
-    }
-
-    throw new InvalidOperationException("Type T is not supported");
+    var result = await _db_singleGame.QueryAsync<T>(cmd, parms);
+    return result?.ToList() ?? new List<T>();
 }
 
     public async Task<int> EditData<T>(string cmd, object parms) {

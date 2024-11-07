@@ -9,6 +9,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Numerics;
 using Newtonsoft.Json;
 using System.Text;
+using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 using AWSHelper;
@@ -52,7 +53,7 @@ public class SingleGameController : ControllerBase {
         }
     }
 
-    [HttpGet("{player}")]
+    [HttpGet("{player}/game")]
     public async Task<ActionResult<List<SingleGame>>> GetAllGamesFromPlayer(string player) {
         List<SingleGame>? allGames = await _singleGameService.GetAllGames();
         List<SingleGame> playerGames = new List<SingleGame>();
@@ -122,20 +123,20 @@ public class SingleGameController : ControllerBase {
     }
 
     [HttpPost("/finalScore")]
-    public async Task<ActionResult> addFinalScore([FromBody] Dictionary<string, string> finalScoreInfo) {
-        try {
-            await _singleGameService.UpdateFinalScore(Convert.ToInt32(finalScoreInfo["hostScore"]), Convert.ToInt32(finalScoreInfo["guestScore"]), finalScoreInfo["gameId"]);
+public async Task<ActionResult> addFinalScore(Dictionary<string, object> finalScoreInfo) {
+    try {
+        int hostScore = ((JsonElement)finalScoreInfo["hostScore"]).GetInt32();
+        int guestScore = ((JsonElement)finalScoreInfo["guestScore"]).GetInt32();
+        string gameId = ((JsonElement)finalScoreInfo["gameId"]).GetString();
 
-            var stringScore = $"{finalScoreInfo["hostScore"]},{finalScoreInfo["guestScore"]}";
+        await _singleGameService.UpdateFinalScore(hostScore, guestScore, gameId);
 
-            await _kafkaProducer.ProduceMessageAsync("UpdateSingleGameFinalScore", finalScoreInfo["gameId"] + "_" + stringScore, "app");
-            await _kafkaProducer.ProduceMessageAsync("UpdateSingleGameFinalScore", stringScore, finalScoreInfo["gameId"]);
-
-            return Ok();
-        } catch {
-            return BadRequest();
-        }
+        return Ok();
+    } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return BadRequest();
     }
+}
 
     [HttpPut("/editor/{gameId}/{editor}")]
     public async Task<ActionResult> updateGameEditor(string gameId, string editor) {

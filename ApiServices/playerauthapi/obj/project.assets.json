@@ -3198,19 +3198,19 @@
     ]
   },
   "packageFolders": {
-    "/home/tim/.nuget/packages/": {}
+    "/Users/timchoi/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/tim/Desktop/competitive-gaming-webapp/ApiServices/playerauthapi/playerauthapi.csproj",
+      "projectUniqueName": "/Users/timchoi/Projects/competitive-gaming-webapp/ApiServices/playerauthapi/playerauthapi.csproj",
       "projectName": "playerauthapi",
-      "projectPath": "/home/tim/Desktop/competitive-gaming-webapp/ApiServices/playerauthapi/playerauthapi.csproj",
-      "packagesPath": "/home/tim/.nuget/packages/",
-      "outputPath": "/home/tim/Desktop/competitive-gaming-webapp/ApiServices/playerauthapi/obj/",
+      "projectPath": "/Users/timchoi/Projects/competitive-gaming-webapp/ApiServices/playerauthapi/playerauthapi.csproj",
+      "packagesPath": "/Users/timchoi/.nuget/packages/",
+      "outputPath": "/Users/timchoi/Projects/competitive-gaming-webapp/ApiServices/playerauthapi/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/tim/.nuget/NuGet/NuGet.Config"
+        "/Users/timchoi/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -3267,20 +3267,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[8.0.10, 8.0.10]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.linux-x64",
-            "version": "[8.0.10, 8.0.10]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[8.0.10, 8.0.10]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -3289,7 +3275,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.403/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.403/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

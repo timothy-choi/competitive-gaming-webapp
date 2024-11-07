@@ -123,29 +123,55 @@ public async Task<ActionResult> Login(Dictionary<string, string> loginInfo) {
     }
 
     [HttpPut("{username}/{newUsername}")]
-    public async Task<ActionResult> ChangeUsername(string username, string newUsername) {
-        if (!HttpContext.Session.Keys.Contains("username")) {
-            return Unauthorized();
-        }
-        try {
-            var acct = await _playerAuthServices.playerAuths.AsQueryable().Where(u => u.PlayerUsername == username).ToListAsync();
-            if (acct == null) {
-                return BadRequest();
-            }
-
-            var found = await _playerAuthServices.playerAuths.AsQueryable().Where(u => u.PlayerUsername == newUsername).ToListAsync();
-            if (found != null) {
-                return BadRequest();
-            }
-
-            acct[0].PlayerUsername = newUsername;
-            await _playerAuthServices.SaveChangesAsync();
-            return Ok();
-        }
-        catch {
-            return BadRequest();
-        }
+public async Task<ActionResult> ChangeUsername(string username, string newUsername)
+{
+    // Check if the user is authorized
+    if (!HttpContext.Session.Keys.Contains("username"))
+    {
+        return Unauthorized();
     }
+
+    try
+    {
+        // Find the account with the old username
+        var acct = await _playerAuthServices.playerAuths
+            .AsQueryable()
+            .Where(u => u.PlayerUsername == username)
+            .ToListAsync();
+
+        // If no matching account is found, return BadRequest
+        if (acct == null || !acct.Any())
+        {
+            Console.WriteLine("Old username not found.");
+            return BadRequest("Old username not found.");
+        }
+
+        // Check if the new username already exists
+        var found = await _playerAuthServices.playerAuths
+            .AsQueryable()
+            .Where(u => u.PlayerUsername == newUsername)
+            .ToListAsync();
+
+        // If any account has the new username, return BadRequest
+        if (found != null && found.Any())
+        {
+            Console.WriteLine("New username already taken.");
+            return BadRequest("New username already taken.");
+        }
+
+        // Update the username and save changes
+        acct[0].PlayerUsername = newUsername;
+        await _playerAuthServices.SaveChangesAsync();
+        
+        return Ok();
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e.Message);
+        return BadRequest("An error occurred while changing the username.");
+    }
+}
+
 
     [HttpPut("{username}/{newPassword}/{retypePassword}")]
     public async Task<ActionResult> ChangePassword(string username, string newPassword, string retypePassword) {

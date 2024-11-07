@@ -141,14 +141,15 @@ public async Task<ActionResult> addFinalScore(Dictionary<string, object> finalSc
     [HttpPut("/editor/{gameId}/{editor}")]
     public async Task<ActionResult> updateGameEditor(string gameId, string editor) {
         try {
-            var player = await client.GetAsync("/player/" + editor);
+            var player = await client.GetAsync("http://localhost:8082/api/Players/" + editor);
             if (player == null) {
                 return NotFound();
             }
             await _singleGameService.EditUserGameEditor(editor, gameId);
-            await _kafkaProducer.ProduceMessageAsync("AddInEditor", editor, gameId);
+            //await _kafkaProducer.ProduceMessageAsync("AddInEditor", editor, gameId);
             return Ok();
-        } catch {
+        } catch (Exception e) {
+            Console.WriteLine(e.Message);
             return BadRequest();
         }
     }

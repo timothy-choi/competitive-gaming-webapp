@@ -29,20 +29,11 @@ public class DBService : IDBService {
         return result;
     }
 
-    public async Task<List<T>?> GetAll<T>(string cmd, object parms) {
-        try {
-            //List<T>? result = default;
-            if (typeof(T) == typeof(SingleGamePaymentTransactions)) {
-                var result = (await _db_gameHistory.QueryAsync<T>(cmd, parms)).ToList();
-                Console.WriteLine(result);
-                if (!result.Any()) throw new Exception("Data not found");
-                return result;
-            }
-        } catch (Exception e) {
-            Console.WriteLine(e.ToString());
-        }
-        throw new InvalidOperationException("Type T is not supported");
-    }
+     public async Task<List<T>?> GetAll<T>(string cmd, object parms)
+{
+    var result = await _db_gameHistory.QueryAsync<T>(cmd, parms);
+    return result?.ToList() ?? new List<T>();
+}
 
     public async Task<int> EditData<T>(string cmd, object parms) {
         int result = default;

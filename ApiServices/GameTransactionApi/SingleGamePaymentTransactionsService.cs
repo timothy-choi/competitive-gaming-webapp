@@ -11,12 +11,17 @@ public class SingleGamePaymentTransactionsService {
     }
 
     public async Task<List<SingleGamePaymentTransactions>?> getAllGames() {
-        try {
-            string cmd = "SELECT * FROM single_game_payment_transactions";
-            List<SingleGamePaymentTransactions>? allItems = await _dbServices.GetAll<SingleGamePaymentTransactions>(cmd, new {});
-            return allItems;
-        } catch {
-            throw new Exception("Couldn't get all game history");
+        try
+        {
+            string cmd = "SELECT * FROM public.GameHistory";
+            List<SingleGamePaymentTransactions> allGames = await _dbServices.GetAll<SingleGamePaymentTransactions>(cmd, new {});
+
+            return allGames; // Returns an empty list if no data is found
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error fetching all games: {e.Message}");
+            throw new Exception("Couldn't get all games!", e); // Include the original exception as inner exception
         }
     }
 

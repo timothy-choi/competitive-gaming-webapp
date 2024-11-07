@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using CompetitiveGamingApp.Models;
 using CompetitiveGamingApp.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+
 
 [ApiController]
 [Route("api/GameTransactions")]
@@ -41,22 +43,27 @@ public class GameTransactionController : ControllerBase {
     }
 
     [HttpPost]
-    public async Task<ActionResult> addNewGame([FromBody] Dictionary<string, string> gameInfo) {
-        try {
-            SingleGamePaymentTransactions curr = new SingleGamePaymentTransactions {
-                transactionId = Guid.NewGuid().ToString(),
-                initPlayer = gameInfo["initPlayer"],
-                hostPlayer = gameInfo["hostPlayer"],
-                gameId = gameInfo["gameId"],
-                playerLost = gameInfo["playerLost"],
-                amountPaid = gameInfo["amountPaid"] == "" ? 0.00 : Convert.ToDouble(gameInfo["amountPaid"]),
-                timePaid = Convert.ToDateTime(gameInfo["timePaid"]),
-                paymentId = gameInfo["paymentId"]
-            };
-            await _singleTransService.addNewGameResult(curr);
-            return Ok();
-        } catch {
-            return BadRequest();
-        }
+public async Task<ActionResult> addNewGame(Dictionary<string, object> gameInfo) {
+    try {
+        SingleGamePaymentTransactions curr = new SingleGamePaymentTransactions {
+            transactionId = Guid.NewGuid().ToString(),
+            initPlayer = gameInfo["initPlayer"].ToString(),
+            hostPlayer = gameInfo["hostPlayer"].ToString(),
+            gameId = gameInfo["gameId"].ToString(),
+            playerLost = gameInfo["playerLost"].ToString(),
+            amountPaid = gameInfo["amountPaid"] is JsonElement amountElement && amountElement.ValueKind == JsonValueKind.String && amountElement.GetString() == ""
+                          ? 0.00 
+                          : Convert.ToDouble(((JsonElement)gameInfo["amountPaid"]).ToString()),
+            timePaid = DateTime.Parse(((JsonElement)gameInfo["timePaid"]).GetString()),
+            paymentId = gameInfo["paymentId"].ToString()
+        };
+
+        await _singleTransService.addNewGameResult(curr);
+        return Ok();
+    } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return BadRequest();
     }
+}
+
 }

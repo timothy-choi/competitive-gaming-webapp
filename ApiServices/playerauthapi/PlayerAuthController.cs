@@ -173,28 +173,54 @@ public async Task<ActionResult> ChangeUsername(string username, string newUserna
 }
 
 
-    [HttpPut("{username}/{newPassword}/{retypePassword}")]
-    public async Task<ActionResult> ChangePassword(string username, string newPassword, string retypePassword) {
-        if (!HttpContext.Session.Keys.Contains("username")) {
-            return Unauthorized();
-        }
-        try {
-            var acct = await _playerAuthServices.playerAuths.AsQueryable().Where(u => u.PlayerUsername == username).ToListAsync();
-            if (acct == null) {
-                return BadRequest();
-            }
-
-            if (newPassword.Length < 9 || !newPassword.Any(Char.IsDigit) || !newPassword.Any(c => !Char.IsLetterOrDigit(c)) || !newPassword.Any(char.IsLetter) || !newPassword.Equals(retypePassword)) {
-                return BadRequest();
-            }
-
-            acct[0].PlayerPassword = HashPassword(newPassword, Encoding.UTF8.GetBytes(acct[0].PlayerSalt));
-            await _playerAuthServices.SaveChangesAsync();
-            return Ok();
-        } catch {
-            return BadRequest();
-        }
+   [HttpPut("{username}/{newPassword}/{retypePassword}")]
+public async Task<ActionResult> ChangePassword(string username, string newPassword, string retypePassword)
+{
+    // Check if the user is authorized
+    if (!HttpContext.Session.Keys.Contains("username"))
+    {
+        return Unauthorized();
     }
+
+    try
+    {
+        // Find the account with the given username
+        var acct = await _playerAuthServices.playerAuths
+            .AsQueryable()
+            .Where(u => u.PlayerUsername == username)
+            .ToListAsync();
+
+        // Check if the account exists
+        if (acct == null || !acct.Any())
+        {
+            return BadRequest("Username not found.");
+        }
+
+        // Validate the new password
+        if (newPassword.Length < 9 ||
+            !newPassword.Any(char.IsDigit) ||
+            !newPassword.Any(c => !char.IsLetterOrDigit(c)) ||
+            !newPassword.Any(char.IsLetter) ||
+            !newPassword.Equals(retypePassword))
+        {
+            return BadRequest("Password must be at least 9 characters long, contain at least one digit, one special character, one letter, and match the retyped password.");
+        }
+
+        byte[] salt = RandomNumberGenerator.GetBytes(64);
+
+        // Hash the new password
+        acct[0].PlayerPassword = HashPassword(newPassword, salt);
+        acct[0].PlayerSalt = Convert.ToHexString(salt);
+        await _playerAuthServices.SaveChangesAsync();
+
+        return Ok("Password changed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error changing password: {ex.Message}");
+        return BadRequest("An error occurred while changing the password.");
+    }
+}
 
     [HttpDelete("{username}")]
     public async Task<ActionResult> DeleteAcct(string username) {
